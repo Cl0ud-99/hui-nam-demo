@@ -102,6 +102,9 @@ async function boot() {
       camera.updateMatrixWorld();
       world.update(0.016, 0, camera);
       world.update(0.016, 0, camera);
+      // force the planar mirrors through one pass here: they render into their own target and
+      // the first real bathroom frame otherwise costs ~60 ms
+      for (const m of world.mirrors) { m.refl.enabled = true; m.refl.update(camera); }
       // the composer pass compiles the AO/normal-depth variants too
       engine.composer.render(0.016);
       engine.renderer.shadowMap.needsUpdate = true;

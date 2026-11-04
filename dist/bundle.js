@@ -39980,6 +39980,10 @@ void main() {
         camera.updateMatrixWorld();
         world.update(0.016, 0, camera);
         world.update(0.016, 0, camera);
+        for (const m of world.mirrors) {
+          m.refl.enabled = true;
+          m.refl.update(camera);
+        }
         engine.composer.render(0.016);
         engine.renderer.shadowMap.needsUpdate = true;
         engine.composer.render(0.016);
