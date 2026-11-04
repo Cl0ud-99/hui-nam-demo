@@ -197,3 +197,13 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - title 模式下 `pointerlockchange` 直接 return，不再"失去指针锁 → 自动暂停"
 - `audio.init()/story.start()` 包 try/catch，AudioContext 被策略拦截时也不会中断启动
 验证：`?title=1` 按 W 1.5s 位移 2.59m；`?title=1&shot=-2,1.55,10.2,0.2,1.9,5.4` 出生在 (-2,10.2) yaw -0.43，按 W 位移 3.53m 走进店里；两者 `paused=""`
+
+### 8.11 舊片劃痕柔化（2026-11-04 晚，**未 push**）
+問題：舊版 `step(0.9975, hash(floor(uv.x*720), floor(uTime*2)))` —— 硬邊、全高、一幀同時好幾條、亮度恆定，看起來像貼圖。
+改法（`gradeShader.js`）：
+- 一次最多 **一條**：每 0.625s 抽一次 `epOn`（約 16% 機率），位置 `scX` 由 hash 決定，同一時段內固定
+- 邊緣柔：`1 - smoothstep(0.0004, 0.0018, |uv.x-scX|)` → 約 3–4px 過渡（原本是 0/1 硬切）
+- 沿長度斷續：`grainNoise(uv.y*5, …)` 做 seg mask，不再是一根到底
+- 亮度會閃：`0.5 + 0.5*hash(ep, floor(uTime*12))`
+- 幅度 0.10 → **0.070**，並新增 `uScratch`（`?scratch=0` 可整體關閉，`?scratch=2` 加強）
+- 實測默認：4px 寬軟線，列均值增幅 5/255，剖面 0→1→4→5→4.9→2.6→0.1→0

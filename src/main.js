@@ -151,6 +151,8 @@ async function boot() {
   const grainParam = params.get("grain");
   if (grainParam !== null) engine.grade.uniforms.uGrain.value = Math.max(0, Number(grainParam) || 0);
   if (params.get("tv") === "1") engine.grade.uniforms.uGrainTV.value = 1;
+  const scratchParam = params.get("scratch");
+  if (scratchParam !== null) engine.grade.uniforms.uScratch.value = Math.max(0, Number(scratchParam) || 0);
   window.addEventListener("resize", () => {
     const cfg = QUALITY[qname];
     const w = window.innerWidth, h = window.innerHeight;

@@ -10,6 +10,7 @@ var GradeShader = {
     uGrain: { value: 0.0207 },
     uAged: { value: 0.6 },
     uGrainTV: { value: 0 },
+    uScratch: { value: 1 },
     uCA: { value: 16e-4 },
     uSat: { value: 0.9 },
     uFade: { value: 0 },
@@ -30,7 +31,7 @@ var GradeShader = {
     `
   precision highp float;
   uniform sampler2D tDiffuse;
-  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse, uAged, uGrainTV;
+  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse, uAged, uGrainTV, uScratch;
   uniform vec3 uShadowTint, uHighTint;
   uniform vec2 uRes;
   varying vec2 vUv;
@@ -115,8 +116,15 @@ var GradeShader = {
       col += vec3(0.010, 0.008, 0.0035) * uAged;
       float flick = hash(vec2(floor(uTime * 14.0), 7.3)) - 0.5;
       col *= 1.0 + flick * 0.045 * uAged;
-      float scratch = step(0.9975, hash(vec2(floor(uv.x * 720.0), floor(uTime * 2.0))));
-      col += scratch * vec3(0.10, 0.09, 0.06) * uAged;
+      // 劃痕：一次最多一條、軟邊、沿長度斷斷續續、亮度會閃
+      float ep = floor(uTime * 1.6);
+      float epOn = step(0.88, hash(vec2(ep, 3.71)));
+      float scX = mix(0.14, 0.86, hash(vec2(ep, 9.13)));
+      float scD = abs(uv.x - scX);
+      float scSoft = 1.0 - smoothstep(0.0004, 0.0018, scD);
+      float scSeg = smoothstep(0.30, 0.72, grainNoise(vec2(uv.y * 5.0, ep * 3.3), floor(uTime * 8.0)));
+      float scFlick = 0.5 + 0.5 * hash(vec2(ep, floor(uTime * 12.0)));
+      col += epOn * scSoft * scSeg * scFlick * 0.070 * uAged * uScratch * vec3(1.0, 0.96, 0.87);
       col *= mix(1.0, vig, 0.25 * uAged);
     }
 
