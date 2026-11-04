@@ -225,5 +225,5 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 
 1. **改之前先对齐源码**。要么从另一台拷 `src/` 过来，要么直接以那台的 `C:\Users\Administrator\Desktop\hui-nam-demo` 为准。
 2. **不要用 D 盘的 `dist/bundle.js` 覆盖仓库**——会静默回退温和模式、标题卡、滤镜、颗粒修复。
-3. 推仓库优先用 `gh api` 单文件写入（`PUT /repos/{owner}/{repo}/contents/<path>`，带 `sha`），本机 `git fetch` 拉整仓常常 5 分钟以上；`git push` 正常。
+3. 推仓库优先用 `gh api` 单文件写入（`PUT /repos/{owner}/{repo}/contents/<path>`，带 `sha`）。本机 `git fetch` 实测会被 `Connection was reset` 打断（`git push` 偶发可成功），整仓同步请到能连 GitHub 的机器做。本地 `hk-horror-web` 停在 `b10b47c`，落后远端 4 个提交。
 4. 提交信息里写清楚动的是哪一块（剧情 / 画面 / 性能），方便另一台 rebase。
