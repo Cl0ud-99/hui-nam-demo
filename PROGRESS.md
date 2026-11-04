@@ -170,3 +170,9 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - 默认 `uGrain` 0.018 → **0.0207**（×1.15）
 - 实测：颗粒高频贡献 0.680 → 0.810（比值 1.19，度量含场景纹理噪声，uniform 本身是精确 ×1.15）
 - 对照图：`shots/grain_15more.png`（100% 裁切，0.018 vs 0.0207）
+
+### 8.7 README 截图重拍（2026-11-04 晚，**未 push**）
+- 按当前观感（grain 0.0207 / aged 0.6）重拍 7 张：menu / shopfront / shop_interior / stairs / altar / bath / trailer
+- 药行机位改为柜台斜侧（2.4,1.62,4.6 → -1.4,1.35,0.9）；浴室改为镜前侧机位（1.95,5.2,4.35 → 2.9,5.0,3.32）
+- 1440×810 JPEG q86，合计 1.36 MB；`docs/screens/` 原文件原地替换
+- 审阅拼图：`shots/readme2_grid.jpg`
