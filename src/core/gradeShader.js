@@ -7,7 +7,8 @@ var GradeShader = {
     uExposure: { value: 1 },
     uTime: { value: 0 },
     uVignette: { value: 1 },
-    uGrain: { value: 0.026 },
+    uGrain: { value: 0.07 },
+    uAged: { value: 0.6 },
     uCA: { value: 16e-4 },
     uSat: { value: 0.9 },
     uFade: { value: 0 },
@@ -28,7 +29,7 @@ var GradeShader = {
     `
   precision highp float;
   uniform sampler2D tDiffuse;
-  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse;
+  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse, uAged;
   uniform vec3 uShadowTint, uHighTint;
   uniform vec2 uRes;
   varying vec2 vUv;
@@ -88,10 +89,27 @@ var GradeShader = {
     float vig = smoothstep(0.95, 0.15, length(d) * (1.0 / uVignette));
     col *= mix(0.50, 1.0, vig);
 
-    // grain, stronger in the shadows like real film
+    // ---- 舊片濾鏡：發黃、褪色、投影機微閃、偶發劃痕 ----
+    if (uAged > 0.001) {
+      float l = dot(col, vec3(0.299, 0.587, 0.114));
+      vec3 sep = vec3(l) * vec3(1.13, 0.98, 0.73);
+      col = mix(col, sep, 0.30 * uAged);
+      col = mix(vec3(l), col, 1.0 - 0.10 * uAged);
+      col += vec3(0.010, 0.008, 0.0035) * uAged;
+      float flick = hash(vec2(floor(uTime * 14.0), 7.3)) - 0.5;
+      col *= 1.0 + flick * 0.045 * uAged;
+      float scratch = step(0.9975, hash(vec2(floor(uv.x * 720.0), floor(uTime * 2.0))));
+      col += scratch * vec3(0.10, 0.09, 0.06) * uAged;
+      col *= mix(1.0, vig, 0.25 * uAged);
+    }
+
+    // grain：兩層，暗部更明顯，像真實底片
     float g = hash(uv * uRes + fract(uTime) * 133.7) - 0.5;
-    col += g * uGrain * (1.0 - smoothstep(0.0, 0.6, dot(col, vec3(0.33))));
-    col += (hash(uv * 1.7 + uTime) - 0.5) * 0.003;
+    float gFine = hash(uv * uRes * 1.93 + fract(uTime * 1.7) * 71.3) - 0.5;
+    float shadowMask = 1.0 - smoothstep(0.0, 0.72, dot(col, vec3(0.33)));
+    col += g * uGrain * (0.45 + 0.55 * shadowMask);
+    col += gFine * uGrain * 0.45;
+    col += (hash(uv * 1.7 + uTime) - 0.5) * 0.004;
 
     // linear -> sRGB
     col = pow(max(col, vec3(0.0)), vec3(1.0 / 2.2));

@@ -143,3 +143,10 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - 新增 `docs/screens/`：menu / shopfront / shop_interior / stairs / altar / bath / trailer 共 7 张（1440×810，JPEG q84，合计约 1.4 MB）
 - README 增加「## 畫面」区块：主菜单大图 + 3×2 网格 + 说明（1600×900 高画质实机截图）
 - 顺带修掉"满屏白色亮点"：`world.js` 尘埃粒子 `gl_PointSize` 由 `(1.2+aSeed*2.4)*(14/-z)` 改为 `clamp((0.7+aSeed*1.6)*(5/-z),0.8,5.0)`，透明度 0.35→0.22，并加 0.8–2.4m 近处淡出
+
+### 8.3 旧片滤镜 + 噪点（2026-11-04 晚，**未 push**）
+- `gradeShader.js` 新增 `uAged`（0–1，默认 0.6）：泛黄分离（sepia mix 0.30）、褪色 0.10、暗部加暖雾 0.010/0.008/0.0035、投影机微闪 4.5%、偶发竖向划痕、旧镜头暗角叠加 0.25
+- 噪点从 0.026 提到 0.07，改为两层（主粒 + 细粒），暗部权重 0.45–1.0
+- URL 实时调参：`?aged=0.35`、`?grain=0.09`；或运行时 `__W.engine.grade.uniforms.uAged.value = 0.8`
+- 四档对照图：`shots/grade_presets.jpg`（0 / 0.35 / 0.6 / 0.85）
+- 线上 Pages 仍是旧观感（本次未 push）

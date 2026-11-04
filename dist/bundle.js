@@ -34435,7 +34435,8 @@ void main() {
       uExposure: { value: 1 },
       uTime: { value: 0 },
       uVignette: { value: 1 },
-      uGrain: { value: 0.026 },
+      uGrain: { value: 0.07 },
+      uAged: { value: 0.6 },
       uCA: { value: 16e-4 },
       uSat: { value: 0.9 },
       uFade: { value: 0 },
@@ -34456,7 +34457,7 @@ void main() {
       `
   precision highp float;
   uniform sampler2D tDiffuse;
-  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse;
+  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse, uAged;
   uniform vec3 uShadowTint, uHighTint;
   uniform vec2 uRes;
   varying vec2 vUv;
@@ -34516,10 +34517,27 @@ void main() {
     float vig = smoothstep(0.95, 0.15, length(d) * (1.0 / uVignette));
     col *= mix(0.50, 1.0, vig);
 
-    // grain, stronger in the shadows like real film
+    // ---- \u820A\u7247\u6FFE\u93E1\uFF1A\u767C\u9EC3\u3001\u892A\u8272\u3001\u6295\u5F71\u6A5F\u5FAE\u9583\u3001\u5076\u767C\u5283\u75D5 ----
+    if (uAged > 0.001) {
+      float l = dot(col, vec3(0.299, 0.587, 0.114));
+      vec3 sep = vec3(l) * vec3(1.13, 0.98, 0.73);
+      col = mix(col, sep, 0.30 * uAged);
+      col = mix(vec3(l), col, 1.0 - 0.10 * uAged);
+      col += vec3(0.010, 0.008, 0.0035) * uAged;
+      float flick = hash(vec2(floor(uTime * 14.0), 7.3)) - 0.5;
+      col *= 1.0 + flick * 0.045 * uAged;
+      float scratch = step(0.9975, hash(vec2(floor(uv.x * 720.0), floor(uTime * 2.0))));
+      col += scratch * vec3(0.10, 0.09, 0.06) * uAged;
+      col *= mix(1.0, vig, 0.25 * uAged);
+    }
+
+    // grain\uFF1A\u5169\u5C64\uFF0C\u6697\u90E8\u66F4\u660E\u986F\uFF0C\u50CF\u771F\u5BE6\u5E95\u7247
     float g = hash(uv * uRes + fract(uTime) * 133.7) - 0.5;
-    col += g * uGrain * (1.0 - smoothstep(0.0, 0.6, dot(col, vec3(0.33))));
-    col += (hash(uv * 1.7 + uTime) - 0.5) * 0.003;
+    float gFine = hash(uv * uRes * 1.93 + fract(uTime * 1.7) * 71.3) - 0.5;
+    float shadowMask = 1.0 - smoothstep(0.0, 0.72, dot(col, vec3(0.33)));
+    col += g * uGrain * (0.45 + 0.55 * shadowMask);
+    col += gFine * uGrain * 0.45;
+    col += (hash(uv * 1.7 + uTime) - 0.5) * 0.004;
 
     // linear -> sRGB
     col = pow(max(col, vec3(0.0)), vec3(1.0 / 2.2));
@@ -40022,6 +40040,10 @@ void main() {
           const order = ["high", "medium", "low"];
           qname = order[(order.indexOf(qname) + 1) % order.length];
           applyQuality(qname);
+          const agedParam = params.get("aged");
+          if (agedParam !== null) engine.grade.uniforms.uAged.value = Math.max(0, Math.min(1, Number(agedParam) || 0));
+          const grainParam = params.get("grain");
+          if (grainParam !== null) engine.grade.uniforms.uGrain.value = Math.max(0, Number(grainParam) || 0);
         }
         if (act === "mode") {
           gentle = !gentle;
