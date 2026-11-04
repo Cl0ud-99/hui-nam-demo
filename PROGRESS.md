@@ -131,3 +131,10 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - 另有第一轮画面调校（可与剧情改动分开回退）：分离色调、湿地面反射（Fresnel^3 + puddle smoothstep）、雨（3200 滴/更细/近处淡出）、柜台改木纹、出生点 `(4.8,0,11.6) yaw 0.72`、一盏全局冷色 DirectionalLight（不占每房 14 盏配额，program 数仍 129）
 
 未做：宣传片重渲（§5-1）、瓦楞铁墙（§5-2）、水洼形状（§5-3）、招牌（§5-4）、二楼外立面（§5-5）、tools 清理（§5-7）。
+
+### 8.1 已发布（2026-11-04 晚）
+
+- 已 push 到 `Cl0ud-99/hui-nam-demo` main：`b10b47c..870f22c`
+- Pages 已重建完成：`index.html` 含「線上版 ONLINE」链接，`dist/bundle.js` 1,983,830 B（Last-Modified 2026-11-04 09:56 GMT）
+- 公网实测：`?story=1` → 菜单第 4 项显示「溫和」、`story.gentle=true`、boot 正常隐藏（headless 截图 `shots/live_pages.png`）
+- 主菜单现为 5 项：開始 / 宣傳片 / 畫質 / 模式 / 操作，下方为線上版链接
