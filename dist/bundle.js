@@ -40092,6 +40092,7 @@ void main() {
       if (state === "play" && document.pointerLockElement == null) engine.renderer.domElement.requestPointerLock?.();
     });
     document.addEventListener("pointerlockchange", () => {
+      if (TITLE) return;
       if (state === "play" && document.pointerLockElement == null) {
         setTimeout(() => {
           if (state === "play") pause(true);
@@ -40163,18 +40164,43 @@ void main() {
         camera.position.set(n[0], n[1], n[2]);
         camera.lookAt(n[3], n[4], n[5]);
       }
-      state = "shot";
-      player.enabled = false;
+      if (!TITLE) {
+        state = "shot";
+        player.enabled = false;
+      }
     } else {
       ui.bootDone();
     }
-    if (TITLE && !SHOT) {
-      startGame();
+    if (TITLE) {
       state = "play";
+      player.enabled = true;
+      started = true;
+      if (SHOT) {
+        const n = SHOT.split(",").map(Number);
+        if (n.length >= 6) {
+          const dx = n[3] - n[0], dy = n[4] - n[1], dz = n[5] - n[2];
+          player.pos.set(n[0], Math.max(0, n[1] - player.eye), n[2]);
+          player.yaw = Math.atan2(-dx, -dz);
+          player.pitch = Math.atan2(dy, Math.hypot(dx, dz));
+          player.applyCamera(0);
+        }
+      }
+      try {
+        audio.init();
+        audio.setAmbience("alley", 2);
+      } catch (e) {
+      }
+      try {
+        story.start();
+      } catch (e) {
+      }
       document.getElementById("hud").classList.remove("on");
       ui.clickHint(false);
       const fadeEl = document.getElementById("fade");
-      if (fadeEl) fadeEl.style.opacity = "0";
+      if (fadeEl) {
+        fadeEl.style.transition = "none";
+        fadeEl.style.opacity = "0";
+      }
     }
     audio.setAmbience("alley", 0.1);
     const clock = new Clock();

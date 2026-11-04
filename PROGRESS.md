@@ -189,3 +189,11 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - **默认满屏、无黑边**；要电影黑边加 `&letterbox=1`
 - 仍可静态定格：`?title=1&shot=x,y,z,lx,ly,lz`（该组合下 player 关闭，纯机位）
 - 验证：`?title=1` → `body=titlemode, player.enabled=true, 按 W 位移 2.82m, hud display=none, letterbox 空, pvtitle=on center`
+
+### 8.10 修：标题卡模式「无法走动」（2026-11-04 晚，**未 push**）
+根因：上一版把 `?title=1&shot=…` 里的 `shot` 当成静态机位，`state="shot"` + `player.enabled=false`，所以标题出来了但人冻住。
+改法（`src/main.js`）：
+- title 模式下 `shot` 只作为**出生点 + 朝向**（`player.pos/yaw/pitch` 由相机反推），玩家保持 `enabled=true`、`state="play"`
+- title 模式下 `pointerlockchange` 直接 return，不再"失去指针锁 → 自动暂停"
+- `audio.init()/story.start()` 包 try/catch，AudioContext 被策略拦截时也不会中断启动
+验证：`?title=1` 按 W 1.5s 位移 2.59m；`?title=1&shot=-2,1.55,10.2,0.2,1.9,5.4` 出生在 (-2,10.2) yaw -0.43，按 W 位移 3.53m 走进店里；两者 `paused=""`
