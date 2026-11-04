@@ -4,7 +4,11 @@
 
 ## 0. 一句话现状
 
-游戏本体可完整通关（后巷→药行→后楼梯→三楼→点香→浴室镜子→睡房结局），碰撞已补齐并经寻路验证，性能卡帧已修复（转身 0 帧 >33ms），公网地址已上线（GitHub Pages）。宣传片是旧版（后巷封闭前），尚未重渲。
+游戏可完整通关（后巷→药行→后楼梯→三楼→点香→浴室镜子→睡房结局），碰撞已补齐并经寻路验证，卡帧已修复（转身 0 帧 >33ms），公网已上线。
+
+在主线之外，仓库版还多了四样东西：**温和模式**（`?story=1`，无 jump scare）、**标题卡模式**（`?title=1`，可走动/满屏，配 `&shot=` 可定机位）、**旧片滤镜**（`uAged` 默认 0.6，`?aged=` 调）、**重做的胶片颗粒**（`?grain=`、`?tv=1`）。
+
+**仓库 HEAD：`643ab95`**（`dist/bundle.js` 1,988,936 B）。**注意：D 盘的源码树落后于仓库**，改动前先看 §9。
 
 ## 1. 路径与环境
 
@@ -89,14 +93,14 @@ cd hk-horror-web && git add -A && git commit -m "..." && git push origin main
 
 ## 5. 未完成 / 下一步（按优先级）
 
-1. **宣传片重渲**：现有 64s trailer 是后巷封闭前的版本，已过时。运镜脚本 `tools/trailer.mjs`（START/END 分段跑，12fps，`genaudio.py` 生成音轨）。录好的 walkthrough（2:26，见 DELIVERY）可先顶着。
-2. **后巷两侧瓦楞铁墙细节**：接缝、锈斑、墙筋；目前偏平。
-3. **水洼形状**：现在是椭圆软边，应做不规则连片 + 边缘积水线。
-4. **招牌质感**：字体排版、灯箱/霓虹描边、玻璃反光。
-5. **二楼外立面**：窗台进深/滴水已做，可再加空调滴水长痕、墙面分色、阳台。
-6. **无惊吓剧情模式**（用户胆小，想要过）：楼梯剪影改远景背影、结尾改关门，字幕全保留；做成 `?story=1` 或菜单选项。
-7. **清理**：`tools/walkthrough.mjs`（旧）与 `walkthrough3.mjs`（现役）重复，合并后删旧；`tools/perf*.json`、`nav*.json` 是一次性脚本可归档。
-8. 性能后备手段（如果用户机仍卡）：画质「中/低」已支持（关 GTAO/降反射）；可再加 GTAO 半分辨率。
+1. **同步 D 盘源码树（最优先，见 §9）**：仓库里的 bundle 已含温和模式/标题卡/旧片滤镜/新出生点，D 盘 `src/` 没有这些改动；直接拿 D 盘重建会把这些特性冲掉。
+2. **宣传片重渲**：`tools/trailer.mjs`（START/END 分段、12fps）+ `genaudio.py`。现有 64s 片是后巷封闭前版本；另有 2:26 通关录像可顶。
+3. **后巷两侧瓦楞铁墙细节**：接缝、锈斑、墙筋。
+4. **水洼形状**：现为椭圆软边，应做不规则连片 + 边缘积水线。
+5. **招牌质感**：字体排版、灯箱/霓虹描边、玻璃反光。
+6. **二楼外立面**：空调滴水长痕、墙面分色、阳台。
+7. **tools 清理**：`walkthrough.mjs`（旧）与 `walkthrough3.mjs` 重复；`shots/mk_scr*.py`、`mk_sc*.py` 是一次性划痕生成脚本，可归到 `tools/scratch/`。
+8. 性能后备：GTAO 半分辨率（画质「中/低」已能关 AO/降反射）。
 
 ## 6. 关键坐标 / 参数速查
 
@@ -144,14 +148,14 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - README 增加「## 畫面」区块：主菜单大图 + 3×2 网格 + 说明（1600×900 高画质实机截图）
 - 顺带修掉"满屏白色亮点"：`world.js` 尘埃粒子 `gl_PointSize` 由 `(1.2+aSeed*2.4)*(14/-z)` 改为 `clamp((0.7+aSeed*1.6)*(5/-z),0.8,5.0)`，透明度 0.35→0.22，并加 0.8–2.4m 近处淡出
 
-### 8.3 旧片滤镜 + 噪点（2026-11-04 晚，**未 push**）
+### 8.3 旧片滤镜 + 噪点（2026-11-04 晚，已推送）
 - `gradeShader.js` 新增 `uAged`（0–1，默认 0.6）：泛黄分离（sepia mix 0.30）、褪色 0.10、暗部加暖雾 0.010/0.008/0.0035、投影机微闪 4.5%、偶发竖向划痕、旧镜头暗角叠加 0.25
 - 噪点从 0.026 提到 0.07，改为两层（主粒 + 细粒），暗部权重 0.45–1.0
 - URL 实时调参：`?aged=0.35`、`?grain=0.09`；或运行时 `__W.engine.grade.uniforms.uAged.value = 0.8`
 - 四档对照图：`shots/grade_presets.jpg`（0 / 0.35 / 0.6 / 0.85）
-- 线上 Pages 仍是旧观感（本次未 push）
+- 线上 Pages 已更新
 
-### 8.4 噪点"重复感"修复（2026-11-04 晚，**未 push**）
+### 8.4 噪点"重复感"修复（2026-11-04 晚，已推送）
 根因两个：
 1. `index.html` 的 `#grain` 图层是 **180×180 SVG turbulence 平铺**（opacity .028，steps(3) 三帧跳变）——肉眼看就是"小贴图一直重复"。已整个删除。
 2. `gradeShader.js` 原 `hash()` 用 `fract(p*vec2(123.34,456.21))`，在像素坐标下有 **x 50px / y 100px 周期**（0.34×50、0.21×100 恰为整数），所以颗粒花紋会规律重复。
@@ -161,36 +165,36 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - 新增 `?tv=1`：12fps、尺度 0.26、横向拖尾 45%、颗粒做 0.72 次幂硬化 → 老电视雪花感
 - 对照图：`shots/grain_compare3.png`（100% 裁切）/ `shots/grain_full_compare.jpg`（整幅）
 
-### 8.5 颗粒减弱 60% + 参数 bug（2026-11-04 晚，**未 push**）
+### 8.5 颗粒减弱 60% + 参数 bug（2026-11-04 晚，已推送）
 - 默认 `uGrain` 0.045 → **0.018**（正好 40%，即 −60%）；高频能量实测 2.062 → 0.950（比值 0.46）
 - **修掉一个真 bug**：`?aged= / ?grain= / ?tv=` 的解析代码被误插到「畫質」按钮的 handler 里（`applyQuality(qname);` 这个锚点在文件里出现两次，替换命中了 8 空格缩进那处），所以启动时根本没生效——之前所有 `?grain=` 的对比截图都是无效的。已移到 boot 内 `applyQuality(qname)` 之后，实测 `?grain=0.5&aged=0` → 探针读回 `{g:0.5,a:0}`，0 与 0.5 的像素差 mean 38（92% 像素 >6），确认生效
 - 对照图：`shots/grain_60_ab.png`（100% 裁切，0.045 vs 0.018）
 
-### 8.6 颗粒回调 +15%（2026-11-04 晚，**未 push**）
+### 8.6 颗粒回调 +15%（2026-11-04 晚，已推送）
 - 默认 `uGrain` 0.018 → **0.0207**（×1.15）
 - 实测：颗粒高频贡献 0.680 → 0.810（比值 1.19，度量含场景纹理噪声，uniform 本身是精确 ×1.15）
 - 对照图：`shots/grain_15more.png`（100% 裁切，0.018 vs 0.0207）
 
-### 8.7 README 截图重拍（2026-11-04 晚，**未 push**）
+### 8.7 README 截图重拍（2026-11-04 晚，已推送）
 - 按当前观感（grain 0.0207 / aged 0.6）重拍 7 张：menu / shopfront / shop_interior / stairs / altar / bath / trailer
 - 药行机位改为柜台斜侧（2.4,1.62,4.6 → -1.4,1.35,0.9）；浴室改为镜前侧机位（1.95,5.2,4.35 → 2.9,5.0,3.32）
 - 1440×810 JPEG q86，合计 1.36 MB；`docs/screens/` 原文件原地替换
 - 审阅拼图：`shots/readme2_grid.jpg`
 
-### 8.8 私用标题卡后门（2026-11-04 晚，**未 push**）
+### 8.8 私用标题卡后门（2026-11-04 晚，已推送）
 - `?title=1`（或 `?card=1`）：隐藏菜单 / HUD / 开场加载层，加 11vh letterbox，画面正中显示「回南 / HUI NAM — A HONG KONG TENEMENT STORY」
 - 可选覆盖文字：`?tzh=三樓&ten=THE THIRD FLOOR`（URL 编码）
 - **不阉割功能**：游戏照常运行，只是不出 UI；配合 `?shot=x,y,z,lx,ly,lz` 可任意机位定格
 - 居中样式：`#pvtitle.center`（含暗色径向晕影 `:before`，保证亮背景也能读）
 - 实测：`title=1` → `pvtitle="on center"`、`menu="hide"`、`hud=""`、`letterbox="on"`；`tzh/ten` 覆盖生效
 
-### 8.9 标题卡模式改为「可走动 + 满屏」（2026-11-04 晚，**未 push**）
+### 8.9 标题卡模式改为「可走动 + 满屏」（2026-11-04 晚，已推送）
 - `?title=1` 现在直接进入 play 状态：WASD 走动、滑鼠环视（点画面锁指针）、剧情照常跑，只是 `body.titlemode` 把 `#hud` / `.clickhint` / `#menu` 全部 `display:none`
 - **默认满屏、无黑边**；要电影黑边加 `&letterbox=1`
 - 仍可静态定格：`?title=1&shot=x,y,z,lx,ly,lz`（该组合下 player 关闭，纯机位）
 - 验证：`?title=1` → `body=titlemode, player.enabled=true, 按 W 位移 2.82m, hud display=none, letterbox 空, pvtitle=on center`
 
-### 8.10 修：标题卡模式「无法走动」（2026-11-04 晚，**未 push**）
+### 8.10 修：标题卡模式「无法走动」（2026-11-04 晚，已推送）
 根因：上一版把 `?title=1&shot=…` 里的 `shot` 当成静态机位，`state="shot"` + `player.enabled=false`，所以标题出来了但人冻住。
 改法（`src/main.js`）：
 - title 模式下 `shot` 只作为**出生点 + 朝向**（`player.pos/yaw/pitch` 由相机反推），玩家保持 `enabled=true`、`state="play"`
@@ -198,7 +202,7 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - `audio.init()/story.start()` 包 try/catch，AudioContext 被策略拦截时也不会中断启动
 验证：`?title=1` 按 W 1.5s 位移 2.59m；`?title=1&shot=-2,1.55,10.2,0.2,1.9,5.4` 出生在 (-2,10.2) yaw -0.43，按 W 位移 3.53m 走进店里；两者 `paused=""`
 
-### 8.11 舊片劃痕柔化（2026-11-04 晚，**未 push**）
+### 8.11 舊片劃痕柔化（2026-11-04 晚，已推送）
 問題：舊版 `step(0.9975, hash(floor(uv.x*720), floor(uTime*2)))` —— 硬邊、全高、一幀同時好幾條、亮度恆定，看起來像貼圖。
 改法（`gradeShader.js`）：
 - 一次最多 **一條**：每 0.625s 抽一次 `epOn`（約 16% 機率），位置 `scX` 由 hash 決定，同一時段內固定
@@ -207,3 +211,19 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - 亮度會閃：`0.5 + 0.5*hash(ep, floor(uTime*12))`
 - 幅度 0.10 → **0.070**，並新增 `uScratch`（`?scratch=0` 可整體關閉，`?scratch=2` 加強）
 - 實測默認：4px 寬軟線，列均值增幅 5/255，剖面 0→1→4→5→4.9→2.6→0.1→0
+
+## 9. 跨机协作注意（2026-11-04 晚起）
+
+这个项目现在在**两台机器**上推进，源码状态不一致：
+
+| 机器 | 路径 | 状态 |
+|---|---|---|
+| 本机（D 盘那台） | `D:\HermesWorkspace\hk-horror` | 源码**较旧**：没有温和模式 / 标题卡 / 旧片滤镜 / 颗粒重做 / 新出生点 |
+| 另一台 | `C:\Users\Administrator\Desktop\hui-nam-demo` | 已从 GitHub bundle 反推出完整 `src/`（21 模块 / 5841 行），含全部新特性，并与 §2/§6 指标逐条对齐 |
+
+规则：
+
+1. **改之前先对齐源码**。要么从另一台拷 `src/` 过来，要么直接以那台的 `C:\Users\Administrator\Desktop\hui-nam-demo` 为准。
+2. **不要用 D 盘的 `dist/bundle.js` 覆盖仓库**——会静默回退温和模式、标题卡、滤镜、颗粒修复。
+3. 推仓库优先用 `gh api` 单文件写入（`PUT /repos/{owner}/{repo}/contents/<path>`，带 `sha`），本机 `git fetch` 拉整仓常常 5 分钟以上；`git push` 正常。
+4. 提交信息里写清楚动的是哪一块（剧情 / 画面 / 性能），方便另一台 rebase。
