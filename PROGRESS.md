@@ -138,3 +138,8 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - Pages 已重建完成：`index.html` 含「線上版 ONLINE」链接，`dist/bundle.js` 1,983,830 B（Last-Modified 2026-11-04 09:56 GMT）
 - 公网实测：`?story=1` → 菜单第 4 项显示「溫和」、`story.gentle=true`、boot 正常隐藏（headless 截图 `shots/live_pages.png`）
 - 主菜单现为 5 项：開始 / 宣傳片 / 畫質 / 模式 / 操作，下方为線上版链接
+
+### 8.2 README 画面（2026-11-04 晚）
+- 新增 `docs/screens/`：menu / shopfront / shop_interior / stairs / altar / bath / trailer 共 7 张（1440×810，JPEG q84，合计约 1.4 MB）
+- README 增加「## 畫面」区块：主菜单大图 + 3×2 网格 + 说明（1600×900 高画质实机截图）
+- 顺带修掉"满屏白色亮点"：`world.js` 尘埃粒子 `gl_PointSize` 由 `(1.2+aSeed*2.4)*(14/-z)` 改为 `clamp((0.7+aSeed*1.6)*(5/-z),0.8,5.0)`，透明度 0.35→0.22，并加 0.8–2.4m 近处淡出

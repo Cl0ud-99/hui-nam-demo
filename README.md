@@ -26,6 +26,26 @@ node server.js --open
 
 ---
 
+## 畫面
+
+<p align="center">
+  <a href="https://cl0ud-99.github.io/hui-nam-demo/">
+    <img src="docs/screens/menu.jpg" alt="回南 · 主目錄" width="100%">
+  </a>
+  <sub>主目錄 · 後巷雨夜</sub>
+</p>
+
+| | |
+|:---:|:---:|
+| ![](docs/screens/shopfront.jpg)<br><sub>後巷 · 福安堂店面</sub> | ![](docs/screens/shop_interior.jpg)<br><sub>藥行內部 · 濕藥材味</sub> |
+| ![](docs/screens/stairs.jpg)<br><sub>後樓梯 · 三樓之前</sub> | ![](docs/screens/altar.jpg)<br><sub>三樓 · 神檯三炷香</sub> |
+| ![](docs/screens/bath.jpg)<br><sub>浴室 · 鏡</sub> | ![](docs/screens/trailer.jpg)<br><sub>宣傳片模式</sub> |
+
+> 截圖為 1600×900、高畫質、RTX 2070 SUPER 實機運行；未經後期合成。
+
+---
+
+
 ## 操作
 
 | 按鍵 | 動作 |

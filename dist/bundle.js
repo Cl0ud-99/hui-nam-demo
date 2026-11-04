@@ -39340,7 +39340,7 @@ void main() {
       geo.setAttribute("position", new BufferAttribute(pos, 3));
       geo.setAttribute("aSeed", new BufferAttribute(seed, 1));
       const mat = new ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uTex: { value: T.art.soft_dot }, uColor: { value: new Color(0.9, 0.82, 0.7) }, uOpacity: { value: 0.35 } },
+        uniforms: { uTime: { value: 0 }, uTex: { value: T.art.soft_dot }, uColor: { value: new Color(0.9, 0.82, 0.7) }, uOpacity: { value: 0.22 } },
         vertexShader: `
       attribute float aSeed; varying float vA;
       uniform float uTime;
@@ -39351,8 +39351,9 @@ void main() {
         p.z += cos(uTime * 0.13 + aSeed * 21.0) * 0.45;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = (1.2 + aSeed * 2.4) * (14.0 / -mv.z);
-        vA = (0.25 + 0.75 * aSeed) * smoothstep(18.0, 6.0, -mv.z);
+        float dz = max(0.5, -mv.z);
+        gl_PointSize = clamp((0.7 + aSeed * 1.6) * (5.0 / dz), 0.8, 5.0);
+        vA = (0.12 + 0.45 * aSeed) * smoothstep(20.0, 7.0, dz) * smoothstep(0.8, 2.4, dz);
       }`,
         fragmentShader: `
       uniform sampler2D uTex; uniform vec3 uColor; uniform float uOpacity; varying float vA;
