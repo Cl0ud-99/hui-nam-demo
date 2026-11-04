@@ -40140,6 +40140,19 @@ void main() {
         state = s;
       }
     };
+    const TITLE = params.get("title") === "1" || params.get("card") === "1";
+    if (TITLE) {
+      ui.menuShow(false);
+      ui.hudOn(false);
+      ui.boot(1);
+      ui.bootDone();
+      document.getElementById("letterbox").classList.add("on");
+      const el = document.getElementById("pvtitle");
+      el.style.transition = "none";
+      el.querySelector(".zh").textContent = params.get("tzh") || "\u56DE\u5357";
+      el.querySelector(".en").textContent = params.get("ten") || "HUI NAM \u2014 A HONG KONG TENEMENT STORY";
+      el.classList.add("on", "center");
+    }
     if (SHOT) {
       ui.menuShow(false);
       ui.hudOn(false);

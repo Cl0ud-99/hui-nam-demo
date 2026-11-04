@@ -291,6 +291,21 @@ async function boot() {
       state = s;
     }
   };
+  // ---- 私用：純標題卡截圖（任意機位）----
+  // ?title=1[&tzh=回南&ten=HUI NAM] — 保留完整遊戲，只隱藏 UI 並在畫面中央加標題
+  const TITLE = params.get("title") === "1" || params.get("card") === "1";
+  if (TITLE) {
+    ui.menuShow(false);
+    ui.hudOn(false);
+    ui.boot(1);
+    ui.bootDone();
+    document.getElementById("letterbox").classList.add("on");
+    const el = document.getElementById("pvtitle");
+    el.style.transition = "none";
+    el.querySelector(".zh").textContent = params.get("tzh") || "回南";
+    el.querySelector(".en").textContent = params.get("ten") || "HUI NAM — A HONG KONG TENEMENT STORY";
+    el.classList.add("on", "center");
+  }
   if (SHOT) {
     ui.menuShow(false);
     ui.hudOn(false);

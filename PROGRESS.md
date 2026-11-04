@@ -176,3 +176,10 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - 药行机位改为柜台斜侧（2.4,1.62,4.6 → -1.4,1.35,0.9）；浴室改为镜前侧机位（1.95,5.2,4.35 → 2.9,5.0,3.32）
 - 1440×810 JPEG q86，合计 1.36 MB；`docs/screens/` 原文件原地替换
 - 审阅拼图：`shots/readme2_grid.jpg`
+
+### 8.8 私用标题卡后门（2026-11-04 晚，**未 push**）
+- `?title=1`（或 `?card=1`）：隐藏菜单 / HUD / 开场加载层，加 11vh letterbox，画面正中显示「回南 / HUI NAM — A HONG KONG TENEMENT STORY」
+- 可选覆盖文字：`?tzh=三樓&ten=THE THIRD FLOOR`（URL 编码）
+- **不阉割功能**：游戏照常运行，只是不出 UI；配合 `?shot=x,y,z,lx,ly,lz` 可任意机位定格
+- 居中样式：`#pvtitle.center`（含暗色径向晕影 `:before`，保证亮背景也能读）
+- 实测：`title=1` → `pvtitle="on center"`、`menu="hide"`、`hud=""`、`letterbox="on"`；`tzh/ten` 覆盖生效

@@ -103,6 +103,15 @@
   #pvtitle{position:fixed;left:0;right:0;bottom:17vh;z-index:13;text-align:center;pointer-events:none;
     opacity:0;transition:opacity 1.4s}
   #pvtitle.on{opacity:1}
+  #pvtitle.center{top:50%;bottom:auto;transform:translateY(-50%)}
+  #pvtitle.center:before{content:"";position:absolute;left:50%;top:calc(50% - 6px);transform:translate(-50%,-50%);
+    width:min(920px,88vw);height:280px;pointer-events:none;z-index:-1;
+    background:radial-gradient(closest-side,rgba(6,5,4,.62),rgba(6,5,4,.28) 62%,rgba(6,5,4,0))}
+  #pvtitle.center .zh{font-size:clamp(46px,6.2vw,96px);letter-spacing:.44em;margin-left:.44em}
+  #pvtitle.center .en{margin-top:22px;font-size:11.5px;color:#ded2c0;letter-spacing:.5em;text-shadow:0 1px 12px #000,0 0 26px #000,0 0 44px rgba(0,0,0,.9)}
+  #pvtitle.center .zh{text-shadow:0 2px 26px rgba(0,0,0,.9),0 0 70px rgba(0,0,0,.65)}
+  #pvtitle.center .rule{box-shadow:0 0 18px rgba(0,0,0,.8)}
+  #pvtitle.center .rule{height:44px;margin-bottom:20px}
   #pvtitle .zh{font-family:var(--serif);font-size:clamp(28px,3.4vw,52px);letter-spacing:.34em;color:#e4dac8;margin-left:.34em}
   #pvtitle .en{font-family:var(--sans);font-size:10px;letter-spacing:.55em;color:#8d8172;margin-top:14px;margin-left:.55em}
   #pvtitle .rule{width:1px;height:34px;background:#7e2a22;margin:0 auto 18px}
