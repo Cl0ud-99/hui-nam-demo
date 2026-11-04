@@ -34435,8 +34435,9 @@ void main() {
       uExposure: { value: 1 },
       uTime: { value: 0 },
       uVignette: { value: 1 },
-      uGrain: { value: 0.07 },
+      uGrain: { value: 0.045 },
       uAged: { value: 0.6 },
+      uGrainTV: { value: 0 },
       uCA: { value: 16e-4 },
       uSat: { value: 0.9 },
       uFade: { value: 0 },
@@ -34457,7 +34458,7 @@ void main() {
       `
   precision highp float;
   uniform sampler2D tDiffuse;
-  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse, uAged;
+  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse, uAged, uGrainTV;
   uniform vec3 uShadowTint, uHighTint;
   uniform vec2 uRes;
   varying vec2 vUv;
@@ -34482,6 +34483,22 @@ void main() {
     return clamp(color, 0.0, 1.0);
   }
   float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+  // \u7121\u9031\u671F\u54C8\u5E0C\uFF08Dave Hoskins\uFF09\uFF1A\u6574\u6578\u5EA7\u6A19 + \u5E40\u7A2E\u5B50\uFF0C\u907F\u514D\u51FA\u73FE\u56FA\u5B9A\u82B1\u7D0B
+  float hash13(vec3 p3){
+    p3 = fract(p3 * 0.1031);
+    p3 += dot(p3, p3.zyx + 31.32);
+    return fract((p3.x + p3.y) * p3.z);
+  }
+  // \u5E73\u6ED1\u503C\u566A\u8072\uFF1A\u505A\u51FA\u300C\u5718\u584A\u300D\u800C\u4E0D\u662F\u6BCF\u50CF\u7D20\u4E82\u9EDE\uFF0C\u50CF\u5E95\u7247\u9846\u7C92
+  float grainNoise(vec2 p, float seed){
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash13(vec3(i, seed));
+    float b = hash13(vec3(i + vec2(1.0, 0.0), seed));
+    float c = hash13(vec3(i + vec2(0.0, 1.0), seed));
+    float d = hash13(vec3(i + vec2(1.0, 1.0), seed));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
 
   void main(){
     vec2 uv = vUv;
@@ -34531,13 +34548,20 @@ void main() {
       col *= mix(1.0, vig, 0.25 * uAged);
     }
 
-    // grain\uFF1A\u5169\u5C64\uFF0C\u6697\u90E8\u66F4\u660E\u986F\uFF0C\u50CF\u771F\u5BE6\u5E95\u7247
-    float g = hash(uv * uRes + fract(uTime) * 133.7) - 0.5;
-    float gFine = hash(uv * uRes * 1.93 + fract(uTime * 1.7) * 71.3) - 0.5;
-    float shadowMask = 1.0 - smoothstep(0.0, 0.72, dot(col, vec3(0.33)));
-    col += g * uGrain * (0.45 + 0.55 * shadowMask);
-    col += gFine * uGrain * 0.45;
-    col += (hash(uv * 1.7 + uTime) - 0.5) * 0.004;
+    // grain\uFF1A\u5169\u5C64\u5E73\u6ED1\u5718\u584A + \u4E00\u9EDE\u6C34\u5E73\u62D6\u5C3E\uFF0C\u9010\u5E40\u63DB\u7A2E\u5B50\uFF08\u4E0D\u6703\u770B\u5230\u56FA\u5B9A\u82B1\u7D0B\uFF09
+    float tRate = mix(24.0, 12.0, uGrainTV);
+    float t24 = floor(uTime * tRate);
+    vec2 gpix = gl_FragCoord.xy;
+    float sc = mix(0.72, 0.26, uGrainTV);
+    float gFine = grainNoise(gpix * sc, t24) - 0.5;
+    float gLump = grainNoise(gpix * (sc * 0.42), t24 + 19.0) - 0.5;
+    float rowN = hash13(vec3(mix(gpix.y, floor(gpix.y * 0.5), uGrainTV), t24, 5.5)) - 0.5;
+    float grain = gFine * 0.95 + gLump * 0.55;
+    grain = mix(grain, rowN, mix(0.10, 0.45, uGrainTV));
+    // TV \u6A21\u5F0F\uFF1A\u9846\u7C92\u66F4\u786C\u3001\u5C0D\u6BD4\u66F4\u9AD8
+    grain = mix(grain, sign(grain) * pow(abs(grain) * 2.0, 0.72) * 0.5, uGrainTV);
+    float shadowMask = 1.0 - smoothstep(0.0, 0.78, dot(col, vec3(0.33)));
+    col += grain * uGrain * (0.55 + 0.75 * shadowMask);
 
     // linear -> sRGB
     col = pow(max(col, vec3(0.0)), vec3(1.0 / 2.2));
@@ -40044,6 +40068,7 @@ void main() {
           if (agedParam !== null) engine.grade.uniforms.uAged.value = Math.max(0, Math.min(1, Number(agedParam) || 0));
           const grainParam = params.get("grain");
           if (grainParam !== null) engine.grade.uniforms.uGrain.value = Math.max(0, Number(grainParam) || 0);
+          if (params.get("tv") === "1") engine.grade.uniforms.uGrainTV.value = 1;
         }
         if (act === "mode") {
           gentle = !gentle;

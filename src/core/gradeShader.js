@@ -7,8 +7,9 @@ var GradeShader = {
     uExposure: { value: 1 },
     uTime: { value: 0 },
     uVignette: { value: 1 },
-    uGrain: { value: 0.07 },
+    uGrain: { value: 0.045 },
     uAged: { value: 0.6 },
+    uGrainTV: { value: 0 },
     uCA: { value: 16e-4 },
     uSat: { value: 0.9 },
     uFade: { value: 0 },
@@ -29,7 +30,7 @@ var GradeShader = {
     `
   precision highp float;
   uniform sampler2D tDiffuse;
-  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse, uAged;
+  uniform float uExposure, uTime, uVignette, uGrain, uCA, uSat, uFade, uPulse, uAged, uGrainTV;
   uniform vec3 uShadowTint, uHighTint;
   uniform vec2 uRes;
   varying vec2 vUv;
@@ -54,6 +55,22 @@ var GradeShader = {
     return clamp(color, 0.0, 1.0);
   }
   float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+  // 無週期哈希（Dave Hoskins）：整數座標 + 幀種子，避免出現固定花紋
+  float hash13(vec3 p3){
+    p3 = fract(p3 * 0.1031);
+    p3 += dot(p3, p3.zyx + 31.32);
+    return fract((p3.x + p3.y) * p3.z);
+  }
+  // 平滑值噪聲：做出「團塊」而不是每像素亂點，像底片顆粒
+  float grainNoise(vec2 p, float seed){
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash13(vec3(i, seed));
+    float b = hash13(vec3(i + vec2(1.0, 0.0), seed));
+    float c = hash13(vec3(i + vec2(0.0, 1.0), seed));
+    float d = hash13(vec3(i + vec2(1.0, 1.0), seed));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
 
   void main(){
     vec2 uv = vUv;
@@ -103,13 +120,20 @@ var GradeShader = {
       col *= mix(1.0, vig, 0.25 * uAged);
     }
 
-    // grain：兩層，暗部更明顯，像真實底片
-    float g = hash(uv * uRes + fract(uTime) * 133.7) - 0.5;
-    float gFine = hash(uv * uRes * 1.93 + fract(uTime * 1.7) * 71.3) - 0.5;
-    float shadowMask = 1.0 - smoothstep(0.0, 0.72, dot(col, vec3(0.33)));
-    col += g * uGrain * (0.45 + 0.55 * shadowMask);
-    col += gFine * uGrain * 0.45;
-    col += (hash(uv * 1.7 + uTime) - 0.5) * 0.004;
+    // grain：兩層平滑團塊 + 一點水平拖尾，逐幀換種子（不會看到固定花紋）
+    float tRate = mix(24.0, 12.0, uGrainTV);
+    float t24 = floor(uTime * tRate);
+    vec2 gpix = gl_FragCoord.xy;
+    float sc = mix(0.72, 0.26, uGrainTV);
+    float gFine = grainNoise(gpix * sc, t24) - 0.5;
+    float gLump = grainNoise(gpix * (sc * 0.42), t24 + 19.0) - 0.5;
+    float rowN = hash13(vec3(mix(gpix.y, floor(gpix.y * 0.5), uGrainTV), t24, 5.5)) - 0.5;
+    float grain = gFine * 0.95 + gLump * 0.55;
+    grain = mix(grain, rowN, mix(0.10, 0.45, uGrainTV));
+    // TV 模式：顆粒更硬、對比更高
+    grain = mix(grain, sign(grain) * pow(abs(grain) * 2.0, 0.72) * 0.5, uGrainTV);
+    float shadowMask = 1.0 - smoothstep(0.0, 0.78, dot(col, vec3(0.33)));
+    col += grain * uGrain * (0.55 + 0.75 * shadowMask);
 
     // linear -> sRGB
     col = pow(max(col, vec3(0.0)), vec3(1.0 / 2.2));

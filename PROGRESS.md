@@ -150,3 +150,13 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - URL 实时调参：`?aged=0.35`、`?grain=0.09`；或运行时 `__W.engine.grade.uniforms.uAged.value = 0.8`
 - 四档对照图：`shots/grade_presets.jpg`（0 / 0.35 / 0.6 / 0.85）
 - 线上 Pages 仍是旧观感（本次未 push）
+
+### 8.4 噪点"重复感"修复（2026-11-04 晚，**未 push**）
+根因两个：
+1. `index.html` 的 `#grain` 图层是 **180×180 SVG turbulence 平铺**（opacity .028，steps(3) 三帧跳变）——肉眼看就是"小贴图一直重复"。已整个删除。
+2. `gradeShader.js` 原 `hash()` 用 `fract(p*vec2(123.34,456.21))`，在像素坐标下有 **x 50px / y 100px 周期**（0.34×50、0.21×100 恰为整数），所以颗粒花紋会规律重复。
+改法：`hash13()`（Dave Hoskins，3D 含帧种子）+ 平滑值噪声两级：
+- 主粒 `grainNoise(px*0.72)`、大团 `grainNoise(px*0.30)`、10% 水平拖尾，24fps 换种子
+- `uGrain` 默认 0.026 → **0.045**；暗部权重 0.55–1.3
+- 新增 `?tv=1`：12fps、尺度 0.26、横向拖尾 45%、颗粒做 0.72 次幂硬化 → 老电视雪花感
+- 对照图：`shots/grain_compare3.png`（100% 裁切）/ `shots/grain_full_compare.jpg`（整幅）

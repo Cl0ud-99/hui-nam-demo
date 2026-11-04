@@ -219,6 +219,7 @@ async function boot() {
     if (agedParam !== null) engine.grade.uniforms.uAged.value = Math.max(0, Math.min(1, Number(agedParam) || 0));
     const grainParam = params.get("grain");
     if (grainParam !== null) engine.grade.uniforms.uGrain.value = Math.max(0, Number(grainParam) || 0);
+    if (params.get("tv") === "1") engine.grade.uniforms.uGrainTV.value = 1;
       }
       if (act === "mode") {
         gentle = !gentle;
