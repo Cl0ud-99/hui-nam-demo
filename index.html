@@ -49,6 +49,8 @@
   nav button:hover{color:#efe6d6;transform:translateX(6px)}
   nav button:hover .idx{color:var(--red-bright)}
   nav button small{font-family:var(--sans);font-size:10px;letter-spacing:.24em;color:#5f574d}
+  nav button.warm{color:#c9c2b2} nav button.warm .idx{color:#8a6a3a}
+  nav button.warm small{color:#8a6a3a}
   .foot{font-family:var(--sans);font-size:10.5px;letter-spacing:.2em;color:#5c544a;line-height:2.1}
   .foot b{color:#7e7466;font-weight:400}
   .menuright{flex:1;position:relative;overflow:hidden}
@@ -144,7 +146,8 @@
       <button data-act="play"><span class="idx">01</span>開始 <small>ENTER</small></button>
       <button data-act="pv"><span class="idx">02</span>宣傳片 <small>TRAILER</small></button>
       <button data-act="quality"><span class="idx">03</span>畫質 <small id="qlabel">高</small></button>
-      <button data-act="help"><span class="idx">04</span>操作 <small>CONTROLS</small></button>
+      <button data-act="mode"><span class="idx">04</span>模式 <small id="mlabel">驚嚇</small></button>
+      <button data-act="help"><span class="idx">05</span>操作 <small>CONTROLS</small></button>
     </nav>
     <div class="foot">
       <b>WASD</b> 移動 · <b>SHIFT</b> 快走 · <b>F</b> 電筒 · <b>E</b> 互動 · <b>ESC</b> 暫停<br>

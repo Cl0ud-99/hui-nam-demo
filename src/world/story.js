@@ -3,7 +3,8 @@ export { Story };
 
 var wait = (ms) => new Promise((r) => setTimeout(r, ms));
 var Story = class {
-  constructor({ world, ui, audio, player, camera }) {
+  constructor({ world, ui, audio, player, camera, gentle = false }) {
+    this.gentle = gentle;
     this.w = world;
     this.ui = ui;
     this.audio = audio;
@@ -89,6 +90,16 @@ var Story = class {
   async _stairsBeat() {
     await wait(4200);
     if (this.w.currentRoom !== "stairs") return;
+    if (this.gentle) {
+      // 溫和模式：遠處一道背影，停留數秒，不嚇人
+      this.stairGhost.position.set(0.35, 3.6, -5.55);
+      this.stairGhost.visible = true;
+      this.audio.drip(0.9);
+      await wait(2600);
+      this.stairGhost.visible = false;
+      this.ui.subtitle("\u6A13\u4E0A\u597D\u50CF\u6709\u4EBA\u8D70\u904E\u3002", 3600);
+      return;
+    }
     this.stairGhost.visible = true;
     this.audio.buzzBurst(1.2);
     this.audio.sting();
@@ -115,7 +126,7 @@ var Story = class {
   }
   async _afterIncense() {
     await wait(2200);
-    this.audio.whisper();
+    if (!this.gentle) this.audio.whisper();
     this.ui.objective("\u53BB\u6D74\u5BA4\u6D17\u628A\u9762\u3002");
     this.ui.subtitle("\u5EF3\u5605\u71C8\uFF0C\u5FFD\u7136\u6697\u5497\u4E00\u534A\u3002", 4200);
     this.player.shake = 6e-3;
@@ -141,6 +152,16 @@ var Story = class {
     if (this.flag.mirror || this.busy) return;
     this.flag.mirror = true;
     this.busy = true;
+    if (this.gentle) {
+      this.ui.subtitle("鏡裡面……只有你自己。", 4200);
+      setTimeout(() => {
+        this.busy = false;
+        this.ui.objective("返出廳。");
+        this.ui.subtitle("水聲停咗。", 2600);
+        this.audio.water(false);
+      }, 3600);
+      return;
+    }
     const bath = this.w.bathRoom;
     bath.ghost.visible = true;
     this.audio.heartbeat(3);
@@ -172,6 +193,18 @@ var Story = class {
     this.flag.ended = true;
     this.player.enabled = false;
     this.ui.prompt(null);
+    if (this.gentle) {
+      this.audio.creak(0.7, 0.5);
+      this.ui.subtitle("房門慢慢關上。", 4200);
+      await wait(2600);
+      await this.ui.fade(1, 1400);
+      this.ui.hudOn(false);
+      await wait(700);
+      this.ui.endcardOn(true);
+      this.audio.setAmbience("bath", 3);
+      this.onEnd?.();
+      return;
+    }
     this.bedGhost.visible = true;
     this.audio.screech();
     this.player.shake = 0.06;

@@ -106,7 +106,8 @@ async function boot() {
     engine.renderer.shadowMap.needsUpdate = true;
   }
   const player = new Player(camera, world, audio);
-  const story = new Story({ world, ui, audio, player, camera });
+  let gentle = params.get("story") === "1" || params.get("gentle") === "1" || localStorage.getItem("huinam_gentle") === "1";
+  const story = new Story({ world, ui, audio, player, camera, gentle });
   world.story = story;
   story.onEnd = () => {
     setTimeout(() => {
@@ -195,6 +196,8 @@ async function boot() {
       }
     }
   }
+  document.getElementById("mlabel").textContent = gentle ? "\u6EAB\u548C" : "\u9A5A\u5687";
+  document.querySelector('[data-act="mode"]').classList.toggle("warm", gentle);
   document.querySelectorAll("[data-act]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const act = btn.dataset.act;
@@ -211,6 +214,13 @@ async function boot() {
         const order = ["high", "medium", "low"];
         qname = order[(order.indexOf(qname) + 1) % order.length];
         applyQuality(qname);
+      }
+      if (act === "mode") {
+        gentle = !gentle;
+        story.gentle = gentle;
+        document.getElementById("mlabel").textContent = gentle ? "\u6EAB\u548C" : "\u9A5A\u5687";
+        localStorage.setItem("huinam_gentle", gentle ? "1" : "0");
+        document.querySelector('[data-act="mode"]').classList.toggle("warm", gentle);
       }
       if (act === "help") {
         document.querySelector(".foot").style.color = "#d8cdbb";

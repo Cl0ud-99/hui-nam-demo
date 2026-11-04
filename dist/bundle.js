@@ -38876,7 +38876,8 @@ void main() {
   // src/world/story.js
   var wait = (ms) => new Promise((r) => setTimeout(r, ms));
   var Story = class {
-    constructor({ world, ui, audio, player, camera }) {
+    constructor({ world, ui, audio, player, camera, gentle = false }) {
+      this.gentle = gentle;
       this.w = world;
       this.ui = ui;
       this.audio = audio;
@@ -38962,6 +38963,15 @@ void main() {
     async _stairsBeat() {
       await wait(4200);
       if (this.w.currentRoom !== "stairs") return;
+      if (this.gentle) {
+        this.stairGhost.position.set(0.35, 3.6, -5.55);
+        this.stairGhost.visible = true;
+        this.audio.drip(0.9);
+        await wait(2600);
+        this.stairGhost.visible = false;
+        this.ui.subtitle("\u6A13\u4E0A\u597D\u50CF\u6709\u4EBA\u8D70\u904E\u3002", 3600);
+        return;
+      }
       this.stairGhost.visible = true;
       this.audio.buzzBurst(1.2);
       this.audio.sting();
@@ -38988,7 +38998,7 @@ void main() {
     }
     async _afterIncense() {
       await wait(2200);
-      this.audio.whisper();
+      if (!this.gentle) this.audio.whisper();
       this.ui.objective("\u53BB\u6D74\u5BA4\u6D17\u628A\u9762\u3002");
       this.ui.subtitle("\u5EF3\u5605\u71C8\uFF0C\u5FFD\u7136\u6697\u5497\u4E00\u534A\u3002", 4200);
       this.player.shake = 6e-3;
@@ -39014,6 +39024,16 @@ void main() {
       if (this.flag.mirror || this.busy) return;
       this.flag.mirror = true;
       this.busy = true;
+      if (this.gentle) {
+        this.ui.subtitle("\u93E1\u88E1\u9762\u2026\u2026\u53EA\u6709\u4F60\u81EA\u5DF1\u3002", 4200);
+        setTimeout(() => {
+          this.busy = false;
+          this.ui.objective("\u8FD4\u51FA\u5EF3\u3002");
+          this.ui.subtitle("\u6C34\u8072\u505C\u5497\u3002", 2600);
+          this.audio.water(false);
+        }, 3600);
+        return;
+      }
       const bath = this.w.bathRoom;
       bath.ghost.visible = true;
       this.audio.heartbeat(3);
@@ -39045,6 +39065,18 @@ void main() {
       this.flag.ended = true;
       this.player.enabled = false;
       this.ui.prompt(null);
+      if (this.gentle) {
+        this.audio.creak(0.7, 0.5);
+        this.ui.subtitle("\u623F\u9580\u6162\u6162\u95DC\u4E0A\u3002", 4200);
+        await wait(2600);
+        await this.ui.fade(1, 1400);
+        this.ui.hudOn(false);
+        await wait(700);
+        this.ui.endcardOn(true);
+        this.audio.setAmbience("bath", 3);
+        this.onEnd?.();
+        return;
+      }
       this.bedGhost.visible = true;
       this.audio.screech();
       this.player.shake = 0.06;
@@ -39881,7 +39913,8 @@ void main() {
       engine.renderer.shadowMap.needsUpdate = true;
     }
     const player = new Player(camera, world, audio);
-    const story = new Story({ world, ui, audio, player, camera });
+    let gentle = params.get("story") === "1" || params.get("gentle") === "1" || localStorage.getItem("huinam_gentle") === "1";
+    const story = new Story({ world, ui, audio, player, camera, gentle });
     world.story = story;
     story.onEnd = () => {
       setTimeout(() => {
@@ -39970,6 +40003,8 @@ void main() {
         }
       }
     }
+    document.getElementById("mlabel").textContent = gentle ? "\u6EAB\u548C" : "\u9A5A\u5687";
+    document.querySelector('[data-act="mode"]').classList.toggle("warm", gentle);
     document.querySelectorAll("[data-act]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const act = btn.dataset.act;
@@ -39986,6 +40021,13 @@ void main() {
           const order = ["high", "medium", "low"];
           qname = order[(order.indexOf(qname) + 1) % order.length];
           applyQuality(qname);
+        }
+        if (act === "mode") {
+          gentle = !gentle;
+          story.gentle = gentle;
+          document.getElementById("mlabel").textContent = gentle ? "\u6EAB\u548C" : "\u9A5A\u5687";
+          localStorage.setItem("huinam_gentle", gentle ? "1" : "0");
+          document.querySelector('[data-act="mode"]').classList.toggle("warm", gentle);
         }
         if (act === "help") {
           document.querySelector(".foot").style.color = "#d8cdbb";

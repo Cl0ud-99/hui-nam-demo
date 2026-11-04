@@ -71,6 +71,9 @@ class CDP {
       this.ws.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
     });
   }
+  post(method, params = {}, sessionId = undefined) {
+    this.ws.send(JSON.stringify({ id: ++this.id, method, params, ...(sessionId ? { sessionId } : {}) }));
+  }
   on(method, fn) {
     if (!this.events.has(method)) this.events.set(method, []);
     this.events.get(method).push(fn);
@@ -130,7 +133,8 @@ async function shoot(cdp, cfg, out) {
   }
   const logs = [];
   cdp.on('Runtime.consoleAPICalled', (p) => {
-    logs.push(p.args.map((a) => a.value ?? a.description ?? '').join(' '));
+    const line = p.args.map((a) => a.value ?? a.description ?? '').join(' ');
+    if (logs.length < 40) logs.push(line);
   });
   cdp.on('Runtime.exceptionThrown', (p) => logs.push('EXC ' + (p.exceptionDetails?.exception?.description || p.exceptionDetails?.text)));
   cdp.on('Page.javascriptDialogOpening', () => {});
@@ -147,7 +151,8 @@ async function shoot(cdp, cfg, out) {
 
   const evals = cfg.eval || [];
   for (const e of evals) {
-    await cdp.send('Runtime.evaluate', { expression: e, returnByValue: true, awaitPromise: false }, sid, 120000);
+    const rr = await cdp.send('Runtime.evaluate', { expression: e, returnByValue: true, awaitPromise: false }, sid, 120000).catch((err) => ({ __err: err.message }));
+    if (process.env.SHOT_DEBUG) console.log('  eval ->', JSON.stringify(rr).slice(0, 300));
     await sleep(120);
   }
   // 等渲染稳定
@@ -172,7 +177,18 @@ async function shoot(cdp, cfg, out) {
     returnByValue: true,
   }, sid, 20000).catch(() => ({ result: { value: '{}' } }));
   await cdp.send('Target.closeTarget', { targetId: tgt.targetId }).catch(() => {});
-  return { out, stats: stats.result?.value, logs: logs.filter((l) => l.includes('EXC') || l.includes('error')).slice(0, 5) };
+  cdp.post('Runtime.evaluate', { expression: 'window.__manual = true' }, sid);
+  await sleep(500);
+  let probe = { result: { value: 'null' } };
+  for (let i = 0; i < 3; i++) {
+    probe = await cdp.send('Runtime.evaluate', { expression: 'JSON.stringify(window.__probe ?? null)', returnByValue: true }, sid, 60000).catch((err) => ({ result: { value: 'ERR ' + err.message } }));
+    if (!String(probe.result?.value || '').startsWith('ERR')) break;
+    await sleep(600);
+  }
+  if (process.env.SHOT_DEBUG) console.log('  probe raw ->', JSON.stringify(probe).slice(0, 400));
+  const consoleProbe = logs.filter((l) => l.startsWith('PROBE')).join(' | ');
+  const errs = logs.filter((l) => l.includes('EXC') || /error/i.test(l)).slice(0, 5);
+  return { out, stats: stats.result?.value, probe: consoleProbe || probe.result?.value, logs: errs };
 }
 
 // ---------------------------------------------------------------- main
@@ -210,7 +226,7 @@ for (const job of jobs) {
   try {
     const r = await shoot(cdp, job.cfg, job.out);
     results.push(r);
-    console.log(`✔ ${r.out}  ${r.stats}${r.logs?.length ? '  ' + r.logs.join(' | ') : ''}`);
+    console.log(`✔ ${r.out}  ${r.stats}${r.probe && r.probe !== 'null' ? '  PROBE ' + r.probe : ''}${r.logs?.length ? '  ' + r.logs.join(' | ') : ''}`);
   } catch (e) {
     console.log(`✘ ${job.out}  ${e.message}`);
   }
