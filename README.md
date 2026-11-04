@@ -1,6 +1,14 @@
 # 回南 · HUI NAM
 ### 港式唐樓恐怖遊戲 Demo — 可玩場景 + 宣傳片模式
 
+<p align="center">
+  <a href="https://cl0ud-99.github.io/hui-nam-demo/"><b>▶︎ 線上遊玩（免安裝）</b></a>
+  &nbsp;·&nbsp; <a href="#畫面">畫面</a>
+  &nbsp;·&nbsp; <a href="#操作">操作</a>
+  &nbsp;·&nbsp; <a href="#重新建置">建置</a>
+  &nbsp;·&nbsp; <a href="PROGRESS.md">進度 / 交接</a>
+</p>
+
 > 一九八七年，深水埗。雨落咗成晚。
 > 你返到阿婆間藥行，後樓梯嘅燈仲著住。
 > 三樓，有人等緊你。
@@ -119,10 +127,13 @@ hk-horror/
 │   ├── tex/                 19 組 CC0 PBR 貼圖（2K）
 │   ├── art/                 程序化生成嘅海報、招牌、decal
 │   └── env/night_street.hdr 環境反射
+├── docs/screens/            README 用實機截圖（1440×810 JPEG）
+├── PROGRESS.md              進度 / 設計取捨 / 交接筆記
 └── tools/
-    ├── genart.py            重新生成所有 2D 美術
-    ├── capture.mjs          截圖／驗證工具
-    └── test_game.mjs        自動化流程測試
+    ├── build.mjs            esbuild 打包（src -> dist/bundle.js）
+    ├── capture.mjs          零依賴 CDP 截圖 / 批量機位 / 自動斷言
+    ├── shots.json           7 個固定機位（後巷…浴室）
+    └── genart.py            重新生成所有 2D 美術
 ```
 
 ---
@@ -164,9 +175,20 @@ python tools/genart.py
 
 - 這是 **demo 場景**，唔係完整遊戲：一條主線、約 5–8 分鐘流程、一個結局。
 - 平面反射每個房間只會更新一個 probe；遠處房間唔會有鏡面反射。
-- 高畫質需要獨立顯示卡；如果 fps 低，主目錄揀「畫質 → 中／低」。
+- 高畫質需要獨立顯示卡（1600×900 高畫質約 1,000 draw call，RTX 2070 SUPER 實測 60 fps）；如果 fps 低，主目錄揀「畫質 → 中／低」。
 - 字體用系統中文字型（宋體／楷體），唔同 Windows 版本可能略有差異。
+- 畫面刻意做舊：泛黃色偏、菲林顆粒、輕微閃爍與偶發劃痕（`src/core/gradeShader.js` 的 `uAged` / `uGrain`）；接受唔到可以 `?aged=0&grain=0` 關掉。
+- 怕驚嚇可以用主目錄 **「模式 → 溫和」**（或 `?story=1`）：保留全部字幕同劇情，只抽起跳嚇、尖叫同震動。
 
 ---
+
+## 關於
+
+一九八七年的深水埗，一個返夜歸嘅故事。場景、道具、貼圖排布、音效都係程序化生成或者 CC0 素材，冇用第三方模型。
+
+- 引擎：three.js r169 + WebGL2，自訂後處理鏈（GTAO → Bloom → ACES → 舊片調色 → SMAA）
+- 時長：5–8 分鐘，單結局，冇失敗判定
+- 平台：桌面 Chrome / Edge（需要 WebGL2）；手機可以開，但畫質同操作唔保證
+- 授權：demo 用途；貼圖 Poly Haven CC0，其餘自製
 
 *Made with three.js. Textures: Poly Haven (CC0). Everything else procedural.*
