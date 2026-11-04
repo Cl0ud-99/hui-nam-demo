@@ -291,15 +291,15 @@ async function boot() {
       state = s;
     }
   };
-  // ---- 私用：純標題卡截圖（任意機位）----
-  // ?title=1[&tzh=回南&ten=HUI NAM] — 保留完整遊戲，只隱藏 UI 並在畫面中央加標題
+  // ---- 私用：標題卡模式（可走動 / 任意視角 / 隱藏 UI，全屏無黑邊）----
+  // ?title=1[&tzh=回南&ten=HUI NAM][&letterbox=1]
   const TITLE = params.get("title") === "1" || params.get("card") === "1";
   if (TITLE) {
+    document.body.classList.add("titlemode");
     ui.menuShow(false);
-    ui.hudOn(false);
     ui.boot(1);
     ui.bootDone();
-    document.getElementById("letterbox").classList.add("on");
+    if (params.get("letterbox") === "1") document.getElementById("letterbox").classList.add("on");
     const el = document.getElementById("pvtitle");
     el.style.transition = "none";
     el.querySelector(".zh").textContent = params.get("tzh") || "回南";
@@ -320,6 +320,15 @@ async function boot() {
     player.enabled = false;
   } else {
     ui.bootDone();
+  }
+  if (TITLE && !SHOT) {
+    // 直接開始遊戲，保留走路 / 環視，只是不出 UI
+    startGame();
+    state = "play";
+    document.getElementById("hud").classList.remove("on");
+    ui.clickHint(false);
+    const fadeEl = document.getElementById("fade");
+    if (fadeEl) fadeEl.style.opacity = "0";
   }
   audio.setAmbience("alley", 0.1);
   const clock = new Clock();

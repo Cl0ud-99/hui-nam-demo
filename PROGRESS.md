@@ -183,3 +183,9 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - **不阉割功能**：游戏照常运行，只是不出 UI；配合 `?shot=x,y,z,lx,ly,lz` 可任意机位定格
 - 居中样式：`#pvtitle.center`（含暗色径向晕影 `:before`，保证亮背景也能读）
 - 实测：`title=1` → `pvtitle="on center"`、`menu="hide"`、`hud=""`、`letterbox="on"`；`tzh/ten` 覆盖生效
+
+### 8.9 标题卡模式改为「可走动 + 满屏」（2026-11-04 晚，**未 push**）
+- `?title=1` 现在直接进入 play 状态：WASD 走动、滑鼠环视（点画面锁指针）、剧情照常跑，只是 `body.titlemode` 把 `#hud` / `.clickhint` / `#menu` 全部 `display:none`
+- **默认满屏、无黑边**；要电影黑边加 `&letterbox=1`
+- 仍可静态定格：`?title=1&shot=x,y,z,lx,ly,lz`（该组合下 player 关闭，纯机位）
+- 验证：`?title=1` → `body=titlemode, player.enabled=true, 按 W 位移 2.82m, hud display=none, letterbox 空, pvtitle=on center`

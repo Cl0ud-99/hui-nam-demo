@@ -40142,11 +40142,11 @@ void main() {
     };
     const TITLE = params.get("title") === "1" || params.get("card") === "1";
     if (TITLE) {
+      document.body.classList.add("titlemode");
       ui.menuShow(false);
-      ui.hudOn(false);
       ui.boot(1);
       ui.bootDone();
-      document.getElementById("letterbox").classList.add("on");
+      if (params.get("letterbox") === "1") document.getElementById("letterbox").classList.add("on");
       const el = document.getElementById("pvtitle");
       el.style.transition = "none";
       el.querySelector(".zh").textContent = params.get("tzh") || "\u56DE\u5357";
@@ -40167,6 +40167,14 @@ void main() {
       player.enabled = false;
     } else {
       ui.bootDone();
+    }
+    if (TITLE && !SHOT) {
+      startGame();
+      state = "play";
+      document.getElementById("hud").classList.remove("on");
+      ui.clickHint(false);
+      const fadeEl = document.getElementById("fade");
+      if (fadeEl) fadeEl.style.opacity = "0";
     }
     audio.setAmbience("alley", 0.1);
     const clock = new Clock();
