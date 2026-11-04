@@ -1,0 +1,21 @@
+{
+  "name": "hui-nam-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "回南 HUI NAM — 港式唐樓恐怖遊戲 demo (three.js)",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "dev": "node server.js --open",
+    "serve": "node server.js",
+    "shot": "node tools/capture.mjs"
+  },
+  "dependencies": {
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5",
+    "esbuild": "^0.28.2"
+  }
+}

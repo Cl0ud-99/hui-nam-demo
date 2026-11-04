@@ -108,12 +108,27 @@ hk-horror/
 ## 重新建置
 
 ```bash
-npm install            # 只第一次
+npm install            # 只第一次（three r169 + esbuild）
 npm run build          # 打包 src -> dist/bundle.js
-npm run serve          # 開伺服器
+npm run serve          # 開伺服器（port 8777）
+node server.js --open  # 開伺服器並開瀏覽器
 ```
 
-修改 `src/` 之後執行 `npm run build` 即生效（或 `npm run watch`）。
+修改 `src/` 之後執行 `npm run build` 即生效。
+
+**截图 / 回归检查（新增）**
+
+```bash
+# 单张：用 ?shot=x,y,z,lookX,lookY,lookZ 固定机位
+node tools/capture.mjs --out shots/a.png \
+  --url "http://localhost:8777/?shot=-2,1.55,10.2,0.2,1.9,5.4" \
+  --seed 1234
+
+# 批量：7 个固定机位（后巷 / 店面 / 药行 / 楼梯 / 三楼 / 神檯 / 浴室）
+node tools/capture.mjs --batch tools/shots.json
+```
+
+`--seed` 固定 `Math.random`，同一 seed 下两次渲染可以逐像素对比，用来验证改动。
 
 重新生成 2D 美術：
 
