@@ -145,6 +145,12 @@ async function boot() {
     localStorage.setItem("huinam_quality", q);
   };
   applyQuality(qname);
+  // 舊片濾鏡強度 / 噪點強度，可由 URL 實時調：?aged=0.3&grain=0.09&tv=1
+  const agedParam = params.get("aged");
+  if (agedParam !== null) engine.grade.uniforms.uAged.value = Math.max(0, Math.min(1, Number(agedParam) || 0));
+  const grainParam = params.get("grain");
+  if (grainParam !== null) engine.grade.uniforms.uGrain.value = Math.max(0, Number(grainParam) || 0);
+  if (params.get("tv") === "1") engine.grade.uniforms.uGrainTV.value = 1;
   window.addEventListener("resize", () => {
     const cfg = QUALITY[qname];
     const w = window.innerWidth, h = window.innerHeight;
@@ -214,12 +220,6 @@ async function boot() {
         const order = ["high", "medium", "low"];
         qname = order[(order.indexOf(qname) + 1) % order.length];
         applyQuality(qname);
-    // 舊片濾鏡強度 / 噪點強度，可由 URL 實時調：?aged=0.3&grain=0.09
-    const agedParam = params.get("aged");
-    if (agedParam !== null) engine.grade.uniforms.uAged.value = Math.max(0, Math.min(1, Number(agedParam) || 0));
-    const grainParam = params.get("grain");
-    if (grainParam !== null) engine.grade.uniforms.uGrain.value = Math.max(0, Number(grainParam) || 0);
-    if (params.get("tv") === "1") engine.grade.uniforms.uGrainTV.value = 1;
       }
       if (act === "mode") {
         gentle = !gentle;

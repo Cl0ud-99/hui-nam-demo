@@ -34435,7 +34435,7 @@ void main() {
       uExposure: { value: 1 },
       uTime: { value: 0 },
       uVignette: { value: 1 },
-      uGrain: { value: 0.045 },
+      uGrain: { value: 0.018 },
       uAged: { value: 0.6 },
       uGrainTV: { value: 0 },
       uCA: { value: 16e-4 },
@@ -39995,6 +39995,11 @@ void main() {
       localStorage.setItem("huinam_quality", q);
     };
     applyQuality(qname);
+    const agedParam = params.get("aged");
+    if (agedParam !== null) engine.grade.uniforms.uAged.value = Math.max(0, Math.min(1, Number(agedParam) || 0));
+    const grainParam = params.get("grain");
+    if (grainParam !== null) engine.grade.uniforms.uGrain.value = Math.max(0, Number(grainParam) || 0);
+    if (params.get("tv") === "1") engine.grade.uniforms.uGrainTV.value = 1;
     window.addEventListener("resize", () => {
       const cfg = QUALITY[qname];
       const w = window.innerWidth, h = window.innerHeight;
@@ -40064,11 +40069,6 @@ void main() {
           const order = ["high", "medium", "low"];
           qname = order[(order.indexOf(qname) + 1) % order.length];
           applyQuality(qname);
-          const agedParam = params.get("aged");
-          if (agedParam !== null) engine.grade.uniforms.uAged.value = Math.max(0, Math.min(1, Number(agedParam) || 0));
-          const grainParam = params.get("grain");
-          if (grainParam !== null) engine.grade.uniforms.uGrain.value = Math.max(0, Number(grainParam) || 0);
-          if (params.get("tv") === "1") engine.grade.uniforms.uGrainTV.value = 1;
         }
         if (act === "mode") {
           gentle = !gentle;

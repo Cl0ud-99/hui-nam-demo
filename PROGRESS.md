@@ -160,3 +160,8 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 - `uGrain` 默认 0.026 → **0.045**；暗部权重 0.55–1.3
 - 新增 `?tv=1`：12fps、尺度 0.26、横向拖尾 45%、颗粒做 0.72 次幂硬化 → 老电视雪花感
 - 对照图：`shots/grain_compare3.png`（100% 裁切）/ `shots/grain_full_compare.jpg`（整幅）
+
+### 8.5 颗粒减弱 60% + 参数 bug（2026-11-04 晚，**未 push**）
+- 默认 `uGrain` 0.045 → **0.018**（正好 40%，即 −60%）；高频能量实测 2.062 → 0.950（比值 0.46）
+- **修掉一个真 bug**：`?aged= / ?grain= / ?tv=` 的解析代码被误插到「畫質」按钮的 handler 里（`applyQuality(qname);` 这个锚点在文件里出现两次，替换命中了 8 空格缩进那处），所以启动时根本没生效——之前所有 `?grain=` 的对比截图都是无效的。已移到 boot 内 `applyQuality(qname)` 之后，实测 `?grain=0.5&aged=0` → 探针读回 `{g:0.5,a:0}`，0 与 0.5 的像素差 mean 38（92% 像素 >6），确认生效
+- 对照图：`shots/grain_60_ab.png`（100% 裁切，0.045 vs 0.018）
