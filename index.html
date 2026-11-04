@@ -49,6 +49,12 @@
   nav button:hover{color:#efe6d6;transform:translateX(6px)}
   nav button:hover .idx{color:var(--red-bright)}
   nav button small{font-family:var(--sans);font-size:10px;letter-spacing:.24em;color:#5f574d}
+  .online{display:flex;align-items:center;gap:9px;margin-top:2.4vh;text-decoration:none;
+    font-family:var(--sans);font-size:10.5px;letter-spacing:.26em;color:#6d655a;transition:color .25s}
+  .online:hover{color:#c05445}
+  .online .dot{width:5px;height:5px;border-radius:50%;background:#7e2a22;box-shadow:0 0 9px rgba(200,50,40,.55)}
+  .online b{font-weight:400;letter-spacing:.1em;color:#585046}
+  .online:hover b{color:#a8625a}
   nav button.warm{color:#c9c2b2} nav button.warm .idx{color:#8a6a3a}
   nav button.warm small{color:#8a6a3a}
   .foot{font-family:var(--sans);font-size:10.5px;letter-spacing:.2em;color:#5c544a;line-height:2.1}
@@ -149,9 +155,12 @@
       <button data-act="mode"><span class="idx">04</span>模式 <small id="mlabel">驚嚇</small></button>
       <button data-act="help"><span class="idx">05</span>操作 <small>CONTROLS</small></button>
     </nav>
+    <a class="online" href="https://cl0ud-99.github.io/hui-nam-demo/" target="_blank" rel="noopener">
+      <span class="dot"></span>線上版 ONLINE <b>cl0ud-99.github.io/hui-nam-demo</b> ↗
+    </a>
     <div class="foot">
       <b>WASD</b> 移動 · <b>SHIFT</b> 快走 · <b>F</b> 電筒 · <b>E</b> 互動 · <b>ESC</b> 暫停<br>
-      建議佩戴耳機 · 本作含閃爍光源與驚嚇內容
+      建議佩戴耳機 · 本作含閃爍光源；怕驚嚇可於「模式」切換溫和
     </div>
   </div>
   <div class="menuright">
