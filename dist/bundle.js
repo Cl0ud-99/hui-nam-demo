@@ -34320,7 +34320,7 @@ void main() {
       this.textureMatrix = new Matrix4();
       this.enabled = true;
       this.rt = new WebGLRenderTarget(width, height, {
-        type: HalfFloatType,
+        type: UnsignedByteType,
         minFilter: LinearFilter,
         magFilter: LinearFilter,
         depthBuffer: true,
@@ -34565,7 +34565,7 @@ void main() {
       this.bloom = new UnrealBloomPass(new Vector2(w, h), 0.34, 0.8, 1.25);
       this.composer.addPass(this.bloom);
       this.grade = new ShaderPass(GradeShader);
-      this.grade.uniforms.uExposure.value = 1.04;
+      this.grade.uniforms.uExposure.value = 1.07;
       this.grade.uniforms.uRes.value = [w, h];
       this.composer.addPass(this.grade);
       this.smaa = new SMAAPass(w, h);
@@ -35263,8 +35263,11 @@ void main() {
     onEnter(id, fn) {
       (this.enterHooks[id] ||= []).push(fn);
     }
-    addLight(roomId, light) {
+    addLight(roomId, light, opts = {}) {
       light.intensity *= 0.55;
+      if (opts.global) (this.globalLights ||= []).push(light);
+      if (opts.keep) light.userData.keep = true;
+      if (light.userData.keepShadow) light.userData.keepShadow = true;
       light.userData.base = light.intensity;
       light.userData.room = roomId;
       this.root.add(light);
@@ -35278,6 +35281,78 @@ void main() {
     }
     animate(fn) {
       this.animators.push(fn);
+    }
+    // one shadow-casting spot shared by every room: keeps the shader program count identical everywhere
+    initKeyShadow() {
+      const l = new SpotLight(16760976, 0, 16, 1.5, 0.95, 2);
+      l.castShadow = false;
+      l.shadow.mapSize.set(1024, 1024);
+      l.shadow.bias = -12e-4;
+      l.shadow.normalBias = 0.03;
+      l.position.set(0, 3, 0);
+      this.scene.add(l);
+      this.scene.add(l.target);
+      this.keyShadow = l;
+      this.keyFor = {};
+    }
+    // equal light budget per room -> a single compiled program set, so entering a room never recompiles
+    normalizeLights(cap = 14) {
+      this.initKeyShadow();
+      for (const id of Object.keys(this.lights)) {
+        let arr = this.lights[id];
+        for (let i = 0; i < arr.length; i++) {
+          const l = arr[i];
+          if (l.isRectAreaLight) {
+            const p = new PointLight(l.color.getHex(), l.intensity, 9, 2);
+            p.position.copy(l.position);
+            p.userData.base = l.intensity;
+            p.userData.room = id;
+            this.root.add(p);
+            this.root.remove(l);
+            arr[i] = p;
+          } else if (l.isSpotLight) {
+            const p = new PointLight(l.color.getHex(), l.intensity, 10, 2);
+            p.position.copy(l.position);
+            p.userData.base = l.intensity;
+            p.userData.room = id;
+            this.root.add(p);
+            this.root.remove(l);
+            arr[i] = p;
+          }
+          arr[i].castShadow = false;
+        }
+        const globals = (this.globalLights || []).filter((l) => l.userData.room !== id || true);
+        const gset = new Set(this.globalLights || []);
+        arr = arr.filter((l) => !gset.has(l));
+        const score = (l) => (l.userData.keep ? 1e6 : 0) + l.intensity * (l.distance || 7);
+        arr.sort((a, b) => score(b) - score(a));
+        const keep = arr.slice(0, Math.max(1, cap - gset.size));
+        for (const l of arr.slice(cap)) {
+          this.root.remove(l);
+          l.dispose?.();
+        }
+        const key = keep.slice().sort((a, b) => (b.userData.base || b.intensity) - (a.userData.base || a.intensity))[0] || null;
+        this.keyFor[id] = key;
+        if (key) {
+          key.castShadow = true;
+          key.shadow.mapSize.set(1024, 1024);
+          key.shadow.bias = -15e-4;
+          key.shadow.normalBias = 0.02;
+        }
+        for (const gl of this.globalLights || []) if (!keep.includes(gl)) keep.push(gl);
+        while (keep.length < cap) {
+          const d = new PointLight(0, 0, 0.2, 2);
+          d.position.set(0, -60, 0);
+          d.userData.room = id;
+          d.userData.dummy = true;
+          this.root.add(d);
+          keep.push(d);
+        }
+        this.lights[id] = keep;
+      }
+    }
+    applyKeyShadow(id) {
+      if (this.keyShadow) this.keyShadow.intensity = 0;
     }
     interact(mesh2, opts) {
       const it = { mesh: mesh2, prompt: opts.prompt || "\u4E92\u52D5", use: opts.use, range: opts.range || 2, enabled: true };
@@ -35420,24 +35495,25 @@ void main() {
     setRoom(id) {
       if (id === this.currentRoom) return;
       this.currentRoom = id;
+      this.shadowDirty = true;
+      this.applyKeyShadow(id);
       for (const fn of this.enterHooks[id] || []) fn();
       this.onRoomChange?.(id);
     }
     updateRoomLights(camera) {
-      const cp = camera.position;
       const active = /* @__PURE__ */ new Set([this.currentRoom]);
-      for (const [id, b] of Object.entries(this.rooms)) {
-        if (id === this.currentRoom) continue;
-        const dx = Math.max(b.x0 - cp.x, 0, cp.x - b.x1);
-        const dz = Math.max(b.z0 - cp.z, 0, cp.z - b.z1);
-        const dy = Math.max((b.y0 || 0) - cp.y, 0, cp.y - ((b.y0 || 0) + 3.2));
-        if (Math.hypot(dx, dz, dy) < 2.6) active.add(id);
-      }
       for (const [id, arr] of Object.entries(this.lights)) {
         const on = active.has(id);
         for (const l of arr) l.visible = on;
       }
       this.activeLightRooms = active;
+      if (this.shadowDirty) {
+        this.engine.renderer.shadowMap.needsUpdate = true;
+        this.shadowDirty = false;
+      }
+    }
+    markShadowDirty() {
+      this.shadowDirty = true;
     }
     update(dt, t, camera) {
       this.time = t;
@@ -35460,14 +35536,16 @@ void main() {
       const r = this.engine.renderer;
       this.groundMirror.enabled = this.qualityRefl > 0 && (this.currentRoom === "alley" || this.currentRoom === "shop");
       this.upperMirror.enabled = this.qualityRefl > 0 && (this.currentRoom === "apt" || this.currentRoom === "bath" || this.currentRoom === "stairs");
-      if (this.groundMirror.enabled) this.groundMirror.update(camera);
-      if (this.upperMirror.enabled) this.upperMirror.update(camera);
+      this._reflTick = (this._reflTick || 0) + 1;
+      const doRefl = (this._reflTick & 1) === 0;
+      if (this.groundMirror.enabled && doRefl) this.groundMirror.update(camera);
+      if (this.upperMirror.enabled && doRefl) this.upperMirror.update(camera);
       const pr = this.engine.renderer.getPixelRatio();
       for (const m of this.mirrors) {
         m.refl.enabled = this.qualityRefl > 0 && m.room === this.currentRoom;
         const u = m.mesh?.material?.uniforms?.uResolution;
         if (u) u.value.set(window.innerWidth * pr, window.innerHeight * pr);
-        if (m.refl.enabled) m.refl.update(camera);
+        if (m.refl.enabled && doRefl) m.refl.update(camera);
       }
       for (const p2 of this.puddles) {
         const nm = p2.mat.normalMap;
@@ -36322,6 +36400,24 @@ void main() {
     g.add(box(0.34, 0.07, 0.02, M.metalDark, -0.02, 0.36, 0.07));
     return g;
   }
+  function acUnit() {
+    const g = new Group();
+    g.add(box(0.78, 0.55, 0.32, M.metalGalv, 0, 0, 0));
+    const fan = new Mesh(new CircleGeometry(0.19, 20), M.blackMetal);
+    fan.position.set(-0.16, 0, 0.165);
+    g.add(fan);
+    const hub = new Mesh(new CylinderGeometry(0.035, 0.035, 0.02, 10), M.metalDark);
+    hub.rotation.x = Math.PI / 2;
+    hub.position.set(-0.16, 0, 0.18);
+    g.add(hub);
+    for (let i = 0; i < 8; i++) {
+      const a = i / 8 * Math.PI * 2;
+      g.add(box(0.36, 5e-3, 5e-3, M.metalDark, -0.16, Math.sin(a) * 0.09, 0.175));
+    }
+    for (let i = 0; i < 6; i++) g.add(box(0.34, 4e-3, 4e-3, M.metalDark, 0.2, -0.18 + i * 0.07, 0.166));
+    g.add(box(0.8, 0.03, 0.03, M.metalRust, 0, -0.3, -0.15));
+    return g;
+  }
   function bucket(r = 0.17, h = 0.3, mat = M.plasticBlue) {
     const g = new Group();
     const body = new Mesh(new CylinderGeometry(r, r * 0.82, h, 18, 1, true), mat);
@@ -36471,7 +36567,7 @@ void main() {
   }
 
   // src/world/alley.js
-  var ALLEY = { x0: -13, x1: 13, z0: 6, z1: 14 };
+  var ALLEY = { x0: -8.4, x1: 8.4, z0: 6, z1: 14 };
   function buildAlley(W) {
     const { x0, x1, z0, z1 } = ALLEY;
     const g = new Group();
@@ -36489,11 +36585,31 @@ void main() {
       const gutter = box(x1 - x0, 0.02, 0.3, M.concreteDark, 0, 0.01, zz);
       g.add(gutter);
     }
-    for (const [px2, pz2, sx, sz] of [[-4.5, 9.6, 2.4, 1.5], [1.2, 11.2, 3, 1.8], [6.8, 8.4, 2, 1.2], [-8.5, 12.4, 1.8, 1.1], [9.5, 12.6, 1.5, 1]]) {
+    const softAlpha = (() => {
+      const c = document.createElement("canvas");
+      c.width = c.height = 128;
+      const ctx = c.getContext("2d");
+      const grd = ctx.createRadialGradient(64, 64, 6, 64, 64, 62);
+      grd.addColorStop(0, "rgba(255,255,255,1)");
+      grd.addColorStop(0.62, "rgba(255,255,255,0.92)");
+      grd.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(64, 64, 63, 0, Math.PI * 2);
+      ctx.fill();
+      const t = new CanvasTexture(c);
+      t.colorSpace = NoColorSpace;
+      return t;
+    })();
+    for (const [px2, pz2, sx, sz] of [[-4.5, 9.6, 2.4, 1.5], [1.2, 11.2, 3, 1.8], [6.8, 8.4, 2, 1.2], [-7.4, 12.4, 1.8, 1.1], [6.6, 12.6, 1.5, 1], [-2.2, 8.1, 1.6, 1], [3.4, 10.6, 1.8, 1.1], [-6.2, 7.6, 1.2, 0.8]]) {
       const pm = M.water.clone();
       pm.normalMap = T.art.water_normal;
       pm.normalScale.set(0.35, 0.35);
-      pm.color = new Color(790802);
+      pm.color = new Color(1712678);
+      pm.alphaMap = softAlpha;
+      pm.transparent = true;
+      pm.opacity = 0.92;
+      pm.depthWrite = false;
       W.wetFloor(pm, { room: "alley", amount: 1, distortion: 0.06, tint: 16772829 });
       const p = new Mesh(new PlaneGeometry(sx, sz, 1, 1), pm);
       p.rotation.x = -Math.PI / 2;
@@ -36501,45 +36617,79 @@ void main() {
       g.add(p);
       W.puddles.push({ mesh: p, mat: pm, phase: Math.random() * 10 });
     }
+    const rippleMat = new ShaderMaterial({
+      uniforms: { uTime: { value: 0 } },
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+      fragmentShader: `
+      uniform float uTime; varying vec2 vUv;
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      void main(){
+        vec2 uv = vUv * vec2(34.0, 16.0);
+        vec2 id = floor(uv); vec2 f = fract(uv) - 0.5;
+        float t = fract(uTime * 0.9 + hash(id));
+        float r = length(f);
+        float w = 0.018 + t * 0.028;
+        float ring = smoothstep(w, 0.0, abs(r - t * 0.30)) * (1.0 - t) * (1.0 - t);
+        if (ring < 0.003) discard;
+        gl_FragColor = vec4(vec3(0.62, 0.70, 0.74), ring * 0.13);
+      }`,
+      transparent: true,
+      depthWrite: false,
+      blending: AdditiveBlending
+    });
+    const ripple = new Mesh(new PlaneGeometry(x1 - x0, z1 - z0), rippleMat);
+    ripple.rotation.x = -Math.PI / 2;
+    ripple.position.set(0, 0.013, (z0 + z1) / 2);
+    g.add(ripple);
+    W.animators.push((t) => {
+      rippleMat.uniforms.uTime.value = t;
+    });
     const grate = new Group();
     grate.position.set(0.6, 0.01, 7.1);
     g.add(grate);
     grate.add(box(0.7, 0.02, 0.45, M.metalRust, 0, 0, 0));
     for (let i = 0; i < 7; i++) grate.add(box(0.62, 0.03, 0.03, M.blackMetal, 0, 5e-3, -0.18 + i * 0.06));
     const facMat = M.plasterDirty;
-    const leftWall = new Mesh(planeGeo(9, 11), facMat);
-    leftWall.position.set(-8.5, 5.5, z0);
+    const lw = -4 - x0, lc = (x0 - 4) / 2;
+    const leftWall = new Mesh(planeGeo(lw, 9.6), M.corrugatedRust);
+    leftWall.position.set(lc, 6.2, z0);
     leftWall.receiveShadow = true;
     g.add(leftWall);
+    const leftBase = new Mesh(planeGeo(lw, 1.4), M.concreteWet);
+    leftBase.position.set(lc, 0.7, z0 + 0.01);
+    leftBase.receiveShadow = true;
+    g.add(leftBase);
     W.colliders.push({ minX: x0, maxX: -4.05, minZ: z0 - 0.2, maxZ: z0 + 0.1, minY: 0, maxY: 11, enabled: true });
-    const rightWall = new Mesh(planeGeo(9, 11), M.concreteDark);
-    rightWall.position.set(8.5, 5.5, z0);
+    const rw = x1 - 4, rc = (x1 + 4) / 2;
+    const rightWall = new Mesh(planeGeo(rw, 9.6), M.corrugated);
+    rightWall.position.set(rc, 6.2, z0);
     rightWall.receiveShadow = true;
     g.add(rightWall);
+    const rightBase = new Mesh(planeGeo(rw, 1.4), M.concreteWet);
+    rightBase.position.set(rc, 0.7, z0 + 0.01);
+    rightBase.receiveShadow = true;
+    g.add(rightBase);
     W.colliders.push({ minX: 4.05, maxX: x1, minZ: z0 - 0.2, maxZ: z0 + 0.1, minY: 0, maxY: 11, enabled: true });
     const winPos = [
-      [-11.6, 1.2, 1.1, 1.5, false],
-      [-9.2, 1.2, 1, 1.4, true],
-      [-6.4, 1.3, 1.2, 1.5, false],
-      [-11.6, 4.8, 1.1, 1.6, true],
-      [-9, 4.8, 1.2, 1.6, false],
-      [-6.3, 4.8, 1.1, 1.6, true],
-      [5.4, 1.2, 1.2, 1.5, false],
-      [7.9, 1.2, 1.1, 1.5, true],
-      [10.6, 1.3, 1.2, 1.5, false],
-      [5.2, 4.7, 1.2, 1.6, true],
-      [7.9, 4.7, 1.1, 1.6, false],
-      [10.6, 4.7, 1.2, 1.6, true]
+      [-7.3, 1.25, 1, 1.45, false],
+      [-5.4, 1.3, 1.1, 1.5, true],
+      [-7.3, 4.7, 1.05, 1.55, true],
+      [-5.3, 4.7, 1.1, 1.6, false],
+      [5.2, 1.25, 1.1, 1.5, false],
+      [7.2, 1.3, 1, 1.45, true],
+      [5.2, 4.7, 1.1, 1.6, true],
+      [7.3, 4.7, 1.05, 1.55, false]
     ];
     for (const [wx, wy, ww, wh, boarded] of winPos) {
       const dark = new Mesh(new PlaneGeometry(ww, wh), new MeshStandardMaterial({ color: 526860, roughness: 0.35, metalness: 0.2 }));
       dark.position.set(wx, wy, z0 + 0.02);
       g.add(dark);
       const fr = new Group();
-      fr.position.set(wx, wy, z0 + 0.05);
+      fr.position.set(wx, wy, z0 + 0.04);
       g.add(fr);
-      for (const s of [-1, 1]) fr.add(box(0.05, wh + 0.06, 0.06, M.metalRust, s * (ww / 2), 0, 0));
-      for (const s of [-1, 1]) fr.add(box(ww + 0.06, 0.05, 0.06, M.metalRust, 0, s * (wh / 2), 0));
+      for (const s of [-1, 1]) fr.add(box(0.08, wh + 0.1, 0.12, M.metalRust, s * (ww / 2), 0, 0));
+      for (const s of [-1, 1]) fr.add(box(ww + 0.1, 0.08, 0.12, M.metalRust, 0, s * (wh / 2), 0));
+      fr.add(box(ww + 0.22, 0.06, 0.2, M.concreteDark, 0, -wh / 2 - 0.08, 0.05));
       fr.add(box(0.03, wh, 0.03, M.metalRust, 0, 0, 0));
       fr.add(box(ww, 0.03, 0.03, M.metalRust, 0, 0, 0));
       if (boarded) {
@@ -36560,12 +36710,267 @@ void main() {
         }
       }
     }
-    for (const [wx, wy, ww, wh] of [[7.9, 1.2, 1.1, 1.5], [-9.2, 4.8, 1, 1.4], [10.6, 4.7, 1.2, 1.6]]) {
-      const pane = new Mesh(new PlaneGeometry(ww * 0.9, wh * 0.9), new MeshBasicMaterial({ color: new Color(0.8, 0.52, 0.28) }));
-      pane.position.set(wx, wy, z0 + 0.035);
+    for (const [wx, wy, ww, wh] of [[7.2, 1.3, 1, 1.45], [-5.3, 4.7, 1.1, 1.6], [5.2, 1.25, 1.1, 1.5]]) {
+      const pane = new Mesh(new PlaneGeometry(ww * 0.86, wh * 0.86), new MeshBasicMaterial({ color: new Color(0.6, 0.38, 0.2) }));
+      pane.position.set(wx, wy, z0 + 0.028);
       g.add(pane);
+      const pf = new Group();
+      pf.position.set(wx, wy, z0 + 0.05);
+      g.add(pf);
+      for (const s of [-1, 1]) pf.add(box(0.07, wh + 0.06, 0.1, M.metalDark, s * ww / 2, 0, 0));
+      for (const s of [-1, 1]) pf.add(box(ww + 0.06, 0.07, 0.1, M.metalDark, 0, s * wh / 2, 0));
     }
-    for (const [bx, by, bw] of [[-10.4, 3.6, 2], [-6.4, 3.6, 1.8]]) {
+    {
+      const bx = 4.05;
+      const baseY = 3.28;
+      const topY = 11.3;
+      const fh = topY - baseY;
+      const winA = { x0: 4.45, x1: 6.95, y0: 1.22, y1: 2.62 };
+      const winB = { x0: 1.62, x1: 3.02, y0: 1.44, y1: 2.36 };
+      const openings = [winA, winB];
+      const facMat2 = M.concreteWet.clone();
+      facMat2.color = new Color(11905172);
+      for (const k of ["map", "normalMap", "roughnessMap"]) {
+        if (facMat2[k]) {
+          facMat2[k] = facMat2[k].clone();
+          facMat2[k].repeat.multiplyScalar(2.6);
+          facMat2[k].needsUpdate = true;
+        }
+      }
+      const facade = wallGroup(bx * 2, fh, facMat2, openings);
+      facade.position.set(0, baseY, z0 + 0.01);
+      g.add(facade);
+      for (const ex of [-bx - 0.03, bx + 0.03]) g.add(box(0.06, fh, 0.18, M.concreteDark, ex, baseY + fh / 2, z0 - 0.02));
+      const revealZ = z0 - 0.02;
+      const winW = (o) => o.x1 - o.x0, winH = (o) => o.y1 - o.y0;
+      const w2x = (o) => o.x0 - bx + winW(o) / 2;
+      const w2y = (o) => baseY + o.y0 + winH(o) / 2;
+      for (const [o, lit2, grille] of [[winA, true, false], [winB, false, true]]) {
+        const cxw = w2x(o), cyw = baseY + o.y0 + winH(o) / 2;
+        const ww = winW(o), wh = winH(o);
+        const grp = new Group();
+        g.add(grp);
+        grp.add(box(ww + 0.16, 0.1, 0.22, M.concreteDark, cxw, baseY + o.y1 + 0.05, z0 - 0));
+        grp.add(box(ww + 0.16, 0.08, 0.22, M.concreteDark, cxw, baseY + o.y0 - 0.04, z0 - 0));
+        grp.add(box(0.1, wh + 0.16, 0.22, M.concreteDark, cxw - ww / 2 - 0.05, cyw, z0 - 0.02));
+        grp.add(box(0.1, wh + 0.16, 0.22, M.concreteDark, cxw + ww / 2 + 0.05, cyw, z0 - 0.02));
+        for (const sgn of [-1, 1]) {
+          const jamb = new Mesh(new PlaneGeometry(0.2, wh), M.concreteDark);
+          jamb.position.set(cxw + sgn * ww / 2, cyw, z0 - 0.09);
+          jamb.rotation.y = sgn * Math.PI / 2;
+          grp.add(jamb);
+        }
+        if (!lit2) {
+          const pane = new Mesh(
+            new PlaneGeometry(ww - 0.04, wh - 0.04),
+            new MeshBasicMaterial({ color: new Color(0.03, 0.036, 0.045) })
+          );
+          pane.position.set(cxw, cyw, z0 - 0.15);
+          grp.add(pane);
+          for (const s2 of [-1, 1]) {
+            grp.add(box(0.07, wh, 0.1, M.woodDark, cxw + s2 * ww / 2, cyw, z0 - 0.06));
+            grp.add(box(ww, 0.07, 0.1, M.woodDark, cxw, cyw + s2 * wh / 2, z0 - 0.06));
+          }
+          grp.add(box(0.05, wh, 0.09, M.woodDark, cxw, cyw, z0 - 0.06));
+        }
+        grp.add(box(ww + 0.28, 0.075, 0.26, M.concreteDark, cxw, baseY + o.y0 - 0.09, z0 + 0.06));
+        grp.add(box(ww + 0.24, 0.03, 0.06, M.concreteDark, cxw, baseY + o.y0 - 0.135, z0 + 0.16));
+        if (grille) {
+          for (let i = 0; i < 5; i++) {
+            grp.add(cyl(0.012, 0.012, wh - 0.02, M.metalRust, 6).translateX(cxw - ww / 2 + 0.06 + i * (ww - 0.12) / 4).translateY(cyw).translateZ(z0 + 0.035));
+          }
+          grp.add(box(ww, 0.012, 0.012, M.metalRust, cxw, cyw + 0.18, z0 + 0.035));
+          grp.add(box(ww, 0.012, 0.012, M.metalRust, cxw, cyw - 0.18, z0 + 0.035));
+        }
+      }
+      g.add(box(bx * 2 + 0.06, 0.2, 0.34, M.woodBlack, 0, 3.36, z0 + 0.02));
+      const canopy2 = box(bx * 2 - 0.2, 0.05, 0.36, M.corrugatedRust, 0, 3.5, z0 + 0.24);
+      canopy2.rotation.x = -0.2;
+      g.add(canopy2);
+      for (const bxp of [-3.9, -1.3, 1.3, 3.9]) {
+        const br = box(0.05, 0.42, 0.05, M.metalRust, bxp, 3.28, z0 + 0.3);
+        br.rotation.x = 0.55;
+        g.add(br);
+        g.add(box(0.05, 0.05, 0.26, M.metalRust, bxp, 3.1, z0 + 0.16));
+      }
+      const neonTube = new Mesh(
+        new BoxGeometry(6.4, 0.032, 0.032),
+        new MeshBasicMaterial({ color: new Color(1.15, 0.3, 0.14) })
+      );
+      neonTube.position.set(0, 3.6, z0 + 0.42);
+      g.add(neonTube);
+      for (const s2 of [-1, 1]) {
+        const t2 = new Mesh(new BoxGeometry(0.032, 0.032, 0.5), new MeshBasicMaterial({ color: new Color(0.9, 0.24, 0.12) }));
+        t2.position.set(s2 * 3.2, 3.6, z0 - 0.06);
+        g.add(t2);
+      }
+      const wain = new Mesh(planeGeo(bx * 2 - 0.08, 1.02), M.tileWallDirty);
+      wain.position.set(0, 3.86, z0 + 0.028);
+      g.add(wain);
+      g.add(box(bx * 2, 0.06, 0.13, M.concreteDark, 0, 4.38, z0 + 0.05));
+      for (const [px2, py2, pw, ph, art] of [[-2.62, 3.95, 0.44, 0.6, T.art.notice], [-2.02, 3.9, 0.36, 0.5, T.art.talisman], [2.72, 3.96, 0.42, 0.56, T.art.poster_buddha]]) {
+        const pm = new Mesh(new PlaneGeometry(pw, ph), new MeshStandardMaterial({ map: art, roughness: 1, transparent: true }));
+        pm.position.set(px2, py2, z0 + 0.05);
+        g.add(pm);
+      }
+      for (const by of [6.58, 9.62]) {
+        g.add(box(bx * 2 + 0.16, 0.16, 0.34, M.concreteDark, 0, by, z0 + 0.1));
+        g.add(box(bx * 2 + 0.1, 0.05, 0.4, M.concreteDark, 0, by - 0.1, z0 + 0.12));
+        for (let i = 0; i < 5; i++) {
+          const st = sticker("rust_streak", rand(0.25, 0.6), rand(0.5, 1.6), rand(0.2, 0.4));
+          st.position.set(rand(-3.6, 3.6), by - 0.62, z0 + 0.035);
+          g.add(st);
+        }
+      }
+      g.add(cyl(0.024, 0.024, fh - 0.4, M.metalGalv, 6).translateX(-0.35).translateY(baseY + fh / 2 - 0.1).translateZ(z0 + 0.09));
+      for (const jy of [5.1, 7.9]) {
+        g.add(box(0.16, 0.22, 0.1, M.metalGalv, -0.35, jy, z0 + 0.1));
+        g.add(box(0.1, 0.14, 0.02, M.blackMetal, -0.35, jy, z0 + 0.16));
+      }
+      g.add(cable([-4, 5.62, z0 + 0.12], [4, 5.72, z0 + 0.12], 0.22, 0.01));
+      g.add(cable([-4, 7.35, z0 + 0.12], [4, 7.28, z0 + 0.12], 0.3, 8e-3));
+      g.add(cable([-0.3, 6.6, z0 + 0.12], [3.4, 8.2, z0 + 0.12], 0.16, 7e-3));
+      const dish = new Group();
+      dish.position.set(-3.25, 8.15, z0 + 0.28);
+      g.add(dish);
+      const dm = new Mesh(new SphereGeometry(0.34, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.35), M.metalGalv);
+      dm.rotation.x = Math.PI / 2;
+      dm.rotation.z = -0.35;
+      dish.add(dm);
+      dish.add(cyl(0.02, 0.02, 0.5, M.metalRust, 6).translateY(-0.22));
+      for (const [lx, ly, lw2] of [[-0.5, 7.3, 2], [2.3, 8.95, 1.5]]) {
+        g.add(cyl(0.018, 0.018, lw2 + 0.3, M.woodRaw, 6).rotateZ(Math.PI / 2).translateX(lx).translateY(ly).translateZ(z0 + 0.3));
+        for (const bxp of [-lw2 / 2 - 0.12, lw2 / 2 + 0.12]) g.add(box(0.03, 0.03, 0.3, M.metalRust, lx + bxp, ly, z0 + 0.15));
+        const mats = [M.fabricCream, M.fabricBlue, M.fabricCream, M.fabricGreen];
+        for (let i = 0; i < 4; i++) {
+          const c = hangingCloth(rand(0.3, 0.62), rand(0.45, 0.85), mats[i % mats.length]);
+          c.position.set(lx - lw2 / 2 + 0.18 + i * (lw2 / 4.2), ly - 0.04, z0 + 0.3);
+          c.rotation.y = rand(-0.08, 0.08);
+          g.add(c);
+        }
+      }
+      for (const [ax, ay] of [[-2.95, 6.35], [2.5, 7.55]]) {
+        const ac2 = acUnit();
+        ac2.position.set(ax, ay, z0 + 0.34);
+        g.add(ac2);
+        g.add(box(0.66, 0.06, 0.5, M.metalRust, ax, ay - 0.34, z0 + 0.3));
+        g.add(cyl(0.014, 0.014, 1.5, M.rubber, 6).translateX(ax + 0.3).translateY(ay - 1.1).translateZ(z0 + 0.3));
+        const st = sticker("rust_streak", 0.5, 2.4, 0.4);
+        st.position.set(ax + 0.3, ay - 1.9, z0 + 0.036);
+        g.add(st);
+      }
+      for (const [px3, pw] of [[0.86, 0.1], [1.32, 0.085], [2.42, 0.095]]) {
+        g.add(cyl(pw, pw * 0.78, pw * 1.4, M.metalRust, 8).translateX(px3).translateY(4.49).translateZ(z0 + 0.13));
+        for (let k = 0; k < 3; k++) {
+          const leaf = new Mesh(new SphereGeometry(pw * (0.9 + k * 0.15), 9, 7), M.fabricGreen);
+          leaf.position.set(px3 + (k - 1) * pw * 0.5, 4.52 + pw * (1.5 + k * 0.35), z0 + 0.13);
+          leaf.scale.y = 0.75;
+          g.add(leaf);
+        }
+      }
+      for (let i = 0; i < 7; i++) {
+        const st = sticker("rust_streak", rand(0.2, 0.4), rand(0.9, 2.4), rand(0.22, 0.42));
+        st.position.set(rand(-3.7, 3.7), rand(4.6, 10.2), z0 + 0.028);
+        g.add(st);
+      }
+      for (let i = 0; i < 3; i++) {
+        const st = sticker("stain", rand(0.9, 1.8), rand(1, 2.2), rand(0.18, 0.3));
+        st.position.set(rand(-3.4, 3.4), rand(6, 10.4), z0 + 0.026);
+        g.add(st);
+      }
+      for (let i = 0; i < 9; i++) {
+        const st = sticker("stain", rand(0.4, 1.1), rand(0.25, 0.6), rand(0.35, 0.55));
+        st.position.set(rand(-3.8, 3.8), rand(3.62, 4.05), z0 + 0.03);
+        g.add(st);
+      }
+      for (const [sx, sy, sw, sh] of [[1.5, 4.28, 2.6, 0.35], [-1.75, 4.6, 1.6, 0.3], [2, 5.55, 1.1, 1.5]]) {
+        const st = sticker("stain", sw, sh, 0.4);
+        st.position.set(sx, sy, z0 + 0.031);
+        g.add(st);
+      }
+      W.addLight("alley", (() => {
+        const l = new PointLight(16754792, 16, 7.5, 2);
+        l.position.set(0.55, 4.45, z0 + 0.55);
+        return l;
+      })(), { keep: true });
+      const shade = new Mesh(new CylinderGeometry(0.16, 0.1, 0.09, 12, 1, true), M.metalDark);
+      shade.position.set(0.55, 4.62, z0 + 0.42);
+      g.add(shade);
+      W.addLight("alley", (() => {
+        const l = new PointLight(16756848, 11, 7, 2);
+        l.position.set(-2.2, 6.95, z0 + 0.5);
+        return l;
+      })(), { keep: true });
+      const shade22 = new Mesh(new CylinderGeometry(0.13, 0.085, 0.08, 12, 1, true), M.metalDark);
+      shade22.position.set(-2.2, 7.1, z0 + 0.4);
+      g.add(shade22);
+      g.add(box(bx * 2 + 0.3, 0.28, 0.36, M.concreteDark, 0, topY + 0.04, z0 + 0.02));
+    }
+    for (const [sx, ex] of [[x0 + 0.05, -4.02], [4.02, x1 - 0.05]]) {
+      const w = ex - sx, cx0 = (sx + ex) / 2;
+      const skirt = box(w, 0.92, 0.09, M.plasterGreen, cx0, 0.46, z0 + 0.055);
+      skirt.material = skirt.material.clone();
+      skirt.material.color.setHex(5134920);
+      g.add(skirt);
+      g.add(box(w, 0.05, 0.13, M.concreteDark, cx0, 0.94, z0 + 0.06));
+      g.add(box(w, 0.09, 0.14, M.concreteDark, cx0, 0.045, z0 + 0.06));
+    }
+    for (const px2 of [x0 + 0.35, -4.35, 4.35, x1 - 0.35]) {
+      const pipe = cyl(0.055, 0.055, 9, M.metalRust, 8);
+      pipe.position.set(px2, 4.5, z0 + 0.16);
+      g.add(pipe);
+      for (let y = 0.9; y < 8.4; y += 2.4) {
+        const br = new Mesh(new TorusGeometry(0.07, 0.012, 4, 8), M.metalDark);
+        br.rotation.x = Math.PI / 2;
+        br.position.set(px2, y, z0 + 0.16);
+        g.add(br);
+      }
+      g.add(cyl(0.075, 0.075, 0.12, M.metalRust, 8).translateY(0.06).translateX(px2).translateZ(z0 + 0.16));
+    }
+    for (const [mx, my, mw, mh] of [[-7.9, 1.9, 0.42, 0.55], [-4.55, 2.2, 0.3, 0.4], [4.55, 2.15, 0.34, 0.46], [7.9, 1.95, 0.4, 0.52]]) {
+      g.add(box(mw, mh, 0.16, M.metalGalv, mx, my, z0 + 0.12));
+      g.add(box(mw * 0.7, mh * 0.5, 0.02, M.blackMetal, mx, my, z0 + 0.205));
+      g.add(cyl(0.018, 0.018, 1.6, M.metalGalv, 6).translateX(mx).translateY(my - 1.1).translateZ(z0 + 0.12));
+    }
+    for (const [dx, lit2] of [[-6.3, true], [6.5, false]]) {
+      const rec = new Mesh(new PlaneGeometry(1, 2.15), new MeshBasicMaterial({ color: lit2 ? 2365968 : 657930 }));
+      rec.position.set(dx, 1.08, z0 + 0.02);
+      g.add(rec);
+      g.add(box(1.16, 0.12, 0.16, M.concreteDark, dx, 2.22, z0 + 0.1));
+      for (const s2 of [-1, 1]) g.add(box(0.1, 2.2, 0.16, M.concreteDark, dx + s2 * 0.56, 1.1, z0 + 0.1));
+      g.add(box(1.16, 0.15, 0.5, M.concreteDark, dx, 0.075, z0 + 0.28));
+      g.add(box(1.02, 2.05, 0.06, M.woodDark, dx, 1.05, z0 + 0.18));
+      if (lit2) {
+        const lamp = bulbLamp({ cord: 0.1, shade: false });
+        lamp.position.set(dx, 2.35, z0 + 0.3);
+        g.add(lamp);
+        W.addLight("alley", (() => {
+          const l = new PointLight(16756848, 6, 4, 2);
+          l.position.set(dx, 2.15, z0 + 0.45);
+          return l;
+        })());
+      }
+    }
+    for (const [px2, py2, nm, pw, ph, rot] of [
+      [-7.6, 1.55, "notice", 0.34, 0.46, 0.03],
+      [-4.75, 1.7, "calendar", 0.3, 0.42, -0.04],
+      [4.7, 1.6, "price_board", 0.34, 0.48, 0.02],
+      [7.5, 1.5, "notice", 0.3, 0.4, -0.03],
+      [-5.6, 1.9, "meridian", 0.4, 0.56, 0.01],
+      [6.9, 1.85, "poster_buddha", 0.36, 0.5, 0.04]
+    ]) {
+      const po = poster(nm, pw, ph, { tint: 13155750 });
+      po.position.set(px2, py2, z0 + 0.1);
+      po.rotation.z = rot;
+      g.add(po);
+    }
+    for (let i = 0; i < 6; i++) {
+      const st = sticker("stain", rand(0.4, 0.9), rand(0.5, 1.2), rand(0.2, 0.4));
+      st.position.set(rand(x0 + 0.4, x1 - 0.4), rand(0.3, 2.4), z0 + 0.07);
+      st.rotation.z = rand(0, 6);
+      g.add(st);
+    }
+    for (const [bx, by, bw] of [[-7, 3.6, 1.6], [-5.2, 3.6, 1.4]]) {
       g.add(box(bw, 0.08, 0.75, M.concreteDark, bx, by, z0 + 0.38));
       for (let i = 0; i < 6; i++) g.add(box(0.02, 0.85, 0.02, M.metalRust, bx - bw / 2 + i * bw / 5, by + 0.44, z0 + 0.72));
       g.add(box(bw, 0.03, 0.03, M.metalRust, bx, by + 0.87, z0 + 0.72));
@@ -36576,25 +36981,30 @@ void main() {
         g.add(cl);
       }
     }
-    const opp = new Mesh(planeGeo(26, 12), M.concrete);
-    opp.position.set(0, 6, z1);
+    const opp = new Mesh(planeGeo(x1 - x0, 10), M.corrugated);
+    opp.position.set(0, 7, z1);
     opp.rotation.y = Math.PI;
     opp.receiveShadow = true;
     g.add(opp);
+    const oppBase = new Mesh(planeGeo(x1 - x0, 2), M.concreteWet);
+    oppBase.position.set(0, 1, z1 - 0.01);
+    oppBase.rotation.y = Math.PI;
+    oppBase.receiveShadow = true;
+    g.add(oppBase);
     W.colliders.push({ minX: x0, maxX: x1, minZ: z1 - 0.1, maxZ: z1 + 0.4, minY: 0, maxY: 12, enabled: true });
     const lit = [
-      [-11, 2.2, z1 - 0.06, 1.2, 1.6, 16756832, 1.6],
-      [-6.5, 5.6, z1 - 0.06, 1.2, 1.6, 16760960, 0.8],
-      [-2, 2.2, z1 - 0.06, 1.2, 1.6, 8829128, 0.7],
-      [2.5, 5.6, z1 - 0.06, 1.2, 1.6, 16752720, 1.2],
-      [7, 2.2, z1 - 0.06, 1.2, 1.6, 16756848, 0.5],
-      [11.5, 5.6, z1 - 0.06, 1.2, 1.6, 9486528, 0.9]
+      [-6.6, 2.3, z1 - 0.06, 1.2, 1.6, 16756832, 1.5],
+      [-3.4, 5.6, z1 - 0.06, 1.2, 1.6, 16760960, 0.8],
+      [-0.2, 2.3, z1 - 0.06, 1.2, 1.6, 8359830, 0.42],
+      [2.8, 5.6, z1 - 0.06, 1.2, 1.6, 16752720, 1.1],
+      [5.6, 2.3, z1 - 0.06, 1.2, 1.6, 16756848, 0.5],
+      [7, 5.6, z1 - 0.06, 1, 1.5, 10132112, 0.5]
     ];
     for (const [wx, wy, wz, ww, wh, col, inten] of lit) {
       const pane = new Mesh(new PlaneGeometry(ww, wh), new MeshBasicMaterial({ color: col }));
       pane.position.set(wx, wy, wz);
       pane.rotation.y = Math.PI;
-      pane.material.color.multiplyScalar(inten);
+      pane.material.color.multiplyScalar(inten * 0.75);
       g.add(pane);
       const fr = new Group();
       fr.position.set(wx, wy, wz + 0.03);
@@ -36603,6 +37013,7 @@ void main() {
       for (const s of [-1, 1]) fr.add(box(0.04, wh, 0.03, M.metalDark, s * ww / 2, 0, 0));
       for (const s of [-1, 1]) fr.add(box(ww, 0.04, 0.03, M.metalDark, 0, s * wh / 2, 0));
       fr.add(box(0.03, wh, 0.02, M.metalDark, 0, 0, 0));
+      fr.add(box(ww + 0.16, 0.07, 0.16, M.concreteDark, 0, -wh / 2 - 0.06, -0.02));
       if (Math.random() < 0.6) {
         const cur = new Mesh(new PlaneGeometry(ww * 0.32, wh), new MeshStandardMaterial({ color: 1709330, roughness: 1 }));
         cur.position.set(wx - ww * 0.28, wy, wz - 0.04);
@@ -36611,20 +37022,197 @@ void main() {
       }
     }
     const farGlow = new PointLight(16751184, 30, 14, 2);
-    farGlow.position.set(-11.4, 3.2, 12.2);
+    farGlow.position.set(-7.4, 3.2, 12.2);
     g.add(farGlow);
     const farPlane = new Mesh(new PlaneGeometry(1.2, 1.8), new MeshBasicMaterial({ color: new Color(1.4, 0.8, 0.4) }));
-    farPlane.position.set(-11.4, 3.2, 13.96);
+    farPlane.position.set(-7.4, 3.2, 13.96);
     farPlane.rotation.y = Math.PI;
     g.add(farPlane);
-    for (const s of [-1, 1]) {
-      const cap = wallGroup(8, 12, M.concreteDark);
-      cap.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2;
-      cap.position.set(s * 13, 0, 10);
-      g.add(cap);
-      W.colliders.push({ minX: s * 13 - 0.2, maxX: s * 13 + 0.2, minZ: 6, maxZ: 14, minY: 0, maxY: 12, enabled: true });
+    const dump = new Group();
+    dump.position.set(-6.9, 0, 12.55);
+    g.add(dump);
+    dump.add(box(1.7, 0.95, 1.05, M.plasticGreen, 0, 0.55, 0));
+    const lid = box(1.76, 0.06, 1.1, M.metalDark, 0, 1.05, -0.02);
+    lid.rotation.x = -0.06;
+    dump.add(lid);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const w = new Mesh(new CylinderGeometry(0.09, 0.09, 0.07, 10), M.rubber);
+      w.rotation.z = Math.PI / 2;
+      w.position.set(sx * 0.7, 0.09, sz * 0.4);
+      dump.add(w);
     }
-    const sky = new Mesh(new PlaneGeometry(26, 8), new MeshBasicMaterial({ color: 658706 }));
+    dump.add(box(0.06, 0.35, 0.5, M.metalRust, 0.86, 0.8, 0));
+    W.colliders.push({ minX: -7.8, maxX: -6, minZ: 12, maxZ: 13.1, minY: 0, maxY: 1.1, enabled: true });
+    for (let i = 0; i < 4; i++) {
+      const c = crate(rand(0.45, 0.6), rand(0.3, 0.4), rand(0.35, 0.5));
+      c.position.set(6.4 + i % 2 * 0.1, Math.floor(i / 2) * 0.38, 11.4 + i % 2 * 0.55);
+      c.rotation.y = rand(-0.2, 0.2);
+      g.add(c);
+    }
+    const pallet = box(1.1, 0.12, 0.9, M.woodRaw, 6.2, 0.06, 12.6);
+    g.add(pallet);
+    W.colliders.push({ minX: 5.6, maxX: 7.1, minZ: 11, maxZ: 13, minY: 0, maxY: 0.9, enabled: true });
+    for (let i = 0; i < 5; i++) {
+      const b = cardboardBox(rand(0.4, 0.6), rand(0.3, 0.42), rand(0.35, 0.5));
+      b.position.set(-3.65 + i % 2 * 0.12, Math.floor(i / 2) * 0.38, 6.55 + i % 3 * 0.12);
+      b.rotation.y = rand(-0.3, 0.3);
+      g.add(b);
+    }
+    const chair = woodenChair();
+    chair.position.set(4.55, 0, 12.2);
+    chair.rotation.y = 1.2;
+    chair.rotation.z = 0.12;
+    g.add(chair);
+    for (const [gx, gz] of [[-4.4, 13.2], [-4, 13.35], [3.9, 13.15]]) {
+      const gas2 = new Group();
+      gas2.position.set(gx, 0, gz);
+      g.add(gas2);
+      gas2.add(cyl(0.17, 0.17, 0.55, M.metalRust, 14).translateY(0.275));
+      gas2.add(cyl(0.08, 0.08, 0.08, M.metalDark, 10).translateY(0.58));
+    }
+    const bkt3 = bucket(0.17, 0.3, M.plasticBlue);
+    bkt3.position.set(-5.2, 0, 6.6);
+    g.add(bkt3);
+    const mo2 = mop();
+    mo2.position.set(5.1, 0, 6.5);
+    mo2.rotation.z = 0.3;
+    g.add(mo2);
+    const bridge = new Group();
+    g.add(bridge);
+    bridge.add(box(1.75, 0.42, z1 - z0 + 0.4, M.concreteDark, -3.7, 4.55, (z0 + z1) / 2));
+    for (const zz of [z0 + 0.1, z1 - 0.1]) {
+      bridge.add(box(1.85, 0.75, 0.18, M.concreteDark, -3.7, 4.78, zz));
+    }
+    for (const [zz, lit2] of [[7, false], [9.2, true], [11.4, false], [13.2, false]]) {
+      const pane = new Mesh(
+        new PlaneGeometry(1, 0.78),
+        lit2 ? new MeshBasicMaterial({ color: new Color(0.75, 0.45, 0.22) }) : new MeshStandardMaterial({ color: 658446, roughness: 0.3, metalness: 0.2 })
+      );
+      pane.geometry.rotateY(Math.PI / 2);
+      pane.position.set(-2.83, 4.62, zz);
+      bridge.add(pane);
+      bridge.add(box(0.05, 0.06, 1.08, M.woodBlack, -2.82, 5.03, zz));
+      bridge.add(box(0.05, 0.06, 1.08, M.woodBlack, -2.82, 4.21, zz));
+      for (const dz of [-0.52, 0.52]) bridge.add(box(0.05, 0.84, 0.05, M.woodBlack, -2.82, 4.62, zz + dz));
+      bridge.add(box(0.04, 0.78, 0.03, M.woodBlack, -2.82, 4.62, zz));
+    }
+    for (const zz of [7.2, 9, 10.8, 12.6]) {
+      bridge.add(box(1.9, 0.12, 0.14, M.woodBlack, -3.7, 4.28, zz));
+    }
+    bridge.add(cyl(0.06, 0.06, z1 - z0 - 0.2, M.pipeGreen, 8).rotateX(Math.PI / 2).translateX(-2.95).translateY(4.2).translateZ((z0 + z1) / 2));
+    bridge.add(cyl(0.03, 0.03, z1 - z0 - 0.2, M.metalRust, 6).rotateX(Math.PI / 2).translateX(-4.4).translateY(4.24).translateZ((z0 + z1) / 2));
+    const underBulb = bulbLamp({ cord: 0.34, shade: false });
+    underBulb.position.set(-3.6, 4.3, 10.2);
+    g.add(underBulb);
+    W.addLight("alley", (() => {
+      const l = new PointLight(16760968, 7, 4.5, 2);
+      l.position.set(-3.6, 3.9, 10.2);
+      return l;
+    })());
+    g.add(cable([-3, 4.1, 8], [-3, 4, 12.2], 0.12, 6e-3));
+    for (let i = 0; i < 3; i++) {
+      const cl = hangingCloth(0.34, 0.5, [M.fabricCream, M.fabricBlue, M.fabricRed][i]);
+      cl.position.set(-3, 3.82, 8.6 + i * 1.3);
+      cl.rotation.y = 1.57 + rand(-0.15, 0.15);
+      g.add(cl);
+    }
+    const canopy = new Group();
+    g.add(canopy);
+    canopy.add(box(3, 0.07, 2.2, M.corrugatedRust, 5.9, 3.15, 8));
+    canopy.add(box(3.06, 0.06, 0.14, M.metalRust, 5.9, 3.18, 6.95));
+    for (const xx of [4.6, 7.2]) {
+      canopy.add(cyl(0.05, 0.05, 0.5, M.metalRust, 8).translateX(xx).translateY(2.9).translateZ(6.98));
+    }
+    canopy.add(box(0.1, 0.55, 2.2, M.metalRust, 4.42, 3.4, 8));
+    for (let i = 0; i < 3; i++) {
+      const c = crate(rand(0.35, 0.5), rand(0.22, 0.32), rand(0.3, 0.4));
+      c.position.set(4.9 + i * 0.7, 3.19, 7.4 + i % 2 * 0.9);
+      c.rotation.y = i;
+      canopy.add(c);
+    }
+    for (const s of [-1, 1]) {
+      const wx = s > 0 ? x1 : x0;
+      const ry = s > 0 ? -Math.PI / 2 : Math.PI / 2;
+      const mat = M.concreteWet;
+      const cap = new Mesh(planeGeo(z1 - z0, 12), mat);
+      cap.rotation.y = ry;
+      cap.position.set(wx, 6, (z0 + z1) / 2);
+      cap.receiveShadow = true;
+      g.add(cap);
+      const recess = new Mesh(planeGeo(2.6, 2.9), new MeshBasicMaterial({ color: 328965 }));
+      recess.rotation.y = ry;
+      recess.position.set(wx - s * 0.02, 1.45, 6.9);
+      g.add(recess);
+      const gate = new Group();
+      gate.position.set(wx - s * 0.06, 0, 6.9);
+      gate.rotation.y = ry;
+      g.add(gate);
+      for (const gx of [-1.25, 1.25]) gate.add(box(0.09, 2.9, 0.09, M.metalRust, gx, 1.45, 0));
+      for (const gy of [0.06, 2.85]) gate.add(box(2.6, 0.09, 0.09, M.metalRust, 0, gy, 0));
+      for (let i = 0; i < 9; i++) gate.add(box(0.035, 2.8, 0.035, M.metalRust, -1.08 + i * 0.27, 1.45, 0.01));
+      const brace = box(3.4, 0.05, 0.04, M.metalRust, 0, 1.45, 0.02);
+      brace.rotation.z = 0.72;
+      gate.add(brace);
+      gate.add(box(0.12, 0.16, 0.08, M.metalDark, 0.1, 1.25, 0.06));
+      gate.add(box(2.9, 0.22, 0.2, M.concrete, 0, 3, 0));
+      const plate = new Mesh(new PlaneGeometry(0.22, 0.16), new MeshBasicMaterial({ color: 10133664 }));
+      plate.position.set(0, 3, 0.11);
+      gate.add(plate);
+      const lampM = bulbLamp({ cord: 0.16, shade: false });
+      lampM.position.set(wx - s * 0.42, 3.25, 6.9);
+      g.add(lampM);
+      W.addLight("alley", (() => {
+        const l = new PointLight(16756848, 9, 5, 2);
+        l.position.set(wx - s * 0.55, 3.05, 6.9);
+        return l;
+      })());
+      for (const zz of [5.35, 8.45]) {
+        g.add(box(0.35, 3.4, 0.35, M.concrete, wx - s * 0.18, 1.7, zz));
+      }
+      g.add(box(0.35, 0.3, 7.2, M.concrete, wx - s * 0.18, 3.5, 6.9));
+      for (const [wy, wz, ww, wh] of [[3.5, 8.5, 1.1, 1.35], [6.3, 10.6, 1, 1.25], [3.4, 11.9, 1, 1.3]]) {
+        const pane = new Mesh(
+          new PlaneGeometry(ww, wh),
+          new MeshStandardMaterial({ color: 658704, roughness: 0.35, metalness: 0.2 })
+        );
+        pane.rotation.y = ry;
+        pane.position.set(wx - s * 0.03, wy, wz);
+        g.add(pane);
+        const fr = new Group();
+        fr.position.set(wx - s * 0.06, wy, wz);
+        fr.rotation.y = ry;
+        g.add(fr);
+        for (const s2 of [-1, 1]) fr.add(box(0.05, wh + 0.08, 0.05, M.metalRust, s2 * ww / 2, 0, 0));
+        for (const s2 of [-1, 1]) fr.add(box(ww + 0.08, 0.05, 0.05, M.metalRust, 0, s2 * wh / 2, 0));
+        for (let i = 0; i < 3; i++) fr.add(box(0.02, wh, 0.02, M.metalDark, -ww / 3 + i * ww / 3, 0, 0.02));
+      }
+      const adv = new Mesh(new PlaneGeometry(2.4, 1.5), new MeshStandardMaterial({ color: 6957600, roughness: 1 }));
+      adv.rotation.y = ry;
+      adv.position.set(wx - s * 0.05, 2.1, 10.4);
+      adv.material.transparent = true;
+      adv.material.opacity = 0.55;
+      g.add(adv);
+      const advT = new Mesh(new PlaneGeometry(1.9, 0.42), new MeshBasicMaterial({ map: T.art.shop_sign, transparent: true, opacity: 0.35 }));
+      advT.rotation.y = ry;
+      advT.position.set(wx - s * 0.07, 2.2, 10.4);
+      g.add(advT);
+      const ac = acUnit();
+      ac.position.set(wx - s * 0.35, 5.4, 12.6);
+      ac.rotation.y = ry;
+      g.add(ac);
+      g.add(cyl(0.05, 0.05, 9, M.metalRust, 8).translateX(wx - s * 0.18).translateY(4.5).translateZ(12.95));
+      for (let i = 0; i < 3; i++) {
+        const c = crate(0.5, 0.34, 0.42);
+        c.position.set(wx - s * 0.45, i * 0.34, 8.2);
+        c.rotation.y = 0.12 * i;
+        g.add(c);
+      }
+      const bin = trashBag();
+      bin.position.set(wx - s * 0.55, 0, 5.7);
+      g.add(bin);
+      W.colliders.push({ minX: Math.min(wx, wx - s * 0.5), maxX: Math.max(wx, wx - s * 0.5), minZ: z0, maxZ: z1, minY: 0, maxY: 12, enabled: true });
+    }
+    const sky = new Mesh(new PlaneGeometry(x1 - x0, 8), new MeshBasicMaterial({ color: 658706 }));
     sky.rotation.x = Math.PI / 2;
     sky.position.set(0, 11.8, 10);
     g.add(sky);
@@ -36682,13 +37270,13 @@ void main() {
     gas.add(cyl(0.08, 0.08, 0.08, M.metalDark, 10).translateY(0.58));
     gas.add(new Mesh(new TorusGeometry(0.12, 0.012, 5, 12), M.metalDark).translateY(0.62));
     const lad = new Group();
-    lad.position.set(11.2, 0, 6.6);
+    lad.position.set(7.55, 0, 6.6);
     lad.rotation.z = 0.12;
     g.add(lad);
     for (const s of [-1, 1]) lad.add(box(0.04, 2.2, 0.05, M.woodRaw, s * 0.22, 1.1, 0));
     for (let i = 0; i < 6; i++) lad.add(box(0.48, 0.03, 0.04, M.woodRaw, 0, 0.3 + i * 0.33, 0));
     const pot = new Group();
-    pot.position.set(-9.9, 0, 6.7);
+    pot.position.set(-7.55, 0, 6.7);
     g.add(pot);
     pot.add(cyl(0.12, 0.09, 0.22, M.ceramicGreen, 12).translateY(0.11));
     for (let i = 0; i < 5; i++) {
@@ -36707,7 +37295,7 @@ void main() {
       g.add(cable([-3.9 + i * 0.12, 4.2, 6.08], [-3.6 + i * 0.15, 2.1, 6.12], 0.15, 7e-3));
     }
     const sign2 = new Group();
-    sign2.position.set(-9.6, 3.2, 6.25);
+    sign2.position.set(-7.5, 3.2, 6.25);
     g.add(sign2);
     sign2.add(box(0.12, 1, 0.04, M.woodBlack, 0, 0, 0));
     const neon = W.addLight("alley", (() => {
@@ -36750,6 +37338,27 @@ void main() {
     W.volumetric({ x: -6.2, y: 3.3, z: 6.5, w: 0.5, h: 0.4, len: 2.6, color: 16730672, intensity: 0.16, dir: new Vector3(0, -1, 0.1).normalize() });
     W.volumetric({ x: 1.2, y: 2.4, z: 6.35, w: 1.1, h: 2, len: 2.6, color: 12376264, intensity: 0.4, dir: new Vector3(0, -1, 0.25).normalize() });
     W.volumetric({ x: -11, y: 3.8, z: 13.7, w: 0.6, h: 0.4, len: 4, color: 10469576, intensity: 0.35, dir: new Vector3(0, -1, -0.4).normalize() });
+    const wallLamp = new Group();
+    wallLamp.position.set(-5.4, 3.35, z0 + 0.12);
+    g.add(wallLamp);
+    wallLamp.add(box(0.06, 0.06, 0.5, M.metalRust, 0, 0, 0.22));
+    const shade2 = new Mesh(new ConeGeometry(0.2, 0.16, 14, 1, true), M.metalRust);
+    shade2.rotation.x = Math.PI;
+    shade2.position.set(0, -0.04, 0.42);
+    wallLamp.add(shade2);
+    const lb2 = new Mesh(new SphereGeometry(0.045, 10, 8), M.bulb);
+    lb2.position.set(0, -0.1, 0.42);
+    wallLamp.add(lb2);
+    W.addLight("alley", (() => {
+      const l = new PointLight(16756848, 16, 7.5, 2);
+      l.position.set(-5.4, 3.05, z0 + 0.55);
+      return l;
+    })());
+    W.addLight("alley", (() => {
+      const l = new PointLight(8363960, 9, 9, 2);
+      l.position.set(0.5, 4.6, 13.2);
+      return l;
+    })());
     W.addLight("alley", (() => {
       const l = new PointLight(1714740, 8, 16, 2);
       l.position.set(0, 8, 10);
@@ -36827,9 +37436,11 @@ void main() {
     const glassStore = new Mesh(new PlaneGeometry(4.1, 2), M.glass);
     glassStore.position.set(-1.45, 1.92, -0.02);
     sf.add(glassStore);
-    sf.add(box(0.1, 2.45, 0.22, wfMat, 0.7, 1.22, 0));
-    sf.add(box(0.1, 2.45, 0.22, wfMat, 1.66, 1.22, 0));
-    sf.add(box(1.05, 0.1, 0.22, wfMat, 1.18, 2.4, 0));
+    sf.add(box(0.1, 2.85, 0.22, wfMat, 0.7, 1.425, 0));
+    sf.add(box(0.1, 2.85, 0.22, wfMat, 1.66, 1.425, 0));
+    sf.add(box(1.06, 0.2, 0.22, wfMat, 1.18, 2.95, 0));
+    sf.add(box(1.02, 0.06, 0.24, wfMat, 1.18, 2.86, 0));
+    sf.add(box(1.06, 0.14, 0.2, plaster, 1.18, 3.02, 0));
     sf.add(box(4.3, 0.26, 0.3, M.metalRust, -1.4, 3.12, 0.02));
     const sign2 = new Mesh(new PlaneGeometry(2.9, 0.79), new MeshStandardMaterial({
       map: T.art.shop_sign,
@@ -37030,7 +37641,7 @@ void main() {
       l.shadow.bias = -15e-4;
       l.shadow.normalBias = 0.02;
       return l;
-    })());
+    })(), { global: true });
     const flick2 = W.addLight("shop", (() => {
       const l = new PointLight(14214868, 12, 6, 2);
       l.position.set(1.9, 3.1, 4.25);
@@ -37042,10 +37653,10 @@ void main() {
     bulb.position.set(-0.7, 3.44, 2.55);
     g.add(bulb);
     const bulbLight = W.addLight("shop", (() => {
-      const l = new PointLight(16758903, 34, 8, 2);
+      const l = new PointLight(16758903, 44, 9, 2);
       l.position.set(-0.7, 2.72, 2.55);
       return l;
-    })());
+    })(), { global: true });
     W.flicker(bulbLight, { min: 0.9, max: 1, speed: 7, pattern: "soft" });
     const bulb2 = bulbLamp({ cord: 0.8, shade: false });
     bulb2.position.set(1.4, 3.4, 4.9);
@@ -37061,15 +37672,15 @@ void main() {
       return l;
     })());
     W.addLight("shop", (() => {
-      const l = new PointLight(16762762, 9, 3.6, 2);
+      const l = new PointLight(16762762, 15, 4.4, 2);
       l.position.set(-2.4, 1.9, 1.35);
       return l;
-    })());
+    })(), { keep: true });
     W.addLight("shop", (() => {
-      const l = new PointLight(16762762, 8, 3.4, 2);
+      const l = new PointLight(16762762, 13, 4.2, 2);
       l.position.set(2.4, 1.9, 1.35);
       return l;
-    })());
+    })(), { keep: true });
     const sh = new Group();
     sh.position.set(x0 + 0.2, 1.55, 1);
     sh.rotation.y = Math.PI / 2;
@@ -37204,12 +37815,12 @@ void main() {
     north.position.set(cx, 0, z0);
     g.add(north);
     W.colliders.push({ minX: x0, maxX: x1, minZ: z0 - 0.2, maxZ: z0 + 0.05, minY: 0, maxY: h, enabled: true });
-    const south = wallGroup(x1 - x0, h, M.concrete, [{ x0: 1.08, x1: 2.52, y0: 0, y1: 2.3 }, { x0: 2.35, x1: 3.35, y0: 3.6, y1: 5.85 }]);
+    const south = wallGroup(x1 - x0, h, M.concrete, [{ x0: 1.08, x1: 2.52, y0: 0, y1: 2.3 }, { x0: 0.25, x1: 1.25, y0: 3.6, y1: 5.85 }]);
     south.position.set(cx, 0, z1);
     south.rotation.y = Math.PI;
     g.add(south);
-    W.colliders.push({ minX: x0, maxX: -0.72, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 0, maxY: h, enabled: true });
-    W.colliders.push({ minX: 0.72, maxX: x1, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 0, maxY: h, enabled: true });
+    W.colliders.push({ minX: x0, maxX: -0.72, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 0, maxY: 3.6, enabled: true });
+    W.colliders.push({ minX: 0.72, maxX: x1, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 0, maxY: 3.6, enabled: true });
     W.colliders.push({ minX: -0.72, maxX: 0.55, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 2.3, maxY: h, enabled: true });
     W.colliders.push({ minX: 0.55, maxX: 1.55, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 2.3, maxY: 3.6, enabled: true });
     W.colliders.push({ minX: 1.55, maxX: x1, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 2.3, maxY: h, enabled: true });
@@ -37251,7 +37862,10 @@ void main() {
       g.add(cyl(0.014, 0.014, 1, M.metalDark, 6).translateX(0.32).translateY(4.1).translateZ(-3.45 + i * 0.42));
     }
     g.add(cyl(0.02, 0.02, 2.5, M.metalDark, 8).rotateX(Math.PI / 2).translateX(0.32).translateY(4.6).translateZ(-2.2));
-    W.colliders.push({ minX: x0, maxX: x0 + 0.06, minZ: z0, maxZ: z1, minY: 0, maxY: h, enabled: true });
+    W.colliders.push({ minX: x0 - 0.1, maxX: x0 + 0.08, minZ: z0 - 0.1, maxZ: z1 + 0.1, minY: 0, maxY: h, enabled: true });
+    W.colliders.push({ minX: x1 - 0.08, maxX: x1 + 0.1, minZ: z0 - 0.1, maxZ: z1 + 0.1, minY: 0, maxY: h, enabled: true });
+    W.colliders.push({ minX: 0.26, maxX: 0.38, minZ: -3.52, maxZ: -0.95, minY: 3.6, maxY: h, enabled: true });
+    W.colliders.push({ minX: x0, maxX: x1, minZ: z0 - 0.1, maxZ: z0 + 0.1, minY: 0, maxY: h, enabled: true });
     const railMat = M.metalDark;
     for (const sx of [x0 + 0.09, x1 - 0.09]) {
       for (let i = 0; i < 5; i++) {
@@ -37309,6 +37923,8 @@ void main() {
       mb.add(box(0.16, 0.012, 0.01, M.blackMetal, -0.33 + c * 0.22, -0.2 + r * 0.26, 0.065));
     }
     mb.add(box(0.95, 0.03, 0.02, M.metalRust, 0, 0.14, 0.04));
+    W.colliders.push({ minX: 1.48, maxX: x1, minZ: -2.3, maxZ: -1.5, minY: 0, maxY: 2.4, enabled: true });
+    W.colliders.push({ minX: -1.62, maxX: -1.08, minZ: -6.6, maxZ: -6.05, minY: 1.8, maxY: 2.9, enabled: true });
     const sh = new Group();
     sh.position.set(-1.35, 1.8, -6.35);
     sh.rotation.y = 0.25;
@@ -37348,7 +37964,7 @@ void main() {
     lampA.position.set(-1.1, 3.25, -2.1);
     g.add(lampA);
     const la = W.addLight("stairs", (() => {
-      const l = new PointLight(16760970, 14, 6.5, 2);
+      const l = new PointLight(16760970, 24, 8, 2);
       l.position.set(-1.1, 2.7, -2.1);
       l.castShadow = true;
       l.shadow.mapSize.set(1024, 1024);
@@ -37365,7 +37981,7 @@ void main() {
     lampB.position.set(0.85, 3, -5.55);
     g.add(lampB);
     const lb = W.addLight("stairs", (() => {
-      const l = new PointLight(16756848, 9, 5, 2);
+      const l = new PointLight(16756848, 15, 6.5, 2);
       l.position.set(0.85, 2.55, -5.55);
       return l;
     })());
@@ -37374,7 +37990,7 @@ void main() {
     lampC.position.set(0.2, 6.45, -2.3);
     g.add(lampC);
     W.addLight("stairs", (() => {
-      const l = new PointLight(16764830, 12, 7, 2);
+      const l = new PointLight(16764830, 18, 8, 2);
       l.position.set(0.2, 5.5, -2.3);
       return l;
     })());
@@ -37491,6 +38107,11 @@ void main() {
       openAngle: -1.75
     });
     g.add(entry.root);
+    W.colliders.push({ minX: -3.95, maxX: -3.2, minZ: -0.65, maxZ: 0.9, minY: y0, maxY: y0 + 1.6, enabled: true });
+    W.colliders.push({ minX: 2.28, maxX: 3.25, minZ: 0.45, maxZ: 2.7, minY: y0, maxY: y0 + 0.95, enabled: true });
+    W.colliders.push({ minX: -4, maxX: -3.32, minZ: 1.85, maxZ: 3.25, minY: y0, maxY: y0 + 1.25, enabled: true });
+    W.colliders.push({ minX: 3.3, maxX: 4, minZ: 1.5, maxZ: 2.8, minY: y0, maxY: y0 + 2, enabled: true });
+    W.colliders.push({ minX: -3.8, maxX: -2.5, minZ: 3.8, maxZ: 5.9, minY: y0, maxY: y0 + 0.75, enabled: true });
     const part = wallGroup(3.4, h, M.wallPeelGreen, [{ x0: 2.6, x1: 3.4, y0: 0, y1: 2.15 }]);
     part.position.set(-2.3, y0, 3.15);
     g.add(part);
@@ -37768,7 +38389,7 @@ void main() {
     g.add(pictureFrame(T.art.photo_4, 0.16, 0.2).translateX(-2.25).translateY(y0 + 0.58).translateZ(4.2).rotateY(0.2));
     g.add(stackOfBooks(2).translateX(-2.3).translateY(y0 + 0.5).translateZ(4.42));
     const winFrame = new Group();
-    winFrame.position.set(0.4, y0 + 0.95, z1 - 0.03);
+    winFrame.position.set(1.65, y0 + 0.95, z1 - 0.03);
     g.add(winFrame);
     winFrame.add(box(2.5, 0.08, 0.12, M.woodDark, 0, 1.35, 0));
     winFrame.add(box(2.5, 0.08, 0.12, M.woodDark, 0, 0, 0));
@@ -37790,12 +38411,12 @@ void main() {
       winGlassMat.normalMap.offset.x = t * 0.01;
     });
     const cu = curtain(1, 2.2, M.curtain);
-    cu.position.set(-0.65, y0 + 1.15, z1 - 0.13);
+    cu.position.set(0.75, y0 + 1.15, z1 - 0.13);
     g.add(cu);
     const cu2 = curtain(0.75, 2.2, M.curtain);
-    cu2.position.set(1.55, y0 + 1.15, z1 - 0.13);
+    cu2.position.set(2.6, y0 + 1.15, z1 - 0.13);
     g.add(cu2);
-    g.add(cyl(0.012, 0.012, 2.6, M.metalDark, 6).rotateZ(Math.PI / 2).translateX(0.45).translateY(y0 + 2.35).translateZ(z1 - 0.13));
+    g.add(cyl(0.012, 0.012, 2.6, M.metalDark, 6).rotateZ(Math.PI / 2).translateX(1.65).translateY(y0 + 2.35).translateZ(z1 - 0.13));
     const ll1 = new Vector3(x0 + 0.2, y0 + 2.45, 4);
     const ll2 = new Vector3(1.35, y0 + 2.35, 5.6);
     g.add(cable([ll1.x, ll1.y, ll1.z], [ll2.x, ll2.y, ll2.z], 0.25, 6e-3));
@@ -37867,7 +38488,7 @@ void main() {
       const l = new PointLight(16758903, 8, 6, 2);
       l.position.set(-2.35, cy - 0.75, 0.28);
       l.castShadow = true;
-      l.shadow.mapSize.set(2048, 2048);
+      l.shadow.mapSize.set(1024, 1024);
       l.shadow.bias = -12e-4;
       l.shadow.normalBias = 0.02;
       return l;
@@ -37983,6 +38604,7 @@ void main() {
     sink.add(cyl(0.03, 0.03, 0.3, M.metalRust, 8).translateY(0.25).translateZ(-0.12));
     sink.add(cyl(0.03, 0.03, 0.26, M.metalRust, 8).rotateX(Math.PI / 2).translateY(0.12).translateZ(0));
     W.colliders.push({ minX: 2.1, maxX: 2.8, minZ: z0, maxZ: z0 + 0.5, minY: y0, maxY: y0 + 1, enabled: true });
+    W.colliders.push({ minX: 2.12, maxX: 2.78, minZ: z0 + 0.02, maxZ: z0 + 0.68, minY: y0, maxY: y0 + 1, enabled: true });
     const mirror = W.makeMirror({ width: 0.66, height: 0.88, x: 2.45, y: y0 + 1.32, z: z0 + 0.045, ry: 0, room: "bath" });
     g.add(box(0.8, 0.05, 0.08, M.metalGalv, 2.45, y0 + 1.82, z0 + 0.1));
     const mTube = new Mesh(new CylinderGeometry(0.014, 0.014, 0.7, 8), M.tube);
@@ -39237,6 +39859,19 @@ void main() {
     ui.boot(0.03);
     await loadTextures((p) => ui.boot(0.03 + p * 0.72));
     buildMaterials();
+    {
+      const initTex = (t2) => {
+        if (t2 && t2.isTexture) engine.renderer.initTexture(t2);
+      };
+      for (const set of Object.values(T.sets)) {
+        initTex(set.map);
+        initTex(set.normal);
+        initTex(set.rough);
+        initTex(set.ao);
+      }
+      for (const t2 of Object.values(T.art)) initTex(t2);
+      if (T.env) initTex(T.env);
+    }
     scene.environment = T.env;
     scene.environmentIntensity = 0.55;
     const world = new World(scene, engine);
@@ -39259,6 +39894,38 @@ void main() {
     world.makeRain({});
     world.dust.position.set(0, 0, 0);
     if (!params.get("nomerge")) world.optimizeStatic();
+    world.normalizeLights();
+    engine.renderer.shadowMap.autoUpdate = false;
+    engine.renderer.shadowMap.needsUpdate = true;
+    {
+      const ids = Object.keys(world.rooms);
+      const prevRoom = world.currentRoom;
+      const prevPos = camera.position.clone();
+      const prevQuat = camera.quaternion.clone();
+      for (let i = 0; i < ids.length; i++) {
+        const b = world.rooms[ids[i]];
+        world.currentRoom = ids[i];
+        world.updateRoomLights(camera);
+        const cx0 = (b.x0 + b.x1) / 2, cz0 = (b.z0 + b.z1) / 2, cy0 = (b.y0 || 0) + 1.62;
+        for (const [tx, tz] of [[b.x0 + 0.4, b.z0 + 0.4], [b.x1 - 0.4, b.z0 + 0.4], [b.x0 + 0.4, b.z1 - 0.4], [b.x1 - 0.4, b.z1 - 0.4], [cx0, b.z0 + 0.4], [cx0, b.z1 - 0.4]]) {
+          camera.position.set(cx0, cy0, cz0);
+          camera.lookAt(tx, (b.y0 || 0) + 1.4, tz);
+          camera.updateMatrixWorld();
+          engine.renderer.compile(scene, camera);
+          engine.renderer.shadowMap.needsUpdate = true;
+          engine.renderer.render(scene, camera);
+        }
+        engine.composer.render(0.016);
+        engine.renderer.shadowMap.needsUpdate = true;
+        engine.composer.render(0.016);
+        ui.boot(0.9 + 0.09 * ((i + 1) / ids.length));
+      }
+      camera.position.copy(prevPos);
+      camera.quaternion.copy(prevQuat);
+      world.currentRoom = prevRoom;
+      world.updateRoomLights(camera);
+      engine.renderer.shadowMap.needsUpdate = true;
+    }
     const player = new Player(camera, world, audio);
     const story = new Story({ world, ui, audio, player, camera });
     world.story = story;

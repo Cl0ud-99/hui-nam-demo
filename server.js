@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { exec } from 'node:child_process';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
-const PORT = Number(process.env.PORT || 8778);
+const PORT = Number(process.env.PORT || 8777);
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json',
@@ -15,6 +15,17 @@ const MIME = {
 };
 
 http.createServer((req, res) => {
+  // tiny upload sink used by the walkthrough recorder
+  if (req.method === 'POST' && (req.url || '').startsWith('/__save')) {
+    const audio = (req.url || '').includes('audio');
+    const out = path.join(ROOT, 'shots', 'video', audio ? 'walkthrough.m4a.webm' : 'walkthrough.webm');
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    const ws = fs.createWriteStream(out);
+    req.pipe(ws);
+    ws.on('finish', () => { res.writeHead(200, { 'Content-Type': 'text/plain' }); res.end('ok ' + fs.statSync(out).size); });
+    ws.on('error', () => { res.writeHead(500); res.end('err'); });
+    return;
+  }
   let p = decodeURIComponent((req.url || '/').split('?')[0]);
   if (p === '/') p = '/index.html';
   const file = path.join(ROOT, path.normalize(p).replace(/^([/\\])+/, ''));
