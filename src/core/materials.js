@@ -83,11 +83,36 @@ export function buildMaterials() {
   // small panels and tiled it turned every door into a dark grid. Relief comes from the
   // stepped inset geometry instead.
   M.doorEntrance = std('dark_wooden_planks', { color: 0xb04a35, roughness: 0.36, normalScale: 0.45, env: 0.7 });
-  M.doorInner = std('dark_wooden_planks', { color: 0xb98247, roughness: 0.58, normalScale: 0.6, env: 0.38 });
+  M.doorInner = std('dark_wooden_planks', { color: 0x96683c, roughness: 0.62, normalScale: 0.65, env: 0.35 });
   M.doorBath = std('dark_wooden_planks', { color: 0xc6cec1, roughness: 0.76, normalScale: 0.15, env: 0.2 });
   M.doorInset = std('dark_wooden_planks', { color: 0x6b4c2f, roughness: 0.64, normalScale: 0.4, env: 0.3 });
   M.framePaint = std('dark_paneled_wood', { color: 0xcec6b4, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
   M.framePaintGreen = std('dark_paneled_wood', { color: 0x8c988a, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
+
+  // ---------------- B: shop joinery (herb cabinets / counter / structure)
+  M.cabRosewood = std('dark_wooden_planks', { color: 0x5a2418, roughness: 0.55, normalScale: 0.45, env: 0.45, tileMul: 1.5 });
+  M.cabDrawer = std('dark_wooden_planks', { color: 0xa46944, roughness: 0.48, normalScale: 0.35, env: 0.5, tileMul: 2.3 });
+  M.counterTop = std('dark_paneled_wood', { color: 0x33403a, roughness: 0.32, normalScale: 0.15, env: 0.6, tileMul: 3.0 });
+  M.counterBody = std('dark_paneled_wood', { color: 0x40503f, roughness: 0.68, normalScale: 0.35, env: 0.25, tileMul: 2.0 });
+  M.beamRough = std('dark_wooden_planks', { color: 0x7d5a38, roughness: 0.93, normalScale: 1.25, env: 0.12, tileMul: 1.15 });
+  M.signBack = std('painted_metal_shutter', { color: 0x3f4a44, roughness: 0.62, metalness: 0.3, env: 0.35, normalScale: 0.6 });
+
+  // ---------------- C: furniture by family
+  M.woodSeat = std('dark_wooden_planks', { color: 0xb08a5a, roughness: 0.74, normalScale: 1.0, env: 0.3, tileMul: 1.9 });
+  M.woodTable = std('dark_wooden_planks', { color: 0x7d4b2c, roughness: 0.58, normalScale: 0.75, env: 0.38, tileMul: 1.1 });
+  M.wardrobeBody = std('dark_paneled_wood', { color: 0x714c2f, roughness: 0.72, normalScale: 0.55, env: 0.28, tileMul: 1.1 });
+  M.wardrobeDoor = std('dark_wooden_planks', { color: 0x8d6c49, roughness: 0.58, normalScale: 0.5, env: 0.42, tileMul: 1.2 });
+  M.bedTimber = std('dark_wooden_planks', { color: 0x593c26, roughness: 0.72, normalScale: 0.7, env: 0.22, tileMul: 1.3 });
+  M.plyLight = std('dark_wooden_planks', { color: 0xb59367, roughness: 0.82, normalScale: 0.55, env: 0.18, tileMul: 2.5 });
+  M.laminateDark = std('dark_paneled_wood', { color: 0x3b423b, roughness: 0.42, normalScale: 0.18, env: 0.42, tileMul: 2.6 });
+
+  // ---------------- D: shrine lacquer
+  M.shrineRed = std('dark_wooden_planks', { color: 0xa23324, roughness: 0.30, normalScale: 0.28, env: 0.7, tileMul: 1.35 });
+  M.shrineDark = std('dark_wooden_planks', { color: 0x61211a, roughness: 0.38, normalScale: 0.32, env: 0.55, tileMul: 1.9 });
+
+  // ---------------- E: floors & rough timber
+  M.floorApt = std('dark_wooden_planks', { color: 0xab8a5f, roughness: 0.8, normalScale: 0.9, env: 0.28, tileMul: 1.7 });
+  M.cratePine = std('dark_wooden_planks', { color: 0xa88a62, roughness: 0.9, normalScale: 1.1, env: 0.15, tileMul: 1.6 });
 
   // ---------------- metals
   M.metalRust = std('rusty_metal_02', { color: 0x8c6a4e, roughness: 0.85, metalness: 0.55, normalScale: 1.2, env: 0.6 });

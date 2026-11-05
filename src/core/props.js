@@ -114,7 +114,7 @@ export function ceilingFan() {
   const blades = new THREE.Group(); blades.position.y = -0.5;
   for (let i = 0; i < 3; i++) {
     const w = new THREE.Group(); w.rotation.y = i / 3 * Math.PI * 2;
-    const b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.012, 0.16), M.woodDark);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.012, 0.16), M.woodTable);
     b.position.x = 0.38; b.rotation.z = -0.06; w.add(b); blades.add(w);
   }
   g.add(blades);
@@ -125,12 +125,12 @@ export function ceilingFan() {
 // ---------------------------------------------------------------- shop fittings
 export function apothecary(w = 2.4, h = 2.1, d = 0.34, cols = 5, rows = 6) {
   const g = new THREE.Group();
-  g.add(box(w, h, d, M.woodDark, 0, h / 2, 0));
+  g.add(box(w, h, d, M.cabRosewood, 0, h / 2, 0));
   const cw = w / cols, ch = h / rows;
   let idx = 0;
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     const fw = cw - 0.03, fh = ch - 0.03;
-    const front = box(fw, fh, 0.02, M.woodBlack, -w / 2 + cw * (c + 0.5), ch * (r + 0.5), d / 2 + 0.005);
+    const front = box(fw, fh, 0.02, M.cabDrawer, -w / 2 + cw * (c + 0.5), ch * (r + 0.5), d / 2 + 0.005);
     g.add(front);
     const lab = labelPlane(Math.min(0.16, fw * 0.55), 0.055, idx++);
     lab.position.set(-w / 2 + cw * (c + 0.5), ch * (r + 0.5) + 0.01, d / 2 + 0.018);
@@ -140,20 +140,20 @@ export function apothecary(w = 2.4, h = 2.1, d = 0.34, cols = 5, rows = 6) {
     handle.position.set(-w / 2 + cw * (c + 0.5), ch * (r + 0.5) - 0.055, d / 2 + 0.035);
     g.add(handle);
   }
-  const cornice = box(w + 0.08, 0.07, d + 0.06, M.woodBlack, 0, h + 0.02, 0);
+  const cornice = box(w + 0.08, 0.07, d + 0.06, M.cabDrawer, 0, h + 0.02, 0);
   g.add(cornice);
   return g;
 }
 
 export function shopCounter(w = 1.9, d = 0.62, h = 1.02) {
   const g = new THREE.Group();
-  g.add(box(w, h - 0.06, d, M.woodDark, 0, (h - 0.06) / 2, 0));
-  const top = box(w + 0.1, 0.06, d + 0.08, M.woodBlack, 0, h - 0.03, 0);
+  g.add(box(w, h - 0.06, d, M.counterBody, 0, (h - 0.06) / 2, 0));
+  const top = box(w + 0.1, 0.06, d + 0.08, M.counterTop, 0, h - 0.03, 0);
   g.add(top);
   // front panels
   for (let i = 0; i < 3; i++) {
     const pw = (w - 0.16) / 3;
-    g.add(box(pw - 0.03, h - 0.22, 0.02, M.woodBlack, -w / 2 + 0.08 + pw * (i + 0.5), (h - 0.06) / 2, d / 2 + 0.005));
+    g.add(box(pw - 0.03, h - 0.22, 0.02, M.counterBody, -w / 2 + 0.08 + pw * (i + 0.5), (h - 0.06) / 2, d / 2 + 0.005));
     const knob = new THREE.Mesh(new THREE.SphereGeometry(0.017, 8, 6), M.brass);
     knob.position.set(-w / 2 + 0.08 + pw * (i + 0.5), h * 0.62, d / 2 + 0.03); g.add(knob);
   }
@@ -169,7 +169,7 @@ export function herbJar(r = 0.075, h = 0.16, fill = 0x6a5a32) {
   content.position.y = h * 0.34; g.add(content);
   const lid = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.03, r * 1.03, 0.018, 14), M.brass);
   lid.position.y = h + 0.005; g.add(lid);
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.96, r * 0.96, 0.008, 14), M.woodBlack);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.96, r * 0.96, 0.008, 14), M.cabDrawer);
   base.position.y = 0.004; g.add(base);
   return g;
 }
@@ -188,7 +188,7 @@ export function medicineBottle(color = 0x3a2418) {
 
 export function brassScale() {
   const g = new THREE.Group();
-  g.add(cyl(0.09, 0.11, 0.02, M.woodBlack, 16));
+  g.add(cyl(0.09, 0.11, 0.02, M.cabRosewood, 16));
   const col = cyl(0.012, 0.012, 0.30, M.brass, 8); col.position.y = 0.15; g.add(col);
   const beam = cyl(0.008, 0.008, 0.34, M.brass, 6); beam.rotation.z = Math.PI / 2; beam.position.y = 0.3; g.add(beam);
   for (const s of [-1, 1]) {
@@ -206,12 +206,12 @@ export function brassScale() {
 
 export function abacus() {
   const g = new THREE.Group();
-  g.add(box(0.34, 0.02, 0.15, M.woodBlack, 0, 0.01, 0));
+  g.add(box(0.34, 0.02, 0.15, M.cabDrawer, 0, 0.01, 0));
   for (let i = 0; i < 8; i++) {
     const rod = cyl(0.0022, 0.0022, 0.14, M.brass, 4);
     rod.rotation.x = Math.PI / 2; rod.position.set(-0.14 + i * 0.04, 0.03, 0); g.add(rod);
     for (let k = 0; k < 4; k++) {
-      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.011, 8, 6), M.woodRed);
+      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.011, 8, 6), M.shrineDark);
       bead.scale.y = 0.55; bead.position.set(-0.14 + i * 0.04, 0.033, -0.04 + k * 0.024 + (i % 3) * 0.004);
       g.add(bead);
     }
@@ -221,7 +221,7 @@ export function abacus() {
 
 export function radio() {
   const g = new THREE.Group();
-  g.add(box(0.24, 0.15, 0.09, M.woodDark, 0, 0.075, 0));
+  g.add(box(0.24, 0.15, 0.09, M.woodTable, 0, 0.075, 0));
   const grille = box(0.13, 0.10, 0.005, M.blackMetal, -0.04, 0.08, 0.048); g.add(grille);
   for (let i = 0; i < 7; i++) {
     g.add(box(0.12, 0.003, 0.002, M.metalGalv, -0.04, 0.04 + i * 0.012, 0.052));
@@ -237,49 +237,49 @@ export function radio() {
 // ---------------------------------------------------------------- furniture
 export function woodenStool(h = 0.44) {
   const g = new THREE.Group();
-  const top = cyl(0.16, 0.17, 0.035, M.woodDark, 16); top.position.y = h; g.add(top);
+  const top = cyl(0.16, 0.17, 0.035, M.woodSeat, 16); top.position.y = h; g.add(top);
   for (let i = 0; i < 4; i++) {
     const a = i / 4 * Math.PI * 2 + Math.PI / 4;
-    const leg = cyl(0.016, 0.02, h, M.woodDark, 8);
+    const leg = cyl(0.016, 0.02, h, M.woodSeat, 8);
     leg.position.set(Math.cos(a) * 0.12, h / 2, Math.sin(a) * 0.12);
     leg.rotation.z = Math.cos(a) * 0.09; leg.rotation.x = -Math.sin(a) * 0.09;
     g.add(leg);
   }
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.008, 5, 18), M.woodDark);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.008, 5, 18), M.woodSeat);
   ring.rotation.x = Math.PI / 2; ring.position.y = 0.15; g.add(ring);
   return g;
 }
 
 export function woodenChair() {
   const g = new THREE.Group();
-  const seat = box(0.4, 0.04, 0.4, M.woodDark, 0, 0.44, 0); g.add(seat);
+  const seat = box(0.4, 0.04, 0.4, M.woodSeat, 0, 0.44, 0); g.add(seat);
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const leg = cyl(0.016, 0.02, 0.44, M.woodDark, 8);
+    const leg = cyl(0.016, 0.02, 0.44, M.woodSeat, 8);
     leg.position.set(sx * 0.17, 0.22, sz * 0.17); g.add(leg);
   }
   for (const sx of [-1, 1]) {
-    const post = cyl(0.017, 0.017, 0.48, M.woodDark, 8);
+    const post = cyl(0.017, 0.017, 0.48, M.woodSeat, 8);
     post.position.set(sx * 0.17, 0.68, -0.18); g.add(post);
   }
-  g.add(box(0.38, 0.12, 0.03, M.woodDark, 0, 0.84, -0.18));
-  g.add(box(0.36, 0.035, 0.025, M.woodDark, 0, 0.64, -0.18));
+  g.add(box(0.38, 0.12, 0.03, M.woodSeat, 0, 0.84, -0.18));
+  g.add(box(0.36, 0.035, 0.025, M.woodSeat, 0, 0.64, -0.18));
   return g;
 }
 
 export function diningTable(w = 1.1, d = 0.8, h = 0.76) {
   const g = new THREE.Group();
-  g.add(box(w, 0.05, d, M.woodDark, 0, h, 0));
+  g.add(box(w, 0.05, d, M.woodTable, 0, h, 0));
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const leg = cyl(0.025, 0.03, h, M.woodDark, 8);
+    const leg = cyl(0.025, 0.03, h, M.woodTable, 8);
     leg.position.set(sx * (w / 2 - 0.08), h / 2, sz * (d / 2 - 0.08)); g.add(leg);
   }
-  g.add(box(w - 0.16, 0.06, 0.05, M.woodDark, 0, h - 0.09, 0));
+  g.add(box(w - 0.16, 0.06, 0.05, M.woodTable, 0, h - 0.09, 0));
   return g;
 }
 
 export function sofa(w = 2.0) {
   const g = new THREE.Group();
-  g.add(box(w, 0.16, 0.82, M.woodBlack, 0, 0.24, 0));
+  g.add(box(w, 0.16, 0.82, M.laminateDark, 0, 0.24, 0));
   g.add(box(w - 0.1, 0.16, 0.78, M.fabricRed, 0, 0.4, 0.02));
   const back = box(w, 0.52, 0.18, M.fabricRed, 0, 0.64, -0.32); back.rotation.x = -0.08; g.add(back);
   for (const s of [-1, 1]) {
@@ -307,7 +307,7 @@ export function sofa(w = 2.0) {
 
 export function bed(w = 1.15, l = 1.95) {
   const g = new THREE.Group();
-  g.add(box(w, 0.22, l, M.woodBlack, 0, 0.22, 0));
+  g.add(box(w, 0.22, l, M.bedTimber, 0, 0.22, 0));
   g.add(box(w - 0.06, 0.18, l - 0.08, M.fabricCream, 0, 0.42, 0));
   // blanket
   const blanket = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.08, l * 0.72, 18, 22), M.fabricRed);
@@ -324,15 +324,15 @@ export function bed(w = 1.15, l = 1.95) {
     pillow.rotation.x = -0.12; pillow.rotation.z = s * 0.05; g.add(pillow);
   }
   // headboard
-  g.add(box(w + 0.06, 0.5, 0.05, M.woodDark, 0, 0.66, -l / 2 - 0.02));
+  g.add(box(w + 0.06, 0.5, 0.05, M.bedTimber, 0, 0.66, -l / 2 - 0.02));
   return g;
 }
 
 export function wardrobe(w = 1.2, h = 2.0, d = 0.55) {
   const g = new THREE.Group();
-  g.add(box(w, h, d, M.woodDark, 0, h / 2, 0));
+  g.add(box(w, h, d, M.wardrobeBody, 0, h / 2, 0));
   for (const s of [-1, 1]) {
-    const door = box(w / 2 - 0.02, h - 0.08, 0.03, M.woodBlack, s * w / 4, h / 2, d / 2 + 0.01);
+    const door = box(w / 2 - 0.02, h - 0.08, 0.03, M.wardrobeDoor, s * w / 4, h / 2, d / 2 + 0.01);
     g.add(door);
     const hd = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), M.brass);
     hd.position.set(s * 0.03, h / 2, d / 2 + 0.04); g.add(hd);
@@ -377,11 +377,11 @@ export function tvSet() {
 // ---------------------------------------------------------------- altar
 export function altarTable(w = 1.5, d = 0.5, h = 0.82) {
   const g = new THREE.Group();
-  g.add(box(w, 0.06, d, M.woodRed, 0, h, 0));
-  g.add(box(w - 0.12, 0.22, 0.04, M.woodRed, 0, h - 0.16, d / 2 - 0.05));
+  g.add(box(w, 0.06, d, M.shrineRed, 0, h, 0));
+  g.add(box(w - 0.12, 0.22, 0.04, M.shrineDark, 0, h - 0.16, d / 2 - 0.05));
   for (const s of [-1, 1]) {
-    g.add(box(0.07, h, 0.07, M.woodRed, s * (w / 2 - 0.06), h / 2, d / 2 - 0.06));
-    g.add(box(0.07, h, 0.07, M.woodRed, s * (w / 2 - 0.06), h / 2, -d / 2 + 0.06));
+    g.add(box(0.07, h, 0.07, M.shrineRed, s * (w / 2 - 0.06), h / 2, d / 2 - 0.06));
+    g.add(box(0.07, h, 0.07, M.shrineRed, s * (w / 2 - 0.06), h / 2, -d / 2 + 0.06));
   }
   return g;
 }
@@ -432,8 +432,8 @@ export function crate(w = 0.5, h = 0.36, d = 0.36, mat = M.woodRaw) {
   const g = new THREE.Group();
   g.add(box(w, h, d, mat, 0, h / 2, 0));
   for (const s of [-1, 1]) {
-    g.add(box(w + 0.01, 0.03, 0.03, M.woodDark, 0, h * 0.18, s * (d / 2 + 0.005)));
-    g.add(box(w + 0.01, 0.03, 0.03, M.woodDark, 0, h * 0.86, s * (d / 2 + 0.005)));
+    g.add(box(w + 0.01, 0.03, 0.03, M.woodTable, 0, h * 0.18, s * (d / 2 + 0.005)));
+    g.add(box(w + 0.01, 0.03, 0.03, M.woodTable, 0, h * 0.86, s * (d / 2 + 0.005)));
   }
   return g;
 }
@@ -639,7 +639,7 @@ export function curtain(w = 1.0, h = 2.0, mat = M.curtain) {
 
 export function shrineLight() {
   const g = new THREE.Group(); g.userData.dynamic = true;
-  g.add(box(0.34, 0.5, 0.2, M.woodRed, 0, 0.25, 0));
+  g.add(box(0.34, 0.5, 0.2, M.shrineDark, 0, 0.25, 0));
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.3),
     new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 0.28, 0.14) }));
   glow.position.set(0, 0.27, 0.101); g.add(glow);

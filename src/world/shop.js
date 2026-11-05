@@ -31,7 +31,7 @@ export function buildShop(W) {
 
   // beams
   for (let i = 0; i < 3; i++) {
-    const b = box(x1 - x0 + 0.02, 0.16, 0.12, M.woodBlack, cx, h - 0.09, z0 + 1.4 + i * 2.2);
+    const b = box(x1 - x0 + 0.02, 0.16, 0.12, M.beamRough, cx, h - 0.09, z0 + 1.4 + i * 2.2);
     g.add(b);
   }
 
@@ -92,7 +92,7 @@ export function buildShop(W) {
   }));
   sign.position.set(-1.35, 3.62, 0.18); sf.add(sign);
   // sign board backing
-  sf.add(box(3.04, 0.92, 0.12, M.woodBlack, -1.35, 3.62, 0.10));
+  sf.add(box(3.04, 0.92, 0.12, M.signBack, -1.35, 3.62, 0.10));
 
   // neon, perpendicular to the facade so it reads down the alley
   const neonMat = new THREE.MeshBasicMaterial({
@@ -281,7 +281,7 @@ export function buildShop(W) {
 
   // shrine on the west shelf
   const sh = new THREE.Group(); sh.position.set(x0 + 0.2, 1.55, 1.0); sh.rotation.y = Math.PI / 2; g.add(sh);
-  sh.add(box(0.3, 0.4, 0.16, M.woodRed, 0, 0.2, 0));
+  sh.add(box(0.3, 0.4, 0.16, M.shrineRed, 0, 0.2, 0));
   const shGlow = new THREE.Mesh(new THREE.PlaneGeometry(0.17, 0.22), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.12, 0.06) }));
   shGlow.position.set(0, 0.22, 0.081); sh.add(shGlow);
   sh.add(cyl(0.006, 0.006, 0.14, M.candleWax, 6).translateX(0.1).translateY(0.07));

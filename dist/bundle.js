@@ -34842,11 +34842,28 @@ void main() {
     M.woodFloorMat = std("dark_wooden_planks", { color: 9136709, roughness: 0.75, normalScale: 1, env: 0.3 });
     M.woodRaw = std("dark_wooden_planks", { color: 10519650, roughness: 0.9, normalScale: 1.1, env: 0.25 });
     M.doorEntrance = std("dark_wooden_planks", { color: 11553333, roughness: 0.36, normalScale: 0.45, env: 0.7 });
-    M.doorInner = std("dark_wooden_planks", { color: 12157511, roughness: 0.58, normalScale: 0.6, env: 0.38 });
+    M.doorInner = std("dark_wooden_planks", { color: 9857084, roughness: 0.62, normalScale: 0.65, env: 0.35 });
     M.doorBath = std("dark_wooden_planks", { color: 13029057, roughness: 0.76, normalScale: 0.15, env: 0.2 });
     M.doorInset = std("dark_wooden_planks", { color: 7031855, roughness: 0.64, normalScale: 0.4, env: 0.3 });
     M.framePaint = std("dark_paneled_wood", { color: 13551284, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
     M.framePaintGreen = std("dark_paneled_wood", { color: 9214090, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
+    M.cabRosewood = std("dark_wooden_planks", { color: 5907480, roughness: 0.55, normalScale: 0.45, env: 0.45, tileMul: 1.5 });
+    M.cabDrawer = std("dark_wooden_planks", { color: 10774852, roughness: 0.48, normalScale: 0.35, env: 0.5, tileMul: 2.3 });
+    M.counterTop = std("dark_paneled_wood", { color: 3358778, roughness: 0.32, normalScale: 0.15, env: 0.6, tileMul: 3 });
+    M.counterBody = std("dark_paneled_wood", { color: 4214847, roughness: 0.68, normalScale: 0.35, env: 0.25, tileMul: 2 });
+    M.beamRough = std("dark_wooden_planks", { color: 8215096, roughness: 0.93, normalScale: 1.25, env: 0.12, tileMul: 1.15 });
+    M.signBack = std("painted_metal_shutter", { color: 4147780, roughness: 0.62, metalness: 0.3, env: 0.35, normalScale: 0.6 });
+    M.woodSeat = std("dark_wooden_planks", { color: 11569754, roughness: 0.74, normalScale: 1, env: 0.3, tileMul: 1.9 });
+    M.woodTable = std("dark_wooden_planks", { color: 8211244, roughness: 0.58, normalScale: 0.75, env: 0.38, tileMul: 1.1 });
+    M.wardrobeBody = std("dark_paneled_wood", { color: 7425071, roughness: 0.72, normalScale: 0.55, env: 0.28, tileMul: 1.1 });
+    M.wardrobeDoor = std("dark_wooden_planks", { color: 9268297, roughness: 0.58, normalScale: 0.5, env: 0.42, tileMul: 1.2 });
+    M.bedTimber = std("dark_wooden_planks", { color: 5848102, roughness: 0.72, normalScale: 0.7, env: 0.22, tileMul: 1.3 });
+    M.plyLight = std("dark_wooden_planks", { color: 11899751, roughness: 0.82, normalScale: 0.55, env: 0.18, tileMul: 2.5 });
+    M.laminateDark = std("dark_paneled_wood", { color: 3883579, roughness: 0.42, normalScale: 0.18, env: 0.42, tileMul: 2.6 });
+    M.shrineRed = std("dark_wooden_planks", { color: 10629924, roughness: 0.3, normalScale: 0.28, env: 0.7, tileMul: 1.35 });
+    M.shrineDark = std("dark_wooden_planks", { color: 6365466, roughness: 0.38, normalScale: 0.32, env: 0.55, tileMul: 1.9 });
+    M.floorApt = std("dark_wooden_planks", { color: 11242079, roughness: 0.8, normalScale: 0.9, env: 0.28, tileMul: 1.7 });
+    M.cratePine = std("dark_wooden_planks", { color: 11045474, roughness: 0.9, normalScale: 1.1, env: 0.15, tileMul: 1.6 });
     M.metalRust = std("rusty_metal_02", { color: 9202254, roughness: 0.85, metalness: 0.55, normalScale: 1.2, env: 0.6 });
     M.metalGalv = std("rusty_painted_metal", { color: 10133664, roughness: 0.6, metalness: 0.65, normalScale: 1, env: 0.8 });
     M.metalDark = std("rusty_metal_02", { color: 3815992, roughness: 0.55, metalness: 0.7, normalScale: 1, env: 0.7 });
@@ -36056,12 +36073,12 @@ void main() {
   }
   function apothecary(w = 2.4, h = 2.1, d = 0.34, cols = 5, rows = 6) {
     const g = new Group();
-    g.add(box(w, h, d, M.woodDark, 0, h / 2, 0));
+    g.add(box(w, h, d, M.cabRosewood, 0, h / 2, 0));
     const cw = w / cols, ch = h / rows;
     let idx = 0;
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       const fw = cw - 0.03, fh = ch - 0.03;
-      const front = box(fw, fh, 0.02, M.woodBlack, -w / 2 + cw * (c + 0.5), ch * (r + 0.5), d / 2 + 5e-3);
+      const front = box(fw, fh, 0.02, M.cabDrawer, -w / 2 + cw * (c + 0.5), ch * (r + 0.5), d / 2 + 5e-3);
       g.add(front);
       const lab = labelPlane(Math.min(0.16, fw * 0.55), 0.055, idx++);
       lab.position.set(-w / 2 + cw * (c + 0.5), ch * (r + 0.5) + 0.01, d / 2 + 0.018);
@@ -36071,18 +36088,18 @@ void main() {
       handle.position.set(-w / 2 + cw * (c + 0.5), ch * (r + 0.5) - 0.055, d / 2 + 0.035);
       g.add(handle);
     }
-    const cornice = box(w + 0.08, 0.07, d + 0.06, M.woodBlack, 0, h + 0.02, 0);
+    const cornice = box(w + 0.08, 0.07, d + 0.06, M.cabDrawer, 0, h + 0.02, 0);
     g.add(cornice);
     return g;
   }
   function shopCounter(w = 1.9, d = 0.62, h = 1.02) {
     const g = new Group();
-    g.add(box(w, h - 0.06, d, M.woodDark, 0, (h - 0.06) / 2, 0));
-    const top = box(w + 0.1, 0.06, d + 0.08, M.woodBlack, 0, h - 0.03, 0);
+    g.add(box(w, h - 0.06, d, M.counterBody, 0, (h - 0.06) / 2, 0));
+    const top = box(w + 0.1, 0.06, d + 0.08, M.counterTop, 0, h - 0.03, 0);
     g.add(top);
     for (let i = 0; i < 3; i++) {
       const pw = (w - 0.16) / 3;
-      g.add(box(pw - 0.03, h - 0.22, 0.02, M.woodBlack, -w / 2 + 0.08 + pw * (i + 0.5), (h - 0.06) / 2, d / 2 + 5e-3));
+      g.add(box(pw - 0.03, h - 0.22, 0.02, M.counterBody, -w / 2 + 0.08 + pw * (i + 0.5), (h - 0.06) / 2, d / 2 + 5e-3));
       const knob = new Mesh(new SphereGeometry(0.017, 8, 6), M.brass);
       knob.position.set(-w / 2 + 0.08 + pw * (i + 0.5), h * 0.62, d / 2 + 0.03);
       g.add(knob);
@@ -36103,7 +36120,7 @@ void main() {
     const lid = new Mesh(new CylinderGeometry(r * 1.03, r * 1.03, 0.018, 14), M.brass);
     lid.position.y = h + 5e-3;
     g.add(lid);
-    const base = new Mesh(new CylinderGeometry(r * 0.96, r * 0.96, 8e-3, 14), M.woodBlack);
+    const base = new Mesh(new CylinderGeometry(r * 0.96, r * 0.96, 8e-3, 14), M.cabDrawer);
     base.position.y = 4e-3;
     g.add(base);
     return g;
@@ -36124,7 +36141,7 @@ void main() {
   }
   function brassScale() {
     const g = new Group();
-    g.add(cyl(0.09, 0.11, 0.02, M.woodBlack, 16));
+    g.add(cyl(0.09, 0.11, 0.02, M.cabRosewood, 16));
     const col = cyl(0.012, 0.012, 0.3, M.brass, 8);
     col.position.y = 0.15;
     g.add(col);
@@ -36149,14 +36166,14 @@ void main() {
   }
   function abacus() {
     const g = new Group();
-    g.add(box(0.34, 0.02, 0.15, M.woodBlack, 0, 0.01, 0));
+    g.add(box(0.34, 0.02, 0.15, M.cabDrawer, 0, 0.01, 0));
     for (let i = 0; i < 8; i++) {
       const rod = cyl(22e-4, 22e-4, 0.14, M.brass, 4);
       rod.rotation.x = Math.PI / 2;
       rod.position.set(-0.14 + i * 0.04, 0.03, 0);
       g.add(rod);
       for (let k = 0; k < 4; k++) {
-        const bead = new Mesh(new SphereGeometry(0.011, 8, 6), M.woodRed);
+        const bead = new Mesh(new SphereGeometry(0.011, 8, 6), M.shrineDark);
         bead.scale.y = 0.55;
         bead.position.set(-0.14 + i * 0.04, 0.033, -0.04 + k * 0.024 + i % 3 * 4e-3);
         g.add(bead);
@@ -36166,7 +36183,7 @@ void main() {
   }
   function radio() {
     const g = new Group();
-    g.add(box(0.24, 0.15, 0.09, M.woodDark, 0, 0.075, 0));
+    g.add(box(0.24, 0.15, 0.09, M.woodTable, 0, 0.075, 0));
     const grille = box(0.13, 0.1, 5e-3, M.blackMetal, -0.04, 0.08, 0.048);
     g.add(grille);
     for (let i = 0; i < 7; i++) {
@@ -36186,18 +36203,18 @@ void main() {
   }
   function woodenStool(h = 0.44) {
     const g = new Group();
-    const top = cyl(0.16, 0.17, 0.035, M.woodDark, 16);
+    const top = cyl(0.16, 0.17, 0.035, M.woodSeat, 16);
     top.position.y = h;
     g.add(top);
     for (let i = 0; i < 4; i++) {
       const a = i / 4 * Math.PI * 2 + Math.PI / 4;
-      const leg = cyl(0.016, 0.02, h, M.woodDark, 8);
+      const leg = cyl(0.016, 0.02, h, M.woodSeat, 8);
       leg.position.set(Math.cos(a) * 0.12, h / 2, Math.sin(a) * 0.12);
       leg.rotation.z = Math.cos(a) * 0.09;
       leg.rotation.x = -Math.sin(a) * 0.09;
       g.add(leg);
     }
-    const ring = new Mesh(new TorusGeometry(0.13, 8e-3, 5, 18), M.woodDark);
+    const ring = new Mesh(new TorusGeometry(0.13, 8e-3, 5, 18), M.woodSeat);
     ring.rotation.x = Math.PI / 2;
     ring.position.y = 0.15;
     g.add(ring);
@@ -36205,25 +36222,25 @@ void main() {
   }
   function woodenChair() {
     const g = new Group();
-    const seat = box(0.4, 0.04, 0.4, M.woodDark, 0, 0.44, 0);
+    const seat = box(0.4, 0.04, 0.4, M.woodSeat, 0, 0.44, 0);
     g.add(seat);
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      const leg = cyl(0.016, 0.02, 0.44, M.woodDark, 8);
+      const leg = cyl(0.016, 0.02, 0.44, M.woodSeat, 8);
       leg.position.set(sx * 0.17, 0.22, sz * 0.17);
       g.add(leg);
     }
     for (const sx of [-1, 1]) {
-      const post = cyl(0.017, 0.017, 0.48, M.woodDark, 8);
+      const post = cyl(0.017, 0.017, 0.48, M.woodSeat, 8);
       post.position.set(sx * 0.17, 0.68, -0.18);
       g.add(post);
     }
-    g.add(box(0.38, 0.12, 0.03, M.woodDark, 0, 0.84, -0.18));
-    g.add(box(0.36, 0.035, 0.025, M.woodDark, 0, 0.64, -0.18));
+    g.add(box(0.38, 0.12, 0.03, M.woodSeat, 0, 0.84, -0.18));
+    g.add(box(0.36, 0.035, 0.025, M.woodSeat, 0, 0.64, -0.18));
     return g;
   }
   function sofa(w = 2) {
     const g = new Group();
-    g.add(box(w, 0.16, 0.82, M.woodBlack, 0, 0.24, 0));
+    g.add(box(w, 0.16, 0.82, M.laminateDark, 0, 0.24, 0));
     g.add(box(w - 0.1, 0.16, 0.78, M.fabricRed, 0, 0.4, 0.02));
     const back = box(w, 0.52, 0.18, M.fabricRed, 0, 0.64, -0.32);
     back.rotation.x = -0.08;
@@ -36252,7 +36269,7 @@ void main() {
   }
   function bed(w = 1.15, l = 1.95) {
     const g = new Group();
-    g.add(box(w, 0.22, l, M.woodBlack, 0, 0.22, 0));
+    g.add(box(w, 0.22, l, M.bedTimber, 0, 0.22, 0));
     g.add(box(w - 0.06, 0.18, l - 0.08, M.fabricCream, 0, 0.42, 0));
     const blanket = new Mesh(new PlaneGeometry(w + 0.08, l * 0.72, 18, 22), M.fabricRed);
     const p = blanket.geometry.attributes.position;
@@ -36270,14 +36287,14 @@ void main() {
       pillow.rotation.z = s * 0.05;
       g.add(pillow);
     }
-    g.add(box(w + 0.06, 0.5, 0.05, M.woodDark, 0, 0.66, -l / 2 - 0.02));
+    g.add(box(w + 0.06, 0.5, 0.05, M.bedTimber, 0, 0.66, -l / 2 - 0.02));
     return g;
   }
   function wardrobe(w = 1.2, h = 2, d = 0.55) {
     const g = new Group();
-    g.add(box(w, h, d, M.woodDark, 0, h / 2, 0));
+    g.add(box(w, h, d, M.wardrobeBody, 0, h / 2, 0));
     for (const s of [-1, 1]) {
-      const door = box(w / 2 - 0.02, h - 0.08, 0.03, M.woodBlack, s * w / 4, h / 2, d / 2 + 0.01);
+      const door = box(w / 2 - 0.02, h - 0.08, 0.03, M.wardrobeDoor, s * w / 4, h / 2, d / 2 + 0.01);
       g.add(door);
       const hd = new Mesh(new SphereGeometry(0.018, 8, 6), M.brass);
       hd.position.set(s * 0.03, h / 2, d / 2 + 0.04);
@@ -36327,11 +36344,11 @@ void main() {
   }
   function altarTable(w = 1.5, d = 0.5, h = 0.82) {
     const g = new Group();
-    g.add(box(w, 0.06, d, M.woodRed, 0, h, 0));
-    g.add(box(w - 0.12, 0.22, 0.04, M.woodRed, 0, h - 0.16, d / 2 - 0.05));
+    g.add(box(w, 0.06, d, M.shrineRed, 0, h, 0));
+    g.add(box(w - 0.12, 0.22, 0.04, M.shrineDark, 0, h - 0.16, d / 2 - 0.05));
     for (const s of [-1, 1]) {
-      g.add(box(0.07, h, 0.07, M.woodRed, s * (w / 2 - 0.06), h / 2, d / 2 - 0.06));
-      g.add(box(0.07, h, 0.07, M.woodRed, s * (w / 2 - 0.06), h / 2, -d / 2 + 0.06));
+      g.add(box(0.07, h, 0.07, M.shrineRed, s * (w / 2 - 0.06), h / 2, d / 2 - 0.06));
+      g.add(box(0.07, h, 0.07, M.shrineRed, s * (w / 2 - 0.06), h / 2, -d / 2 + 0.06));
     }
     return g;
   }
@@ -36389,8 +36406,8 @@ void main() {
     const g = new Group();
     g.add(box(w, h, d, mat, 0, h / 2, 0));
     for (const s of [-1, 1]) {
-      g.add(box(w + 0.01, 0.03, 0.03, M.woodDark, 0, h * 0.18, s * (d / 2 + 5e-3)));
-      g.add(box(w + 0.01, 0.03, 0.03, M.woodDark, 0, h * 0.86, s * (d / 2 + 5e-3)));
+      g.add(box(w + 0.01, 0.03, 0.03, M.woodTable, 0, h * 0.18, s * (d / 2 + 5e-3)));
+      g.add(box(w + 0.01, 0.03, 0.03, M.woodTable, 0, h * 0.86, s * (d / 2 + 5e-3)));
     }
     return g;
   }
@@ -37089,7 +37106,7 @@ void main() {
       c.rotation.y = rand(-0.2, 0.2);
       g.add(c);
     }
-    const pallet = box(1.1, 0.12, 0.9, M.woodRaw, 6.2, 0.06, 12.6);
+    const pallet = box(1.1, 0.12, 0.9, M.cratePine, 6.2, 0.06, 12.6);
     g.add(pallet);
     W.colliders.push({ minX: 5.6, maxX: 7.1, minZ: 11, maxZ: 13, minY: 0, maxY: 0.9, enabled: true });
     for (let i = 0; i < 5; i++) {
@@ -37274,8 +37291,8 @@ void main() {
     lad.position.set(7.55, 0, 6.6);
     lad.rotation.z = 0.12;
     g.add(lad);
-    for (const s of [-1, 1]) lad.add(box(0.04, 2.2, 0.05, M.woodRaw, s * 0.22, 1.1, 0));
-    for (let i = 0; i < 6; i++) lad.add(box(0.48, 0.03, 0.04, M.woodRaw, 0, 0.3 + i * 0.33, 0));
+    for (const s of [-1, 1]) lad.add(box(0.04, 2.2, 0.05, M.cratePine, s * 0.22, 1.1, 0));
+    for (let i = 0; i < 6; i++) lad.add(box(0.48, 0.03, 0.04, M.cratePine, 0, 0.3 + i * 0.33, 0));
     const pot = new Group();
     pot.position.set(-7.55, 0, 6.7);
     g.add(pot);
@@ -37395,7 +37412,7 @@ void main() {
     ceil.position.set(cx, h, cz);
     g.add(ceil);
     for (let i = 0; i < 3; i++) {
-      const b = box(x1 - x0 + 0.02, 0.16, 0.12, M.woodBlack, cx, h - 0.09, z0 + 1.4 + i * 2.2);
+      const b = box(x1 - x0 + 0.02, 0.16, 0.12, M.beamRough, cx, h - 0.09, z0 + 1.4 + i * 2.2);
       g.add(b);
     }
     const back = wallGroup(x1 - x0, h, M.wallPeelGreen, [{ x0: 3.46, x1: 4.54, y0: 0, y1: 2.3 }]);
@@ -37453,7 +37470,7 @@ void main() {
     }));
     sign2.position.set(-1.35, 3.62, 0.18);
     sf.add(sign2);
-    sf.add(box(3.04, 0.92, 0.12, M.woodBlack, -1.35, 3.62, 0.1));
+    sf.add(box(3.04, 0.92, 0.12, M.signBack, -1.35, 3.62, 0.1));
     const neonMat = new MeshBasicMaterial({
       map: T.art.neon_fuan,
       transparent: true,
@@ -37687,7 +37704,7 @@ void main() {
     sh.position.set(x0 + 0.2, 1.55, 1);
     sh.rotation.y = Math.PI / 2;
     g.add(sh);
-    sh.add(box(0.3, 0.4, 0.16, M.woodRed, 0, 0.2, 0));
+    sh.add(box(0.3, 0.4, 0.16, M.shrineRed, 0, 0.2, 0));
     const shGlow = new Mesh(new PlaneGeometry(0.17, 0.22), new MeshBasicMaterial({ color: new Color(1, 0.12, 0.06) }));
     shGlow.position.set(0, 0.22, 0.081);
     sh.add(shGlow);
@@ -37943,7 +37960,7 @@ void main() {
     sh.position.set(-1.35, 1.8, -6.35);
     sh.rotation.y = 0.25;
     g.add(sh);
-    sh.add(box(0.4, 0.55, 0.24, M.woodRed, 0, 0.28, 0));
+    sh.add(box(0.4, 0.55, 0.24, M.shrineRed, 0, 0.28, 0));
     const glowM = new MeshBasicMaterial({ color: new Color(1.2, 0.12, 0.06) });
     const glow = new Mesh(new PlaneGeometry(0.24, 0.3), glowM);
     glow.position.set(0, 0.32, 0.121);
@@ -37956,7 +37973,7 @@ void main() {
       o.position.set(dx, 0.66, 0.18);
       sh.add(o);
     }
-    sh.add(box(0.34, 0.02, 0.1, M.woodRed, 0, 0.62, 0.16));
+    sh.add(box(0.34, 0.02, 0.1, M.shrineDark, 0, 0.62, 0.16));
     const bk = bucket(0.16, 0.26, M.plasticRed);
     bk.position.set(0.9, 1.82, -5.9);
     g.add(bk);
@@ -38056,10 +38073,10 @@ void main() {
     const g = new Group();
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, cy = y0 + h;
-    const floorMat = M.floorWood.clone();
+    const floorMat = M.floorApt.clone();
     W.wetFloor(floorMat, { room: "apt", amount: 0, distortion: 0.045, blur: 4e-3, tint: 16771280 });
-    floorMat.roughness = 0.38;
-    floorMat.metalness = 0.06;
+    floorMat.roughness = 0.52;
+    floorMat.metalness = 0;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, y0 + 0.01, cz);
@@ -38179,7 +38196,7 @@ void main() {
     g.add(altar);
     const at = altarTable(1.95, 0.62, 0.8);
     altar.add(at);
-    const cloth = new Mesh(new PlaneGeometry(1.9, 0.62, 12, 10), M.woodRed);
+    const cloth = new Mesh(new PlaneGeometry(1.9, 0.62, 12, 10), M.shrineRed);
     cloth.rotation.x = -Math.PI / 2;
     cloth.position.set(0, 0.831, 0.02);
     altar.add(cloth);
@@ -38192,7 +38209,7 @@ void main() {
     const shrine = new Group();
     shrine.position.set(0, 0.83, -0.12);
     altar.add(shrine);
-    shrine.add(box(0.62, 0.52, 0.26, M.woodRed, 0, 0.26, 0));
+    shrine.add(box(0.62, 0.52, 0.26, M.shrineRed, 0, 0.26, 0));
     const shrineInner = new Mesh(new PlaneGeometry(0.52, 0.42), new MeshStandardMaterial({ color: 3804936, roughness: 0.9, emissive: 9050634, emissiveIntensity: 0.35 }));
     shrineInner.position.set(0, 0.3, 0.131);
     shrine.add(shrineInner);
@@ -38321,7 +38338,7 @@ void main() {
     pF.rotation.y = Math.PI / 2;
     g.add(pF);
     for (let i = 0; i < 3; i++) {
-      const ph = pictureFrame(T.art[`photo_${i + 1}`], 0.2, 0.26, i === 1 ? M.woodRed : M.woodDark);
+      const ph = pictureFrame(T.art[`photo_${i + 1}`], 0.2, 0.26, i === 1 ? M.shrineDark : M.framePaint);
       ph.position.set(-3.95, y0 + 1.35 + (i === 1 ? 0.32 : 0), 1.55 + i * 0.3);
       ph.rotation.y = Math.PI / 2;
       ph.rotation.z = rand(-0.05, 0.05);
@@ -38336,12 +38353,12 @@ void main() {
     sf.rotation.y = -Math.PI / 2;
     g.add(sf);
     W.colliders.push({ minX: 2.3, maxX: 3.2, minZ: 0.5, maxZ: 2.6, minY: y0, maxY: y0 + 0.9, enabled: true });
-    const coffee = box(0.95, 0.05, 0.5, M.woodDark, 1.25, y0 + 0.36, 1.55);
+    const coffee = box(0.95, 0.05, 0.5, M.woodTable, 1.25, y0 + 0.36, 1.55);
     g.add(coffee);
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(cyl(0.018, 0.022, 0.36, M.woodDark, 6).translateX(1.25 + sx * 0.4).translateY(y0 + 0.18).translateZ(1.55 + sz * 0.2));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(cyl(0.018, 0.022, 0.36, M.woodTable, 6).translateX(1.25 + sx * 0.4).translateY(y0 + 0.18).translateZ(1.55 + sz * 0.2));
     g.add(cyl(0.035, 0.028, 0.07, M.porcelain, 12).translateX(1.1).translateY(y0 + 0.42).translateZ(1.45));
     g.add(cyl(0.05, 0.05, 0.018, M.ceramicGreen, 14).translateX(1.35).translateY(y0 + 0.39).translateZ(1.62));
-    const cab = box(1.1, 0.55, 0.42, M.woodDark, x0 + 0.28, y0 + 0.275, 2.55);
+    const cab = box(1.1, 0.55, 0.42, M.plyLight, x0 + 0.28, y0 + 0.275, 2.55);
     g.add(cab);
     const tv = tvSet();
     tv.position.set(x0 + 0.3, y0 + 0.55, 2.55);
@@ -38353,8 +38370,8 @@ void main() {
     kt.position.set(x1 - 0.3, y0, -0.35);
     kt.rotation.y = -Math.PI / 2;
     g.add(kt);
-    kt.add(box(1.3, 0.86, 0.56, M.woodDark, 0, 0.43, 0));
-    kt.add(box(1.34, 0.05, 0.6, M.woodBlack, 0, 0.88, 0));
+    kt.add(box(1.3, 0.86, 0.56, M.laminateDark, 0, 0.43, 0));
+    kt.add(box(1.34, 0.05, 0.6, M.counterTop, 0, 0.88, 0));
     const stove = box(0.52, 0.06, 0.42, M.blackMetal, -0.25, 0.915, 0.02);
     kt.add(stove);
     for (const s of [-1, 1]) {
@@ -38398,7 +38415,7 @@ void main() {
     bd.position.set(-3.15, y0, 4.85);
     g.add(bd);
     W.colliders.push({ minX: -3.75, maxX: -2.55, minZ: 3.85, maxZ: 5.85, minY: y0, maxY: y0 + 0.6, enabled: true });
-    const night = box(0.42, 0.5, 0.4, M.woodDark, -2.25, y0 + 0.25, 4.3);
+    const night = box(0.42, 0.5, 0.4, M.plyLight, -2.25, y0 + 0.25, 4.3);
     g.add(night);
     const nlamp = new Group();
     nlamp.position.set(-2.25, y0 + 0.5, 4.3);

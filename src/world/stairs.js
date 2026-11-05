@@ -171,7 +171,7 @@ export function buildStairs(W) {
 
   // shrine on the landing
   const sh = new THREE.Group(); sh.position.set(-1.35, 1.8, -6.35); sh.rotation.y = 0.25; g.add(sh);
-  sh.add(box(0.4, 0.55, 0.24, M.woodRed, 0, 0.28, 0));
+  sh.add(box(0.4, 0.55, 0.24, M.shrineRed, 0, 0.28, 0));
   const glowM = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.2, 0.12, 0.06) });
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.3), glowM);
   glow.position.set(0, 0.32, 0.121); sh.add(glow);
@@ -182,7 +182,7 @@ export function buildStairs(W) {
     const o = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), new THREE.MeshStandardMaterial({ color: 0xc46a1e, roughness: 0.55 }));
     o.position.set(dx, 0.66, 0.18); sh.add(o);
   }
-  sh.add(box(0.34, 0.02, 0.1, M.woodRed, 0, 0.62, 0.16));
+  sh.add(box(0.34, 0.02, 0.1, M.shrineDark, 0, 0.62, 0.16));
 
   // bucket catching a drip
   const bk = bucket(0.16, 0.26, M.plasticRed); bk.position.set(0.9, 1.82, -5.9); g.add(bk);

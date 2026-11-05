@@ -19,10 +19,10 @@ export function buildApartment(W) {
   const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, cy = y0 + h;
 
   // ---------------------------------------------------------------- shell
-  const floorMat = M.floorWood.clone();
+  const floorMat = M.floorApt.clone();
   // same here: the floor is damp, not polished — no mirrored ghost of the room
   W.wetFloor(floorMat, { room: 'apt', amount: 0.0, distortion: 0.045, blur: 0.004, tint: 0xffe8d0 });
-  floorMat.roughness = 0.38; floorMat.metalness = 0.06;
+  floorMat.roughness = 0.52; floorMat.metalness = 0.0;
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(cx, y0 + 0.01, cz);
   floor.receiveShadow = true; g.add(floor); W.upperHide.push(floor);
@@ -127,7 +127,7 @@ export function buildApartment(W) {
   const altar = new THREE.Group(); altar.position.set(x0 + 0.42, y0, 0.12); altar.rotation.y = Math.PI / 2; g.add(altar);
   const at = altarTable(1.95, 0.62, 0.8); altar.add(at);
   // red cloth over the table
-  const cloth = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.62, 12, 10), M.woodRed);
+  const cloth = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.62, 12, 10), M.shrineRed);
   cloth.rotation.x = -Math.PI / 2; cloth.position.set(0, 0.831, 0.02); altar.add(cloth);
   // cloth falling to the floor over the front edge
   const skirt = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.8, 14, 10), M.fabricRed);
@@ -138,7 +138,7 @@ export function buildApartment(W) {
 
   // shrine box with red light behind glass
   const shrine = new THREE.Group(); shrine.position.set(0, 0.83, -0.12); altar.add(shrine);
-  shrine.add(box(0.62, 0.52, 0.26, M.woodRed, 0, 0.26, 0));
+  shrine.add(box(0.62, 0.52, 0.26, M.shrineRed, 0, 0.26, 0));
   // dark red interior with a small hot strip light (no flat pink screen)
   const shrineInner = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.42), new THREE.MeshStandardMaterial({ color: 0x3a0f08, roughness: 0.9, emissive: 0x8a1a0a, emissiveIntensity: 0.35 }));
   shrineInner.position.set(0, 0.3, 0.131); shrine.add(shrineInner);
@@ -222,7 +222,7 @@ export function buildApartment(W) {
 
   // framed family photos on the altar wall
   for (let i = 0; i < 3; i++) {
-    const ph = pictureFrame(T.art[`photo_${i + 1}`], 0.2, 0.26, i === 1 ? M.woodRed : M.woodDark);
+    const ph = pictureFrame(T.art[`photo_${i + 1}`], 0.2, 0.26, i === 1 ? M.shrineDark : M.framePaint);
     ph.position.set(-3.95, y0 + 1.35 + (i === 1 ? 0.32 : 0), 1.55 + i * 0.3);
     ph.rotation.y = Math.PI / 2; ph.rotation.z = rand(-0.05, 0.05); g.add(ph);
   }
@@ -236,22 +236,22 @@ export function buildApartment(W) {
   const sf = sofa(2.05); sf.position.set(2.75, y0, 1.55); sf.rotation.y = -Math.PI / 2; g.add(sf);
   W.colliders.push({ minX: 2.3, maxX: 3.2, minZ: 0.5, maxZ: 2.6, minY: y0, maxY: y0 + 0.9, enabled: true });
 
-  const coffee = box(0.95, 0.05, 0.5, M.woodDark, 1.25, y0 + 0.36, 1.55); g.add(coffee);
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(cyl(0.018, 0.022, 0.36, M.woodDark, 6).translateX(1.25 + sx * 0.4).translateY(y0 + 0.18).translateZ(1.55 + sz * 0.2));
+  const coffee = box(0.95, 0.05, 0.5, M.woodTable, 1.25, y0 + 0.36, 1.55); g.add(coffee);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(cyl(0.018, 0.022, 0.36, M.woodTable, 6).translateX(1.25 + sx * 0.4).translateY(y0 + 0.18).translateZ(1.55 + sz * 0.2));
   // tea set + ashtray
   g.add(cyl(0.035, 0.028, 0.07, M.porcelain, 12).translateX(1.1).translateY(y0 + 0.42).translateZ(1.45));
   g.add(cyl(0.05, 0.05, 0.018, M.ceramicGreen, 14).translateX(1.35).translateY(y0 + 0.39).translateZ(1.62));
 
   // tv cabinet + tv against the west wall, facing the sofa
-  const cab = box(1.1, 0.55, 0.42, M.woodDark, x0 + 0.28, y0 + 0.275, 2.55); g.add(cab);
+  const cab = box(1.1, 0.55, 0.42, M.plyLight, x0 + 0.28, y0 + 0.275, 2.55); g.add(cab);
   const tv = tvSet(); tv.position.set(x0 + 0.3, y0 + 0.55, 2.55); tv.rotation.y = Math.PI / 2; g.add(tv);
   W.animators.push((t, dt) => tv.userData.animate?.(t, dt));
   W.colliders.push({ minX: x0, maxX: x0 + 0.55, minZ: 2.0, maxZ: 3.1, minY: y0, maxY: y0 + 1.1, enabled: true });
 
   // kitchen nook on the east wall
   const kt = new THREE.Group(); kt.position.set(x1 - 0.3, y0, -0.35); kt.rotation.y = -Math.PI / 2; g.add(kt);
-  kt.add(box(1.3, 0.86, 0.56, M.woodDark, 0, 0.43, 0));
-  kt.add(box(1.34, 0.05, 0.6, M.woodBlack, 0, 0.88, 0));
+  kt.add(box(1.3, 0.86, 0.56, M.laminateDark, 0, 0.43, 0));
+  kt.add(box(1.34, 0.05, 0.6, M.counterTop, 0, 0.88, 0));
   const stove = box(0.52, 0.06, 0.42, M.blackMetal, -0.25, 0.915, 0.02); kt.add(stove);
   for (const s of [-1, 1]) {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.012, 5, 16), M.metalRust);
@@ -288,7 +288,7 @@ export function buildApartment(W) {
   // ---------------------------------------------------------------- bedroom
   const bd = bed(1.15, 1.95); bd.position.set(-3.15, y0, 4.85); g.add(bd);
   W.colliders.push({ minX: -3.75, maxX: -2.55, minZ: 3.85, maxZ: 5.85, minY: y0, maxY: y0 + 0.6, enabled: true });
-  const night = box(0.42, 0.5, 0.4, M.woodDark, -2.25, y0 + 0.25, 4.3); g.add(night);
+  const night = box(0.42, 0.5, 0.4, M.plyLight, -2.25, y0 + 0.25, 4.3); g.add(night);
   const nlamp = new THREE.Group(); nlamp.position.set(-2.25, y0 + 0.5, 4.3); g.add(nlamp);
   nlamp.add(cyl(0.05, 0.07, 0.02, M.brass, 12));
   nlamp.add(cyl(0.012, 0.012, 0.2, M.brass, 6).translateY(0.1));

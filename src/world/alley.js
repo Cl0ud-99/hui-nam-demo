@@ -457,7 +457,7 @@ export function buildAlley(W) {
     c.position.set(6.4 + (i % 2) * 0.1, Math.floor(i / 2) * 0.38, 11.4 + (i % 2) * 0.55);
     c.rotation.y = rand(-0.2, 0.2); g.add(c);
   }
-  const pallet = box(1.1, 0.12, 0.9, M.woodRaw, 6.2, 0.06, 12.6); g.add(pallet);
+  const pallet = box(1.1, 0.12, 0.9, M.cratePine, 6.2, 0.06, 12.6); g.add(pallet);
   W.colliders.push({ minX: 5.6, maxX: 7.1, minZ: 11.0, maxZ: 13.0, minY: 0, maxY: 0.9, enabled: true });
   // cardboard stack and a broken chair by the shop wall
   for (let i = 0; i < 5; i++) {
@@ -580,8 +580,8 @@ export function buildAlley(W) {
   gas.add(new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.012, 5, 12), M.metalDark).translateY(0.62));
   // ladder
   const lad = new THREE.Group(); lad.position.set(7.55, 0, 6.6); lad.rotation.z = 0.12; g.add(lad);
-  for (const s of [-1, 1]) lad.add(box(0.04, 2.2, 0.05, M.woodRaw, s * 0.22, 1.1, 0));
-  for (let i = 0; i < 6; i++) lad.add(box(0.48, 0.03, 0.04, M.woodRaw, 0, 0.3 + i * 0.33, 0));
+  for (const s of [-1, 1]) lad.add(box(0.04, 2.2, 0.05, M.cratePine, s * 0.22, 1.1, 0));
+  for (let i = 0; i < 6; i++) lad.add(box(0.48, 0.03, 0.04, M.cratePine, 0, 0.3 + i * 0.33, 0));
   // potted plant
   const pot = new THREE.Group(); pot.position.set(-7.55, 0, 6.7); g.add(pot);
   pot.add(cyl(0.12, 0.09, 0.22, M.ceramicGreen, 12).translateY(0.11));
