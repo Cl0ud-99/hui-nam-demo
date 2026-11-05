@@ -252,3 +252,13 @@ node tools/capture.mjs --batch tools/shots.json
 ```
 
 改完代码后，在本机执行 `node tools/manifest.mjs` 更新 `SRC-MANIFEST.txt`，再打新包，另一台用 `node tools/manifest.mjs --check` 就能立刻知道有没有漂移。
+
+**如果 `github.com` 的下载链接被网络掐断**（api.github.com 能通、release 下载不通的情况），走资产 API 直取，实测字节一致：
+
+```bash
+TOKEN=...   # 自己的 PAT
+curl -L -H "Authorization: Bearer $TOKEN" -H "Accept: application/octet-stream" \
+  https://api.github.com/repos/Cl0ud-99/hui-nam-demo/releases/assets/712241858 \
+  -o hui-nam-src-2026-11-04.zip
+# sha256 应为 cc67649e08f4511491cfba8486ebaeba0fe19c1059567c9430c3e743f00da2e6
+```
