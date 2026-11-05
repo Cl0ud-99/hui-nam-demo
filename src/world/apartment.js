@@ -65,7 +65,7 @@ export function buildApartment(W) {
   // entry door (from stair landing)
   const entry = makeDoor(W, {
     x: 1.05, y: y0, z: z0 + 0.04, width: 0.95, height: 2.18, ry: 0, hinge: 'left',
-    label: '入屋', mat: M.woodDark, red: true, openAngle: -1.75,
+    label: '入屋', mat: M.doorEntrance, red: false, openAngle: -1.75,
     onOpen: () => W.story?.onApartmentEntered?.(),
   });
   g.add(entry.root);
@@ -95,7 +95,7 @@ export function buildApartment(W) {
     // a real door leaf (makeDoor brings its own casing, so no second frame here)
     const bedDoor = makeDoor(W, {
       x: 0.495, y: y0, z: wz, width: 0.9, height: 2.12, ry: Math.PI, hinge: 'left',
-      label: '睡房', mat: M.woodDark, knob: true, openAngle: 1.6,
+      label: '睡房', mat: M.doorInner, knob: true, openAngle: 1.6,
     });
     g.add(bedDoor.root);
     W.colliders.push({ minX: bx0, maxX: bx0 + dL, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0, maxY: cy, enabled: true });
@@ -113,7 +113,7 @@ export function buildApartment(W) {
 
   const bathDoor = makeDoor(W, {
     x: BATH.x0 - 0.055, y: y0, z: 4.275, width: 0.9, height: 2.08, ry: Math.PI / 2, hinge: 'left',
-    label: '浴室', mat: M.woodBlack, knob: true, openAngle: 1.9,
+    label: '浴室', mat: M.doorBath, knob: true, openAngle: 1.9,
   });
   g.add(bathDoor.root);
 
@@ -303,13 +303,13 @@ export function buildApartment(W) {
   // the bedroom window sits inside the bedroom (x -4..1.75); at x 1.65 it ran behind the
   // bathroom wall, and its big glass pane read as a dark wooden door beside the bathroom door
   const winFrame = new THREE.Group(); winFrame.position.set(0.35, y0 + 0.95, z1 - 0.03); g.add(winFrame);
-  winFrame.add(box(1.9, 0.08, 0.12, M.woodDark, 0, 1.35, 0));
-  winFrame.add(box(1.9, 0.08, 0.12, M.woodDark, 0, 0, 0));
-  winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, -0.95, 0.675, 0));
-  winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, 0.95, 0.675, 0));
-  winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0, 0.675, 0));
-  winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, -0.48, 0.675, 0));
-  winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0.48, 0.675, 0));
+  winFrame.add(box(1.9, 0.08, 0.12, M.framePaint, 0, 1.35, 0));
+  winFrame.add(box(1.9, 0.08, 0.12, M.framePaint, 0, 0, 0));
+  winFrame.add(box(0.08, 1.35, 0.12, M.framePaint, -0.95, 0.675, 0));
+  winFrame.add(box(0.08, 1.35, 0.12, M.framePaint, 0.95, 0.675, 0));
+  winFrame.add(box(0.06, 1.35, 0.1, M.framePaint, 0, 0.675, 0));
+  winFrame.add(box(0.06, 1.35, 0.1, M.framePaint, -0.48, 0.675, 0));
+  winFrame.add(box(0.06, 1.35, 0.1, M.framePaint, 0.48, 0.675, 0));
   // no glass slab: the rainy alley behind is the point, and the pane just read as a door
 
   // small sash window on the same wall (the facade has one here; without this the inside
@@ -318,10 +318,10 @@ export function buildApartment(W) {
     const wf = new THREE.Group();
     wf.position.set(-1.73, y0 + 1.12, z1 - 0.03);
     g.add(wf);
-    wf.add(box(1.4, 0.07, 0.12, M.woodDark, 0, 0.92, 0));
-    wf.add(box(1.4, 0.07, 0.12, M.woodDark, 0, 0, 0));
-    for (const sx of [-0.67, 0.67]) wf.add(box(0.07, 0.92, 0.12, M.woodDark, sx, 0.46, 0));
-    wf.add(box(0.05, 0.92, 0.1, M.woodDark, 0, 0.46, 0));
+    wf.add(box(1.4, 0.07, 0.12, M.framePaintGreen, 0, 0.92, 0));
+    wf.add(box(1.4, 0.07, 0.12, M.framePaintGreen, 0, 0, 0));
+    for (const sx of [-0.67, 0.67]) wf.add(box(0.07, 0.92, 0.12, M.framePaintGreen, sx, 0.46, 0));
+    wf.add(box(0.05, 0.92, 0.1, M.framePaintGreen, 0, 0.46, 0));
     // sill + a couple of iron bars so it reads as the same window seen from the alley
     wf.add(box(1.52, 0.06, 0.18, M.concreteDark, 0, -0.03, 0.03));
     for (let i = -2; i <= 2; i++) wf.add(box(0.018, 0.92, 0.018, M.metalRust, i * 0.26, 0.46, -0.02));
@@ -353,9 +353,14 @@ export function buildApartment(W) {
     const s = sticker('stain', rand(0.5, 1.15), rand(0.5, 1.3), rand(0.16, 0.3));
     const yy = rand(y0 + 0.35, y0 + 2.5);
     switch (i % 3) {
-      case 0:
-        s.position.set(rand(x0 + 0.5, x1 - 0.5), yy, z0 + 0.02);
+      case 0: {
+        // keep off the entry doorway (world x 0.55..1.55) — a decal there floats in the opening
+        let sx0 = rand(x0 + 0.5, x1 - 0.5);
+        const sw0 = s.geometry.parameters.width;
+        if (sx0 + sw0 / 2 > 0.45 && sx0 - sw0 / 2 < 1.65) sx0 = sx0 < 1.05 ? 0.45 - sw0 / 2 - 0.05 : 1.65 + sw0 / 2 + 0.05;
+        s.position.set(sx0, yy, z0 + 0.02);
         break;
+      }
       case 1: {
         // keep the south wall decals off the window opening (world -0.60..1.30)
         let sx = rand(x0 + 0.5, x1 - 0.5);

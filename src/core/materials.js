@@ -75,6 +75,20 @@ export function buildMaterials() {
   M.woodFloorMat = std('dark_wooden_planks', { color: 0x8b6a45, roughness: 0.75, normalScale: 1.0, env: 0.3 });
   M.woodRaw = std('dark_wooden_planks', { color: 0xa08462, roughness: 0.9, normalScale: 1.1, env: 0.25 });
 
+  // ---------------- doors & window joinery (kept separate from furniture timber)
+  // the panel texture is re-used everywhere, so the variation comes from UV density, gloss and
+  // how flat the relief is: lacquered front doors, waxed inner doors, painted bathroom door,
+  // and painted casings instead of raw timber
+  // door leaves use the plank set, not the panelled set: the latter is a picture of many
+  // small panels and tiled it turned every door into a dark grid. Relief comes from the
+  // stepped inset geometry instead.
+  M.doorEntrance = std('dark_wooden_planks', { color: 0xb04a35, roughness: 0.36, normalScale: 0.45, env: 0.7 });
+  M.doorInner = std('dark_wooden_planks', { color: 0xb98247, roughness: 0.58, normalScale: 0.6, env: 0.38 });
+  M.doorBath = std('dark_wooden_planks', { color: 0xc6cec1, roughness: 0.76, normalScale: 0.15, env: 0.2 });
+  M.doorInset = std('dark_wooden_planks', { color: 0x6b4c2f, roughness: 0.64, normalScale: 0.4, env: 0.3 });
+  M.framePaint = std('dark_paneled_wood', { color: 0xcec6b4, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
+  M.framePaintGreen = std('dark_paneled_wood', { color: 0x8c988a, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
+
   // ---------------- metals
   M.metalRust = std('rusty_metal_02', { color: 0x8c6a4e, roughness: 0.85, metalness: 0.55, normalScale: 1.2, env: 0.6 });
   M.metalGalv = std('rusty_painted_metal', { color: 0x9aa0a0, roughness: 0.6, metalness: 0.65, normalScale: 1.0, env: 0.8 });

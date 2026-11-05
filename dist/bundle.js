@@ -34841,6 +34841,12 @@ void main() {
     M.woodRed = std("dark_paneled_wood", { color: 8008999, roughness: 0.6, normalScale: 0.9, env: 0.35 });
     M.woodFloorMat = std("dark_wooden_planks", { color: 9136709, roughness: 0.75, normalScale: 1, env: 0.3 });
     M.woodRaw = std("dark_wooden_planks", { color: 10519650, roughness: 0.9, normalScale: 1.1, env: 0.25 });
+    M.doorEntrance = std("dark_wooden_planks", { color: 11553333, roughness: 0.36, normalScale: 0.45, env: 0.7 });
+    M.doorInner = std("dark_wooden_planks", { color: 12157511, roughness: 0.58, normalScale: 0.6, env: 0.38 });
+    M.doorBath = std("dark_wooden_planks", { color: 13029057, roughness: 0.76, normalScale: 0.15, env: 0.2 });
+    M.doorInset = std("dark_wooden_planks", { color: 7031855, roughness: 0.64, normalScale: 0.4, env: 0.3 });
+    M.framePaint = std("dark_paneled_wood", { color: 13551284, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
+    M.framePaintGreen = std("dark_paneled_wood", { color: 9214090, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
     M.metalRust = std("rusty_metal_02", { color: 9202254, roughness: 0.85, metalness: 0.55, normalScale: 1.2, env: 0.6 });
     M.metalGalv = std("rusty_painted_metal", { color: 10133664, roughness: 0.6, metalness: 0.65, normalScale: 1, env: 0.8 });
     M.metalDark = std("rusty_metal_02", { color: 3815992, roughness: 0.55, metalness: 0.7, normalScale: 1, env: 0.7 });
@@ -35808,8 +35814,8 @@ void main() {
     width = 0.95,
     height = 2.15,
     ry = 0,
-    mat = M.woodDark,
-    frameMat = M.woodBlack,
+    mat = M.doorInner,
+    frameMat = M.framePaint,
     hinge = "left",
     openAngle = 1.85,
     label = "\u63A8\u9580",
@@ -35833,7 +35839,7 @@ void main() {
     pivot.add(panel);
     for (let i = 0; i < 2; i++) {
       const pw = width * 0.66, ph = height * 0.32;
-      const inset = new Mesh(new BoxGeometry(pw, ph, 0.012), M.woodBlack);
+      const inset = new Mesh(new BoxGeometry(pw, ph, 0.012), M.doorInset);
       inset.position.set(-dir * width / 2, height * (0.28 + i * 0.36), thick / 2 + 4e-3);
       pivot.add(inset);
     }
@@ -36800,10 +36806,10 @@ void main() {
         }
         if (!lit2) {
           for (const s2 of [-1, 1]) {
-            grp.add(box(0.07, wh, 0.1, M.woodDark, cxw + s2 * ww / 2, cyw, z0 - 0.06));
-            grp.add(box(ww, 0.07, 0.1, M.woodDark, cxw, cyw + s2 * wh / 2, z0 - 0.06));
+            grp.add(box(0.07, wh, 0.1, M.framePaintGreen, cxw + s2 * ww / 2, cyw, z0 - 0.06));
+            grp.add(box(ww, 0.07, 0.1, M.framePaintGreen, cxw, cyw + s2 * wh / 2, z0 - 0.06));
           }
-          grp.add(box(0.05, wh, 0.09, M.woodDark, cxw, cyw, z0 - 0.06));
+          grp.add(box(0.05, wh, 0.09, M.framePaintGreen, cxw, cyw, z0 - 0.06));
         }
         grp.add(box(ww + 0.28, 0.075, 0.26, M.concreteDark, cxw, baseY + o.y0 - 0.09, z0 + 0.06));
         grp.add(box(ww + 0.24, 0.03, 0.06, M.concreteDark, cxw, baseY + o.y0 - 0.135, z0 + 0.16));
@@ -38102,8 +38108,8 @@ void main() {
       ry: 0,
       hinge: "left",
       label: "\u5165\u5C4B",
-      mat: M.woodDark,
-      red: true,
+      mat: M.doorEntrance,
+      red: false,
       openAngle: -1.75,
       onOpen: () => W.story?.onApartmentEntered?.()
     });
@@ -38133,7 +38139,7 @@ void main() {
         ry: Math.PI,
         hinge: "left",
         label: "\u7761\u623F",
-        mat: M.woodDark,
+        mat: M.doorInner,
         knob: true,
         openAngle: 1.6
       });
@@ -38156,7 +38162,7 @@ void main() {
       ry: Math.PI / 2,
       hinge: "left",
       label: "\u6D74\u5BA4",
-      mat: M.woodBlack,
+      mat: M.doorBath,
       knob: true,
       openAngle: 1.9
     });
@@ -38411,21 +38417,21 @@ void main() {
     const winFrame = new Group();
     winFrame.position.set(0.35, y0 + 0.95, z1 - 0.03);
     g.add(winFrame);
-    winFrame.add(box(1.9, 0.08, 0.12, M.woodDark, 0, 1.35, 0));
-    winFrame.add(box(1.9, 0.08, 0.12, M.woodDark, 0, 0, 0));
-    winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, -0.95, 0.675, 0));
-    winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, 0.95, 0.675, 0));
-    winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0, 0.675, 0));
-    winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, -0.48, 0.675, 0));
-    winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0.48, 0.675, 0));
+    winFrame.add(box(1.9, 0.08, 0.12, M.framePaint, 0, 1.35, 0));
+    winFrame.add(box(1.9, 0.08, 0.12, M.framePaint, 0, 0, 0));
+    winFrame.add(box(0.08, 1.35, 0.12, M.framePaint, -0.95, 0.675, 0));
+    winFrame.add(box(0.08, 1.35, 0.12, M.framePaint, 0.95, 0.675, 0));
+    winFrame.add(box(0.06, 1.35, 0.1, M.framePaint, 0, 0.675, 0));
+    winFrame.add(box(0.06, 1.35, 0.1, M.framePaint, -0.48, 0.675, 0));
+    winFrame.add(box(0.06, 1.35, 0.1, M.framePaint, 0.48, 0.675, 0));
     {
       const wf = new Group();
       wf.position.set(-1.73, y0 + 1.12, z1 - 0.03);
       g.add(wf);
-      wf.add(box(1.4, 0.07, 0.12, M.woodDark, 0, 0.92, 0));
-      wf.add(box(1.4, 0.07, 0.12, M.woodDark, 0, 0, 0));
-      for (const sx of [-0.67, 0.67]) wf.add(box(0.07, 0.92, 0.12, M.woodDark, sx, 0.46, 0));
-      wf.add(box(0.05, 0.92, 0.1, M.woodDark, 0, 0.46, 0));
+      wf.add(box(1.4, 0.07, 0.12, M.framePaintGreen, 0, 0.92, 0));
+      wf.add(box(1.4, 0.07, 0.12, M.framePaintGreen, 0, 0, 0));
+      for (const sx of [-0.67, 0.67]) wf.add(box(0.07, 0.92, 0.12, M.framePaintGreen, sx, 0.46, 0));
+      wf.add(box(0.05, 0.92, 0.1, M.framePaintGreen, 0, 0.46, 0));
       wf.add(box(1.52, 0.06, 0.18, M.concreteDark, 0, -0.03, 0.03));
       for (let i = -2; i <= 2; i++) wf.add(box(0.018, 0.92, 0.018, M.metalRust, i * 0.26, 0.46, -0.02));
     }
@@ -38455,9 +38461,13 @@ void main() {
       const s = sticker("stain", rand(0.5, 1.15), rand(0.5, 1.3), rand(0.16, 0.3));
       const yy = rand(y0 + 0.35, y0 + 2.5);
       switch (i % 3) {
-        case 0:
-          s.position.set(rand(x0 + 0.5, x1 - 0.5), yy, z0 + 0.02);
+        case 0: {
+          let sx0 = rand(x0 + 0.5, x1 - 0.5);
+          const sw0 = s.geometry.parameters.width;
+          if (sx0 + sw0 / 2 > 0.45 && sx0 - sw0 / 2 < 1.65) sx0 = sx0 < 1.05 ? 0.45 - sw0 / 2 - 0.05 : 1.65 + sw0 / 2 + 0.05;
+          s.position.set(sx0, yy, z0 + 0.02);
           break;
+        }
         case 1: {
           let sx = rand(x0 + 0.5, x1 - 0.5);
           const sw = s.geometry.parameters.width;

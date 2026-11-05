@@ -8,7 +8,7 @@ import { box, cyl, planeGeo } from '../core/util.js';
  */
 export function makeDoor(W, {
   x, y = 0, z, width = 0.95, height = 2.15, ry = 0,
-  mat = M.woodDark, frameMat = M.woodBlack, hinge = 'left', openAngle = 1.85,
+  mat = M.doorInner, frameMat = M.framePaint, hinge = 'left', openAngle = 1.85,
   label = '推門', locked = false, lockedLabel = '鎖上', onOpen = null, thick = 0.045,
   knob = true, red = false,
 } = {}) {
@@ -27,7 +27,7 @@ export function makeDoor(W, {
   // recessed panels
   for (let i = 0; i < 2; i++) {
     const pw = width * 0.66, ph = height * 0.32;
-    const inset = new THREE.Mesh(new THREE.BoxGeometry(pw, ph, 0.012), M.woodBlack);
+    const inset = new THREE.Mesh(new THREE.BoxGeometry(pw, ph, 0.012), M.doorInset);
     inset.position.set(-dir * width / 2, height * (0.28 + i * 0.36), thick / 2 + 0.004);
     pivot.add(inset);
   }

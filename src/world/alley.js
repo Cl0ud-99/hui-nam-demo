@@ -197,10 +197,10 @@ export function buildAlley(W) {
         // plane here read as "the window is walled up" from inside
         // wooden sash + mullion for the dark window
         for (const s2 of [-1, 1]) {
-          grp.add(box(0.07, wh, 0.1, M.woodDark, cxw + s2 * ww / 2, cyw, z0 - 0.06));
-          grp.add(box(ww, 0.07, 0.1, M.woodDark, cxw, cyw + s2 * wh / 2, z0 - 0.06));
+          grp.add(box(0.07, wh, 0.1, M.framePaintGreen, cxw + s2 * ww / 2, cyw, z0 - 0.06));
+          grp.add(box(ww, 0.07, 0.1, M.framePaintGreen, cxw, cyw + s2 * wh / 2, z0 - 0.06));
         }
-        grp.add(box(0.05, wh, 0.09, M.woodDark, cxw, cyw, z0 - 0.06));
+        grp.add(box(0.05, wh, 0.09, M.framePaintGreen, cxw, cyw, z0 - 0.06));
       }
       // projecting sill with drip groove
       grp.add(box(ww + 0.28, 0.075, 0.26, M.concreteDark, cxw, baseY + o.y0 - 0.09, z0 + 0.06));
