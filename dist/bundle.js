@@ -34448,7 +34448,8 @@ void main() {
     puddleScale = 0.12,
     puddleDarken = 0.5,
     tint = 16777215,
-    falloff = 3
+    falloff = 3,
+    blur = 0
   } = {}) {
     const uniforms = {
       tReflect: { value: reflector.rt.texture },
@@ -34460,6 +34461,7 @@ void main() {
       uPuddleDarken: { value: puddleDarken },
       uReflTint: { value: new Color(tint) },
       uReflFalloff: { value: falloff },
+      uReflBlur: { value: blur },
       uReflDebug: { value: 0 },
       uResolution: { value: new Vector2(window.innerWidth, window.innerHeight) }
     };
@@ -34480,6 +34482,7 @@ void main() {
         uniform float uPuddleDarken;
         uniform vec3 uReflTint;
         uniform float uReflFalloff;
+        uniform float uReflBlur;
         uniform float uReflDebug;
         uniform vec2 uResolution;
         float WetPuddle(vec2 p){ ${puddleMap ? "return texture2D(uPuddleMap, p * uPuddleScale).r;" : "return 1.0;"} }`).replace("#include <map_fragment>", `#include <map_fragment>
@@ -34489,7 +34492,19 @@ void main() {
           vec3 vn = normalize(vNormal);
           vec2 ruv = gl_FragCoord.xy / uResolution;
           ruv += vn.xy * uReflDistort * (0.35 + puddle * 0.9);
-          vec3 refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb * uReflTint;
+          // multi-tap blur: a matte, damp floor should smear the reflection, not mirror it
+          vec3 refl;
+          if (uReflBlur > 0.0001) {
+            vec2 b = vec2(uReflBlur, uReflBlur * 0.75);
+            refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb * 0.36
+                 + texture2D(tReflect, clamp(ruv + vec2( b.x, 0.0), 0.001, 0.999)).rgb * 0.16
+                 + texture2D(tReflect, clamp(ruv + vec2(-b.x, 0.0), 0.001, 0.999)).rgb * 0.16
+                 + texture2D(tReflect, clamp(ruv + vec2(0.0,  b.y), 0.001, 0.999)).rgb * 0.16
+                 + texture2D(tReflect, clamp(ruv + vec2(0.0, -b.y), 0.001, 0.999)).rgb * 0.16;
+          } else {
+            refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb;
+          }
+          refl *= uReflTint;
           float ndv = clamp(dot(normalize(vViewPosition), vn), 0.0, 1.0);
           float fres = pow(1.0 - ndv, 4.0);
           float amt = uReflAmount * (0.16 + 0.46 * puddle) * (0.30 + 0.70 * fres);
@@ -35383,6 +35398,7 @@ void main() {
         puddleMap: opts.puddle ? T.art.puddle_mask : null,
         puddleScale: opts.puddleScale ?? 0.1,
         puddleDarken: 0.45,
+        blur: opts.blur ?? 0,
         tint: opts.tint || 16777215
       });
       material.needsUpdate = true;
@@ -37366,7 +37382,7 @@ void main() {
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     const floorMat = M.floorChecker.clone();
-    W.wetFloor(floorMat, { room: "shop", amount: 0.85, distortion: 0.018, tint: 16773858 });
+    W.wetFloor(floorMat, { room: "shop", amount: 0.3, distortion: 0.05, blur: 35e-4, tint: 16773858 });
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, 0.02, cz);
@@ -38041,7 +38057,7 @@ void main() {
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, cy = y0 + h;
     const floorMat = M.floorWood.clone();
-    W.wetFloor(floorMat, { room: "apt", amount: 0.35, distortion: 0.012, tint: 16771280 });
+    W.wetFloor(floorMat, { room: "apt", amount: 0.16, distortion: 0.045, blur: 4e-3, tint: 16771280 });
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, y0 + 0.01, cz);
@@ -38299,10 +38315,6 @@ void main() {
     tal.position.set(-3.94, y0 + 1.55, -0.15);
     tal.rotation.y = Math.PI / 2;
     g.add(tal);
-    const curt = curtain(0.75, 2.15, M.curtain);
-    curt.position.set(-3.9, y0 + 1.25, 1.95);
-    curt.rotation.y = Math.PI / 2;
-    g.add(curt);
     const sf = sofa(2.05);
     sf.position.set(2.75, y0, 1.55);
     sf.rotation.y = -Math.PI / 2;

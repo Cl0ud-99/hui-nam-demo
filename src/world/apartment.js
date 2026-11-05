@@ -20,7 +20,7 @@ export function buildApartment(W) {
 
   // ---------------------------------------------------------------- shell
   const floorMat = M.floorWood.clone();
-  W.wetFloor(floorMat, { room: 'apt', amount: 0.35, distortion: 0.012, tint: 0xffe8d0 });
+  W.wetFloor(floorMat, { room: 'apt', amount: 0.16, distortion: 0.045, blur: 0.004, tint: 0xffe8d0 });
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(cx, y0 + 0.01, cz);
   floor.receiveShadow = true; g.add(floor); W.upperHide.push(floor);
@@ -222,9 +222,7 @@ export function buildApartment(W) {
   const tal = sticker('talisman', 0.17, 0.6, 0.95);
   tal.position.set(-3.94, y0 + 1.55, -0.15); tal.rotation.y = Math.PI / 2; g.add(tal);
 
-  // yellow curtain beside the altar
-  const curt = curtain(0.75, 2.15, M.curtain);
-  curt.position.set(-3.9, y0 + 1.25, 1.95); curt.rotation.y = Math.PI / 2; g.add(curt);
+  // (the dark curtain that hung beside the altar has been removed)
 
   // ---------------------------------------------------------------- living
   const sf = sofa(2.05); sf.position.set(2.75, y0, 1.55); sf.rotation.y = -Math.PI / 2; g.add(sf);

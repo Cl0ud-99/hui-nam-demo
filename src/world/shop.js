@@ -19,7 +19,7 @@ export function buildShop(W) {
 
   // ---------------------------------------------------------------- shell
   const floorMat = M.floorChecker.clone();
-  W.wetFloor(floorMat, { room: 'shop', amount: 0.85, distortion: 0.018, tint: 0xfff2e2 });
+  W.wetFloor(floorMat, { room: 'shop', amount: 0.30, distortion: 0.05, blur: 0.0035, tint: 0xfff2e2 });
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(cx, 0.02, cz);
   floor.receiveShadow = true; g.add(floor); W.groundHide.push(floor);

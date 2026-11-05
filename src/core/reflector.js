@@ -144,7 +144,7 @@ export class PlanarReflector {
  */
 export function wetify(material, {
   reflector, amount = 1.0, distortion = 0.045, puddleMap = null, puddleScale = 0.12,
-  puddleDarken = 0.5, tint = 0xffffff, falloff = 3.0,
+  puddleDarken = 0.5, tint = 0xffffff, falloff = 3.0, blur = 0.0,
 } = {}) {
   const uniforms = {
     tReflect: { value: reflector.rt.texture },
@@ -156,6 +156,7 @@ export function wetify(material, {
     uPuddleDarken: { value: puddleDarken },
     uReflTint: { value: new THREE.Color(tint) },
     uReflFalloff: { value: falloff },
+    uReflBlur: { value: blur },
     uReflDebug: { value: 0 },
     uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
   };
@@ -179,6 +180,7 @@ export function wetify(material, {
         uniform float uPuddleDarken;
         uniform vec3 uReflTint;
         uniform float uReflFalloff;
+        uniform float uReflBlur;
         uniform float uReflDebug;
         uniform vec2 uResolution;
         float WetPuddle(vec2 p){ ${puddleMap ? 'return texture2D(uPuddleMap, p * uPuddleScale).r;' : 'return 1.0;'} }`)
@@ -190,7 +192,19 @@ export function wetify(material, {
           vec3 vn = normalize(vNormal);
           vec2 ruv = gl_FragCoord.xy / uResolution;
           ruv += vn.xy * uReflDistort * (0.35 + puddle * 0.9);
-          vec3 refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb * uReflTint;
+          // multi-tap blur: a matte, damp floor should smear the reflection, not mirror it
+          vec3 refl;
+          if (uReflBlur > 0.0001) {
+            vec2 b = vec2(uReflBlur, uReflBlur * 0.75);
+            refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb * 0.36
+                 + texture2D(tReflect, clamp(ruv + vec2( b.x, 0.0), 0.001, 0.999)).rgb * 0.16
+                 + texture2D(tReflect, clamp(ruv + vec2(-b.x, 0.0), 0.001, 0.999)).rgb * 0.16
+                 + texture2D(tReflect, clamp(ruv + vec2(0.0,  b.y), 0.001, 0.999)).rgb * 0.16
+                 + texture2D(tReflect, clamp(ruv + vec2(0.0, -b.y), 0.001, 0.999)).rgb * 0.16;
+          } else {
+            refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb;
+          }
+          refl *= uReflTint;
           float ndv = clamp(dot(normalize(vViewPosition), vn), 0.0, 1.0);
           float fres = pow(1.0 - ndv, 4.0);
           float amt = uReflAmount * (0.16 + 0.46 * puddle) * (0.30 + 0.70 * fres);
