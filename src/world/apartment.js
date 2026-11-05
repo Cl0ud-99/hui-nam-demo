@@ -294,24 +294,22 @@ export function buildApartment(W) {
   g.add(stackOfBooks(2).translateX(-2.3).translateY(y0 + 0.5).translateZ(4.42));
 
   // window + curtain + rain glass
-  const winFrame = new THREE.Group(); winFrame.position.set(1.65, y0 + 0.95, z1 - 0.03); g.add(winFrame);
-  winFrame.add(box(2.5, 0.08, 0.12, M.woodDark, 0, 1.35, 0));
-  winFrame.add(box(2.5, 0.08, 0.12, M.woodDark, 0, 0, 0));
-  winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, -1.25, 0.675, 0));
-  winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, 1.25, 0.675, 0));
+  // the bedroom window sits inside the bedroom (x -4..1.75); at x 1.65 it ran behind the
+  // bathroom wall, and its big glass pane read as a dark wooden door beside the bathroom door
+  const winFrame = new THREE.Group(); winFrame.position.set(0.35, y0 + 0.95, z1 - 0.03); g.add(winFrame);
+  winFrame.add(box(1.9, 0.08, 0.12, M.woodDark, 0, 1.35, 0));
+  winFrame.add(box(1.9, 0.08, 0.12, M.woodDark, 0, 0, 0));
+  winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, -0.95, 0.675, 0));
+  winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, 0.95, 0.675, 0));
   winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0, 0.675, 0));
-  winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, -0.62, 0.675, 0));
-  winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0.62, 0.675, 0));
-  const winGlassMat = M.glass.clone(); winGlassMat.opacity = 0.16; winGlassMat.roughness = 0.06;
-  winGlassMat.normalMap = T.art.water_normal; winGlassMat.normalScale.set(0.25, 0.25);
-  const wg = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.3), winGlassMat);
-  wg.position.set(0, 0.675, 0); winFrame.add(wg);
-  W.animators.push((t) => { winGlassMat.normalMap.offset.y = -t * 0.05; winGlassMat.normalMap.offset.x = t * 0.01; });
+  winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, -0.48, 0.675, 0));
+  winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0.48, 0.675, 0));
+  // no glass slab: the rainy alley behind is the point, and the pane just read as a door
 
   // curtain partially drawn
-  const cu = curtain(1.0, 2.2, M.curtain); cu.position.set(0.75, y0 + 1.15, z1 - 0.13); g.add(cu);
-  const cu2 = curtain(0.75, 2.2, M.curtain); cu2.position.set(2.6, y0 + 1.15, z1 - 0.13); g.add(cu2);
-  g.add(cyl(0.012, 0.012, 2.6, M.metalDark, 6).rotateZ(Math.PI / 2).translateX(1.65).translateY(y0 + 2.35).translateZ(z1 - 0.13));
+  const cu = curtain(1.0, 2.2, M.curtain); cu.position.set(-0.55, y0 + 1.15, z1 - 0.13); g.add(cu);
+  const cu2 = curtain(0.75, 2.2, M.curtain); cu2.position.set(1.15, y0 + 1.15, z1 - 0.13); g.add(cu2);
+  g.add(cyl(0.012, 0.012, 2.2, M.metalDark, 6).rotateZ(Math.PI / 2).translateX(0.35).translateY(y0 + 2.35).translateZ(z1 - 0.13));
 
   // laundry line across the bedroom
   const ll1 = new THREE.Vector3(x0 + 0.2, y0 + 2.45, 4.0);

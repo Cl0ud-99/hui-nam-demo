@@ -136,7 +136,7 @@ async function boot() {
   world.hotspot({ x: -3.15, y: 4.45, z: -0.15, w: 0.5, h: 0.6, d: 0.6, prompt: '上香', use: () => story.lightIncense() });
   world.hotspot({ x: 2.45, y: 4.6, z: 3.32, w: 0.45, h: 0.4, d: 0.45, prompt: '開水喉', use: () => story.useTap() });
   world.hotspot({ x: 2.45, y: 4.95, z: 3.25, w: 0.6, h: 0.7, d: 0.2, prompt: '望鏡', use: () => story.lookMirror() });
-  world.hotspot({ x: 0.4, y: 5.2, z: 5.86, w: 1.4, h: 1.0, d: 0.3, prompt: '望出窗外', use: () => ui.subtitle('樓下嘅巷，有人企喺雨入面，抬頭望住你。', 5200) });
+  world.hotspot({ x: 0.35, y: 5.15, z: 5.86, w: 1.7, h: 1.3, d: 0.3, prompt: '望出窗外', use: () => ui.subtitle('樓下嘅巷，有人企喺雨入面，抬頭望住你。', 5200) });
 
   ui.boot(0.94);
   await new Promise(r => setTimeout(r, 60));
