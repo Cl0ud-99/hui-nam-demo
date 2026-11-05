@@ -35583,8 +35583,8 @@ void main() {
       if (found) this.setRoom(found);
       this.updateRoomLights(camera);
       const r = this.engine.renderer;
-      this.groundMirror.enabled = this.qualityRefl > 0 && (this.currentRoom === "alley" || this.currentRoom === "shop");
-      this.upperMirror.enabled = this.qualityRefl > 0 && (this.currentRoom === "apt" || this.currentRoom === "bath" || this.currentRoom === "stairs");
+      this.groundMirror.enabled = this.qualityRefl > 0 && this.currentRoom === "alley";
+      this.upperMirror.enabled = false;
       this._reflTick = (this._reflTick || 0) + 1;
       const doRefl = (this._reflTick & 1) === 0;
       if (this.groundMirror.enabled && doRefl) this.groundMirror.update(camera);
@@ -37389,7 +37389,9 @@ void main() {
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     const floorMat = M.floorChecker.clone();
-    W.wetFloor(floorMat, { room: "shop", amount: 0.3, distortion: 0.05, blur: 35e-4, tint: 16773858 });
+    W.wetFloor(floorMat, { room: "shop", amount: 0, distortion: 0.05, blur: 35e-4, tint: 16773858 });
+    floorMat.roughness = 0.34;
+    floorMat.metalness = 0.08;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, 0.02, cz);
@@ -38063,7 +38065,9 @@ void main() {
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, cy = y0 + h;
     const floorMat = M.floorWood.clone();
-    W.wetFloor(floorMat, { room: "apt", amount: 0.16, distortion: 0.045, blur: 4e-3, tint: 16771280 });
+    W.wetFloor(floorMat, { room: "apt", amount: 0, distortion: 0.045, blur: 4e-3, tint: 16771280 });
+    floorMat.roughness = 0.38;
+    floorMat.metalness = 0.06;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, y0 + 0.01, cz);

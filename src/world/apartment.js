@@ -20,7 +20,9 @@ export function buildApartment(W) {
 
   // ---------------------------------------------------------------- shell
   const floorMat = M.floorWood.clone();
-  W.wetFloor(floorMat, { room: 'apt', amount: 0.16, distortion: 0.045, blur: 0.004, tint: 0xffe8d0 });
+  // same here: the floor is damp, not polished — no mirrored ghost of the room
+  W.wetFloor(floorMat, { room: 'apt', amount: 0.0, distortion: 0.045, blur: 0.004, tint: 0xffe8d0 });
+  floorMat.roughness = 0.38; floorMat.metalness = 0.06;
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(cx, y0 + 0.01, cz);
   floor.receiveShadow = true; g.add(floor); W.upperHide.push(floor);
@@ -267,6 +269,10 @@ export function buildApartment(W) {
   // wardrobe (east wall) with mirror
   const wr = wardrobe(1.15, 1.95, 0.55); wr.position.set(x1 - 0.3, y0, 2.15); wr.rotation.y = -Math.PI / 2; g.add(wr);
   W.colliders.push({ minX: x1 - 0.62, maxX: x1, minZ: 1.55, maxZ: 2.75, minY: y0, maxY: y0 + 2.0, enabled: true });
+  // real planar mirror on the wardrobe door, built through the same path as the bathroom
+  // mirror (the env-map stand-in showed a blurry photo of the alley instead of the room)
+  // NOTE: a second planar reflector here made the GL context drop on this machine,
+  // so the wardrobe keeps a static environment reflection (no person, no extra pass)
   W.addMirror(wr.userData.mirror, 'wardrobe');
 
   // chair facing the altar, a small stool with clothes
