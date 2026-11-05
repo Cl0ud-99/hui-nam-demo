@@ -83,8 +83,7 @@ export function buildShop(W) {
   sf.add(box(1.0, 0.2, 0.22, wfMat, 1.15, 2.95, -0.012));
   sf.add(box(0.96, 0.06, 0.24, wfMat, 1.15, 2.86, -0.012));
   sf.add(box(1.0, 0.14, 0.2, plaster, 1.15, 3.02, -0.012));
-  // shutter box + half-raised shutter
-  sf.add(box(4.3, 0.26, 0.3, M.metalRust, -1.4, 3.12, 0.02));
+  // (the rusty shutter housing sat inside the head beam and read as a doubled plank)
   // outside sign
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.79), new THREE.MeshStandardMaterial({
     map: T.art.shop_sign, roughness: 0.6, emissive: 0xffffff, emissiveMap: T.art.shop_sign, emissiveIntensity: 0.10,

@@ -36824,7 +36824,6 @@ void main() {
           grp.add(box(ww, 0.012, 0.012, M.metalRust, cxw, cyw - 0.18, z0 + 0.035));
         }
       }
-      g.add(box(bx * 2 + 0.06, 0.18, 0.3, M.woodBlack, 0, 3.03, z0 + 0.02));
       const canopy2 = box(bx * 2 - 0.2, 0.05, 0.42, M.corrugatedRust, 0, 4.12, z0 + 0.3);
       canopy2.rotation.x = -0.2;
       g.add(canopy2);
@@ -37443,7 +37442,6 @@ void main() {
     sf.add(box(1, 0.2, 0.22, wfMat, 1.15, 2.95, -0.012));
     sf.add(box(0.96, 0.06, 0.24, wfMat, 1.15, 2.86, -0.012));
     sf.add(box(1, 0.14, 0.2, plaster, 1.15, 3.02, -0.012));
-    sf.add(box(4.3, 0.26, 0.3, M.metalRust, -1.4, 3.12, 0.02));
     const sign2 = new Mesh(new PlaneGeometry(2.9, 0.79), new MeshStandardMaterial({
       map: T.art.shop_sign,
       roughness: 0.6,

@@ -212,7 +212,7 @@ export function buildAlley(W) {
     }
 
     // ---- shopfront fascia + canopy + neon line
-    g.add(box(bx * 2 + 0.06, 0.18, 0.30, M.woodBlack, 0, 3.03, z0 + 0.02));
+    // (the fascia board here duplicated the shop's own window-frame rail and z-fought with it)
     const canopy = box(bx * 2 - 0.2, 0.05, 0.42, M.corrugatedRust, 0, 4.12, z0 + 0.30);
     canopy.rotation.x = -0.2; g.add(canopy);
     for (const bxp of [-3.9, -1.3, 1.3, 3.9]) {
