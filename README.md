@@ -47,6 +47,26 @@ node server.js --open     # http://localhost:8777/
 
 ---
 
+## 畫面
+
+<p align="center">
+  <a href="https://cl0ud-99.github.io/hui-nam-demo/">
+    <img src="docs/screens/menu.jpg" alt="回南 · 主目錄" width="100%">
+  </a>
+  <sub>主目錄 · 後巷雨夜</sub>
+</p>
+
+| | |
+|:---:|:---:|
+| ![](docs/screens/shopfront.jpg)<br><sub>後巷 · 福安堂店面</sub> | ![](docs/screens/shop_interior.jpg)<br><sub>藥行內部 · 濕藥材味</sub> |
+| ![](docs/screens/stairs.jpg)<br><sub>後樓梯 · 三樓之前</sub> | ![](docs/screens/altar.jpg)<br><sub>三樓 · 神檯三炷香</sub> |
+| ![](docs/screens/bath.jpg)<br><sub>浴室 · 鏡</sub> | ![](docs/screens/trailer.jpg)<br><sub>宣傳片模式</sub> |
+
+> 截圖為 1600×900、高畫質、RTX 2070 SUPER 實機運行；未經後期合成。
+
+---
+
+
 ## 操作
 
 | 按鍵 | 動作 |
@@ -123,9 +143,10 @@ hui-nam-demo/
 │   └── env/night_street.hdr 環境反射
 ├── screenshots/             README 用截圖
 └── tools/
-    ├── genart.py            重新生成所有 2D 美術
-    ├── capture.mjs          截圖／驗證工具
-    └── test_game.mjs        自動化流程測試
+    ├── build.mjs            esbuild 打包（src -> dist/bundle.js）
+    ├── capture.mjs          零依賴 CDP 截圖 / 批量機位 / 自動斷言
+    ├── shots.json           7 個固定機位（後巷…浴室）
+    └── genart.py            重新生成所有 2D 美術
 ```
 
 ---
@@ -133,12 +154,27 @@ hui-nam-demo/
 ## 重新建置
 
 ```bash
-npm install            # 只第一次
+npm install            # 只第一次（three r169 + esbuild）
 npm run build          # 打包 src -> dist/bundle.js
-npm run serve          # 開伺服器
+npm run serve          # 開伺服器（port 8777）
+node server.js --open  # 開伺服器並開瀏覽器
 ```
 
-修改 `src/` 之後執行 `npm run build` 即生效（或 `npm run watch`）。
+修改 `src/` 之後執行 `npm run build` 即生效。
+
+**截图 / 回归检查（新增）**
+
+```bash
+# 单张：用 ?shot=x,y,z,lookX,lookY,lookZ 固定机位
+node tools/capture.mjs --out shots/a.png \
+  --url "http://localhost:8777/?shot=-2,1.55,10.2,0.2,1.9,5.4" \
+  --seed 1234
+
+# 批量：7 个固定机位（后巷 / 店面 / 药行 / 楼梯 / 三楼 / 神檯 / 浴室）
+node tools/capture.mjs --batch tools/shots.json
+```
+
+`--seed` 固定 `Math.random`，同一 seed 下两次渲染可以逐像素对比，用来验证改动。
 
 重新生成 2D 美術：
 
@@ -170,7 +206,18 @@ python tools/genart.py
 - 這是 **demo 場景**，唔係完整遊戲：一條主線、約 5–8 分鐘流程、一個結局。
 - 高畫質需要獨立顯示卡；如果 fps 低，主目錄揀「畫質 → 中／低」（亦會自動降檔）。
 - 字體用系統中文字型（宋體／楷體），唔同 Windows 版本可能略有差異。
+- 畫面刻意做舊：泛黃色偏、菲林顆粒、輕微閃爍與偶發劃痕（`src/core/gradeShader.js` 的 `uAged` / `uGrain`）；接受唔到可以 `?aged=0&grain=0` 關掉。
+- 怕驚嚇可以用主目錄 **「模式 → 溫和」**（或 `?story=1`）：保留全部字幕同劇情，只抽起跳嚇、尖叫同震動。
 
 ---
+
+## 關於
+
+一九八七年的深水埗，一個返夜歸嘅故事。場景、道具、貼圖排布、音效都係程序化生成或者 CC0 素材，冇用第三方模型。
+
+- 引擎：three.js r169 + WebGL2，自訂後處理鏈（GTAO → Bloom → ACES → 舊片調色 → SMAA）
+- 時長：5–8 分鐘，單結局，冇失敗判定
+- 平台：桌面 Chrome / Edge（需要 WebGL2）；手機可以開，但畫質同操作唔保證
+- 授權：demo 用途；貼圖 Poly Haven CC0，其餘自製
 
 *Made with three.js. Textures: Poly Haven (CC0). Everything else procedural.*

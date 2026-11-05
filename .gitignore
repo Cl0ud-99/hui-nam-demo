@@ -1,0 +1,8 @@
+node_modules/
+*.log
+# 本地截图工作区（只保留对比图）
+shots/before/
+shots/pass*/
+shots/*.png
+shots/video/
+dist/bundle.orig.js
