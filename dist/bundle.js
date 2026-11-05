@@ -34448,7 +34448,8 @@ void main() {
     puddleScale = 0.12,
     puddleDarken = 0.5,
     tint = 16777215,
-    falloff = 3
+    falloff = 3,
+    blur = 0
   } = {}) {
     const uniforms = {
       tReflect: { value: reflector.rt.texture },
@@ -34460,6 +34461,7 @@ void main() {
       uPuddleDarken: { value: puddleDarken },
       uReflTint: { value: new Color(tint) },
       uReflFalloff: { value: falloff },
+      uReflBlur: { value: blur },
       uReflDebug: { value: 0 },
       uResolution: { value: new Vector2(window.innerWidth, window.innerHeight) }
     };
@@ -34480,6 +34482,7 @@ void main() {
         uniform float uPuddleDarken;
         uniform vec3 uReflTint;
         uniform float uReflFalloff;
+        uniform float uReflBlur;
         uniform float uReflDebug;
         uniform vec2 uResolution;
         float WetPuddle(vec2 p){ ${puddleMap ? "return texture2D(uPuddleMap, p * uPuddleScale).r;" : "return 1.0;"} }`).replace("#include <map_fragment>", `#include <map_fragment>
@@ -34489,7 +34492,21 @@ void main() {
           vec3 vn = normalize(vNormal);
           vec2 ruv = gl_FragCoord.xy / uResolution;
           ruv += vn.xy * uReflDistort * (0.35 + puddle * 0.9);
-          vec3 refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb * uReflTint;
+          // multi-tap blur: a matte, damp floor should smear the reflection, not mirror it.
+          // gated on uReflAmount so the reflector's own pass (which zeroes it) never samples
+          // the target it is currently rendering into \u2014 that feedback loop killed the context
+          vec3 refl = vec3(0.0);
+          if (uReflAmount > 0.0005 && uReflBlur > 0.0001) {
+            vec2 b = vec2(uReflBlur, uReflBlur * 0.75);
+            refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb * 0.36
+                 + texture2D(tReflect, clamp(ruv + vec2( b.x, 0.0), 0.001, 0.999)).rgb * 0.16
+                 + texture2D(tReflect, clamp(ruv + vec2(-b.x, 0.0), 0.001, 0.999)).rgb * 0.16
+                 + texture2D(tReflect, clamp(ruv + vec2(0.0,  b.y), 0.001, 0.999)).rgb * 0.16
+                 + texture2D(tReflect, clamp(ruv + vec2(0.0, -b.y), 0.001, 0.999)).rgb * 0.16;
+          } else if (uReflAmount > 0.0005) {
+            refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb;
+          }
+          refl *= uReflTint;
           float ndv = clamp(dot(normalize(vViewPosition), vn), 0.0, 1.0);
           float fres = pow(1.0 - ndv, 4.0);
           float amt = uReflAmount * (0.16 + 0.46 * puddle) * (0.30 + 0.70 * fres);
@@ -34824,6 +34841,29 @@ void main() {
     M.woodRed = std("dark_paneled_wood", { color: 8008999, roughness: 0.6, normalScale: 0.9, env: 0.35 });
     M.woodFloorMat = std("dark_wooden_planks", { color: 9136709, roughness: 0.75, normalScale: 1, env: 0.3 });
     M.woodRaw = std("dark_wooden_planks", { color: 10519650, roughness: 0.9, normalScale: 1.1, env: 0.25 });
+    M.doorEntrance = std("dark_wooden_planks", { color: 11553333, roughness: 0.36, normalScale: 0.45, env: 0.7 });
+    M.doorInner = std("dark_wooden_planks", { color: 9857084, roughness: 0.62, normalScale: 0.65, env: 0.35 });
+    M.doorBath = std("dark_wooden_planks", { color: 13029057, roughness: 0.76, normalScale: 0.15, env: 0.2 });
+    M.doorInset = std("dark_wooden_planks", { color: 7031855, roughness: 0.64, normalScale: 0.4, env: 0.3 });
+    M.framePaint = std("dark_paneled_wood", { color: 13551284, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
+    M.framePaintGreen = std("dark_paneled_wood", { color: 9214090, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
+    M.cabRosewood = std("dark_wooden_planks", { color: 5907480, roughness: 0.55, normalScale: 0.45, env: 0.45, tileMul: 1.5 });
+    M.cabDrawer = std("dark_wooden_planks", { color: 10774852, roughness: 0.48, normalScale: 0.35, env: 0.5, tileMul: 2.3 });
+    M.counterTop = std("dark_paneled_wood", { color: 3358778, roughness: 0.32, normalScale: 0.15, env: 0.6, tileMul: 3 });
+    M.counterBody = std("dark_paneled_wood", { color: 4214847, roughness: 0.68, normalScale: 0.35, env: 0.25, tileMul: 2 });
+    M.beamRough = std("dark_wooden_planks", { color: 8215096, roughness: 0.93, normalScale: 1.25, env: 0.12, tileMul: 1.15 });
+    M.signBack = std("painted_metal_shutter", { color: 4147780, roughness: 0.62, metalness: 0.3, env: 0.35, normalScale: 0.6 });
+    M.woodSeat = std("dark_wooden_planks", { color: 11569754, roughness: 0.74, normalScale: 1, env: 0.3, tileMul: 1.9 });
+    M.woodTable = std("dark_wooden_planks", { color: 8211244, roughness: 0.58, normalScale: 0.75, env: 0.38, tileMul: 1.1 });
+    M.wardrobeBody = std("dark_paneled_wood", { color: 7425071, roughness: 0.72, normalScale: 0.55, env: 0.28, tileMul: 1.1 });
+    M.wardrobeDoor = std("dark_wooden_planks", { color: 9268297, roughness: 0.58, normalScale: 0.5, env: 0.42, tileMul: 1.2 });
+    M.bedTimber = std("dark_wooden_planks", { color: 5848102, roughness: 0.72, normalScale: 0.7, env: 0.22, tileMul: 1.3 });
+    M.plyLight = std("dark_wooden_planks", { color: 11899751, roughness: 0.82, normalScale: 0.55, env: 0.18, tileMul: 2.5 });
+    M.laminateDark = std("dark_paneled_wood", { color: 3883579, roughness: 0.42, normalScale: 0.18, env: 0.42, tileMul: 2.6 });
+    M.shrineRed = std("dark_wooden_planks", { color: 10629924, roughness: 0.3, normalScale: 0.28, env: 0.7, tileMul: 1.35 });
+    M.shrineDark = std("dark_wooden_planks", { color: 6365466, roughness: 0.38, normalScale: 0.32, env: 0.55, tileMul: 1.9 });
+    M.floorApt = std("dark_wooden_planks", { color: 11242079, roughness: 0.8, normalScale: 0.9, env: 0.28, tileMul: 1.7 });
+    M.cratePine = std("dark_wooden_planks", { color: 11045474, roughness: 0.9, normalScale: 1.1, env: 0.15, tileMul: 1.6 });
     M.metalRust = std("rusty_metal_02", { color: 9202254, roughness: 0.85, metalness: 0.55, normalScale: 1.2, env: 0.6 });
     M.metalGalv = std("rusty_painted_metal", { color: 10133664, roughness: 0.6, metalness: 0.65, normalScale: 1, env: 0.8 });
     M.metalDark = std("rusty_metal_02", { color: 3815992, roughness: 0.55, metalness: 0.7, normalScale: 1, env: 0.7 });
@@ -35297,6 +35337,7 @@ void main() {
     }
     // equal light budget per room -> a single compiled program set, so entering a room never recompiles
     normalizeLights(cap = 14) {
+      this.lightCap = cap;
       this.initKeyShadow();
       for (const id of Object.keys(this.lights)) {
         let arr = this.lights[id];
@@ -35382,6 +35423,7 @@ void main() {
         puddleMap: opts.puddle ? T.art.puddle_mask : null,
         puddleScale: opts.puddleScale ?? 0.1,
         puddleDarken: 0.45,
+        blur: opts.blur ?? 0,
         tint: opts.tint || 16777215
       });
       material.needsUpdate = true;
@@ -35396,8 +35438,8 @@ void main() {
       plane.position.set(0, 0, 0);
       group.add(plane);
       const refl = new PlanarReflector(this.engine.renderer, this.scene, plane, {
-        width: 512,
-        height: 512,
+        width: 384,
+        height: 384,
         clipBias: 2e-3,
         extraLayers: [2]
       });
@@ -35413,7 +35455,13 @@ void main() {
       return { group, refl, mesh: m };
     }
     addMirror(mesh2, room) {
-      mesh2.material = new MeshStandardMaterial({ color: 10133660, roughness: 0.06, metalness: 1, envMap: T.env, envMapIntensity: 0.9 });
+      mesh2.material = new MeshStandardMaterial({
+        color: 7304561,
+        roughness: 0.14,
+        metalness: 0.9,
+        envMap: T.env,
+        envMapIntensity: 0.35
+      });
     }
     volumetric(opts) {
       return null;
@@ -35501,12 +35549,36 @@ void main() {
       this.onRoomChange?.(id);
     }
     updateRoomLights(camera) {
-      const active = /* @__PURE__ */ new Set([this.currentRoom]);
-      for (const [id, arr] of Object.entries(this.lights)) {
-        const on = active.has(id);
-        for (const l of arr) l.visible = on;
+      const cap = this.lightCap || 14;
+      if (!this._allLights) {
+        this._allLights = [];
+        this.scene.traverse((o) => {
+          if (o.isLight) this._allLights.push(o);
+        });
       }
-      this.activeLightRooms = active;
+      const arr = this.lights[this.currentRoom] || [];
+      while (arr.length < cap) {
+        const d = new PointLight(0, 0, 0.2, 2);
+        d.position.set(0, -60, 0);
+        d.userData.room = this.currentRoom;
+        d.userData.dummy = true;
+        this.root.add(d);
+        arr.push(d);
+        this._allLights.push(d);
+      }
+      const ranked = arr.slice().sort((a, b) => (b.userData.keep ? 1e6 : 0) + b.intensity - ((a.userData.keep ? 1e6 : 0) + a.intensity));
+      const show = new Set(ranked.slice(0, cap));
+      if (this.keyShadow) show.add(this.keyShadow);
+      const key = this.keyFor && this.keyFor[this.currentRoom];
+      for (const l of this._allLights) {
+        l.visible = show.has(l);
+        l.castShadow = show.has(l) && l === key;
+      }
+      if (this.keyShadow) {
+        this.keyShadow.intensity = 0;
+        this.keyShadow.castShadow = false;
+      }
+      this.activeLightRooms = /* @__PURE__ */ new Set([this.currentRoom]);
       if (this.shadowDirty) {
         this.engine.renderer.shadowMap.needsUpdate = true;
         this.shadowDirty = false;
@@ -35534,8 +35606,8 @@ void main() {
       if (found) this.setRoom(found);
       this.updateRoomLights(camera);
       const r = this.engine.renderer;
-      this.groundMirror.enabled = this.qualityRefl > 0 && (this.currentRoom === "alley" || this.currentRoom === "shop");
-      this.upperMirror.enabled = this.qualityRefl > 0 && (this.currentRoom === "apt" || this.currentRoom === "bath" || this.currentRoom === "stairs");
+      this.groundMirror.enabled = false;
+      this.upperMirror.enabled = false;
       this._reflTick = (this._reflTick || 0) + 1;
       const doRefl = (this._reflTick & 1) === 0;
       if (this.groundMirror.enabled && doRefl) this.groundMirror.update(camera);
@@ -35545,7 +35617,7 @@ void main() {
         m.refl.enabled = this.qualityRefl > 0 && m.room === this.currentRoom;
         const u = m.mesh?.material?.uniforms?.uResolution;
         if (u) u.value.set(window.innerWidth * pr, window.innerHeight * pr);
-        if (m.refl.enabled && doRefl) m.refl.update(camera);
+        if (m.refl.enabled && doRefl && this._reflTick % 3 === 0) m.refl.update(camera);
       }
       for (const p2 of this.puddles) {
         const nm = p2.mat.normalMap;
@@ -35759,8 +35831,8 @@ void main() {
     width = 0.95,
     height = 2.15,
     ry = 0,
-    mat = M.woodDark,
-    frameMat = M.woodBlack,
+    mat = M.doorInner,
+    frameMat = M.framePaint,
     hinge = "left",
     openAngle = 1.85,
     label = "\u63A8\u9580",
@@ -35784,7 +35856,7 @@ void main() {
     pivot.add(panel);
     for (let i = 0; i < 2; i++) {
       const pw = width * 0.66, ph = height * 0.32;
-      const inset = new Mesh(new BoxGeometry(pw, ph, 0.012), M.woodBlack);
+      const inset = new Mesh(new BoxGeometry(pw, ph, 0.012), M.doorInset);
       inset.position.set(-dir * width / 2, height * (0.28 + i * 0.36), thick / 2 + 4e-3);
       pivot.add(inset);
     }
@@ -36001,12 +36073,12 @@ void main() {
   }
   function apothecary(w = 2.4, h = 2.1, d = 0.34, cols = 5, rows = 6) {
     const g = new Group();
-    g.add(box(w, h, d, M.woodDark, 0, h / 2, 0));
+    g.add(box(w, h, d, M.cabRosewood, 0, h / 2, 0));
     const cw = w / cols, ch = h / rows;
     let idx = 0;
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       const fw = cw - 0.03, fh = ch - 0.03;
-      const front = box(fw, fh, 0.02, M.woodBlack, -w / 2 + cw * (c + 0.5), ch * (r + 0.5), d / 2 + 5e-3);
+      const front = box(fw, fh, 0.02, M.cabDrawer, -w / 2 + cw * (c + 0.5), ch * (r + 0.5), d / 2 + 5e-3);
       g.add(front);
       const lab = labelPlane(Math.min(0.16, fw * 0.55), 0.055, idx++);
       lab.position.set(-w / 2 + cw * (c + 0.5), ch * (r + 0.5) + 0.01, d / 2 + 0.018);
@@ -36016,18 +36088,18 @@ void main() {
       handle.position.set(-w / 2 + cw * (c + 0.5), ch * (r + 0.5) - 0.055, d / 2 + 0.035);
       g.add(handle);
     }
-    const cornice = box(w + 0.08, 0.07, d + 0.06, M.woodBlack, 0, h + 0.02, 0);
+    const cornice = box(w + 0.08, 0.07, d + 0.06, M.cabDrawer, 0, h + 0.02, 0);
     g.add(cornice);
     return g;
   }
   function shopCounter(w = 1.9, d = 0.62, h = 1.02) {
     const g = new Group();
-    g.add(box(w, h - 0.06, d, M.woodDark, 0, (h - 0.06) / 2, 0));
-    const top = box(w + 0.1, 0.06, d + 0.08, M.woodBlack, 0, h - 0.03, 0);
+    g.add(box(w, h - 0.06, d, M.counterBody, 0, (h - 0.06) / 2, 0));
+    const top = box(w + 0.1, 0.06, d + 0.08, M.counterTop, 0, h - 0.03, 0);
     g.add(top);
     for (let i = 0; i < 3; i++) {
       const pw = (w - 0.16) / 3;
-      g.add(box(pw - 0.03, h - 0.22, 0.02, M.woodBlack, -w / 2 + 0.08 + pw * (i + 0.5), (h - 0.06) / 2, d / 2 + 5e-3));
+      g.add(box(pw - 0.03, h - 0.22, 0.02, M.counterBody, -w / 2 + 0.08 + pw * (i + 0.5), (h - 0.06) / 2, d / 2 + 5e-3));
       const knob = new Mesh(new SphereGeometry(0.017, 8, 6), M.brass);
       knob.position.set(-w / 2 + 0.08 + pw * (i + 0.5), h * 0.62, d / 2 + 0.03);
       g.add(knob);
@@ -36048,7 +36120,7 @@ void main() {
     const lid = new Mesh(new CylinderGeometry(r * 1.03, r * 1.03, 0.018, 14), M.brass);
     lid.position.y = h + 5e-3;
     g.add(lid);
-    const base = new Mesh(new CylinderGeometry(r * 0.96, r * 0.96, 8e-3, 14), M.woodBlack);
+    const base = new Mesh(new CylinderGeometry(r * 0.96, r * 0.96, 8e-3, 14), M.cabDrawer);
     base.position.y = 4e-3;
     g.add(base);
     return g;
@@ -36069,7 +36141,7 @@ void main() {
   }
   function brassScale() {
     const g = new Group();
-    g.add(cyl(0.09, 0.11, 0.02, M.woodBlack, 16));
+    g.add(cyl(0.09, 0.11, 0.02, M.cabRosewood, 16));
     const col = cyl(0.012, 0.012, 0.3, M.brass, 8);
     col.position.y = 0.15;
     g.add(col);
@@ -36094,14 +36166,14 @@ void main() {
   }
   function abacus() {
     const g = new Group();
-    g.add(box(0.34, 0.02, 0.15, M.woodBlack, 0, 0.01, 0));
+    g.add(box(0.34, 0.02, 0.15, M.cabDrawer, 0, 0.01, 0));
     for (let i = 0; i < 8; i++) {
       const rod = cyl(22e-4, 22e-4, 0.14, M.brass, 4);
       rod.rotation.x = Math.PI / 2;
       rod.position.set(-0.14 + i * 0.04, 0.03, 0);
       g.add(rod);
       for (let k = 0; k < 4; k++) {
-        const bead = new Mesh(new SphereGeometry(0.011, 8, 6), M.woodRed);
+        const bead = new Mesh(new SphereGeometry(0.011, 8, 6), M.shrineDark);
         bead.scale.y = 0.55;
         bead.position.set(-0.14 + i * 0.04, 0.033, -0.04 + k * 0.024 + i % 3 * 4e-3);
         g.add(bead);
@@ -36111,7 +36183,7 @@ void main() {
   }
   function radio() {
     const g = new Group();
-    g.add(box(0.24, 0.15, 0.09, M.woodDark, 0, 0.075, 0));
+    g.add(box(0.24, 0.15, 0.09, M.woodTable, 0, 0.075, 0));
     const grille = box(0.13, 0.1, 5e-3, M.blackMetal, -0.04, 0.08, 0.048);
     g.add(grille);
     for (let i = 0; i < 7; i++) {
@@ -36131,18 +36203,18 @@ void main() {
   }
   function woodenStool(h = 0.44) {
     const g = new Group();
-    const top = cyl(0.16, 0.17, 0.035, M.woodDark, 16);
+    const top = cyl(0.16, 0.17, 0.035, M.woodSeat, 16);
     top.position.y = h;
     g.add(top);
     for (let i = 0; i < 4; i++) {
       const a = i / 4 * Math.PI * 2 + Math.PI / 4;
-      const leg = cyl(0.016, 0.02, h, M.woodDark, 8);
+      const leg = cyl(0.016, 0.02, h, M.woodSeat, 8);
       leg.position.set(Math.cos(a) * 0.12, h / 2, Math.sin(a) * 0.12);
       leg.rotation.z = Math.cos(a) * 0.09;
       leg.rotation.x = -Math.sin(a) * 0.09;
       g.add(leg);
     }
-    const ring = new Mesh(new TorusGeometry(0.13, 8e-3, 5, 18), M.woodDark);
+    const ring = new Mesh(new TorusGeometry(0.13, 8e-3, 5, 18), M.woodSeat);
     ring.rotation.x = Math.PI / 2;
     ring.position.y = 0.15;
     g.add(ring);
@@ -36150,25 +36222,25 @@ void main() {
   }
   function woodenChair() {
     const g = new Group();
-    const seat = box(0.4, 0.04, 0.4, M.woodDark, 0, 0.44, 0);
+    const seat = box(0.4, 0.04, 0.4, M.woodSeat, 0, 0.44, 0);
     g.add(seat);
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      const leg = cyl(0.016, 0.02, 0.44, M.woodDark, 8);
+      const leg = cyl(0.016, 0.02, 0.44, M.woodSeat, 8);
       leg.position.set(sx * 0.17, 0.22, sz * 0.17);
       g.add(leg);
     }
     for (const sx of [-1, 1]) {
-      const post = cyl(0.017, 0.017, 0.48, M.woodDark, 8);
+      const post = cyl(0.017, 0.017, 0.48, M.woodSeat, 8);
       post.position.set(sx * 0.17, 0.68, -0.18);
       g.add(post);
     }
-    g.add(box(0.38, 0.12, 0.03, M.woodDark, 0, 0.84, -0.18));
-    g.add(box(0.36, 0.035, 0.025, M.woodDark, 0, 0.64, -0.18));
+    g.add(box(0.38, 0.12, 0.03, M.woodSeat, 0, 0.84, -0.18));
+    g.add(box(0.36, 0.035, 0.025, M.woodSeat, 0, 0.64, -0.18));
     return g;
   }
   function sofa(w = 2) {
     const g = new Group();
-    g.add(box(w, 0.16, 0.82, M.woodBlack, 0, 0.24, 0));
+    g.add(box(w, 0.16, 0.82, M.laminateDark, 0, 0.24, 0));
     g.add(box(w - 0.1, 0.16, 0.78, M.fabricRed, 0, 0.4, 0.02));
     const back = box(w, 0.52, 0.18, M.fabricRed, 0, 0.64, -0.32);
     back.rotation.x = -0.08;
@@ -36197,7 +36269,7 @@ void main() {
   }
   function bed(w = 1.15, l = 1.95) {
     const g = new Group();
-    g.add(box(w, 0.22, l, M.woodBlack, 0, 0.22, 0));
+    g.add(box(w, 0.22, l, M.bedTimber, 0, 0.22, 0));
     g.add(box(w - 0.06, 0.18, l - 0.08, M.fabricCream, 0, 0.42, 0));
     const blanket = new Mesh(new PlaneGeometry(w + 0.08, l * 0.72, 18, 22), M.fabricRed);
     const p = blanket.geometry.attributes.position;
@@ -36215,14 +36287,14 @@ void main() {
       pillow.rotation.z = s * 0.05;
       g.add(pillow);
     }
-    g.add(box(w + 0.06, 0.5, 0.05, M.woodDark, 0, 0.66, -l / 2 - 0.02));
+    g.add(box(w + 0.06, 0.5, 0.05, M.bedTimber, 0, 0.66, -l / 2 - 0.02));
     return g;
   }
   function wardrobe(w = 1.2, h = 2, d = 0.55) {
     const g = new Group();
-    g.add(box(w, h, d, M.woodDark, 0, h / 2, 0));
+    g.add(box(w, h, d, M.wardrobeBody, 0, h / 2, 0));
     for (const s of [-1, 1]) {
-      const door = box(w / 2 - 0.02, h - 0.08, 0.03, M.woodBlack, s * w / 4, h / 2, d / 2 + 0.01);
+      const door = box(w / 2 - 0.02, h - 0.08, 0.03, M.wardrobeDoor, s * w / 4, h / 2, d / 2 + 0.01);
       g.add(door);
       const hd = new Mesh(new SphereGeometry(0.018, 8, 6), M.brass);
       hd.position.set(s * 0.03, h / 2, d / 2 + 0.04);
@@ -36272,11 +36344,11 @@ void main() {
   }
   function altarTable(w = 1.5, d = 0.5, h = 0.82) {
     const g = new Group();
-    g.add(box(w, 0.06, d, M.woodRed, 0, h, 0));
-    g.add(box(w - 0.12, 0.22, 0.04, M.woodRed, 0, h - 0.16, d / 2 - 0.05));
+    g.add(box(w, 0.06, d, M.shrineRed, 0, h, 0));
+    g.add(box(w - 0.12, 0.22, 0.04, M.shrineDark, 0, h - 0.16, d / 2 - 0.05));
     for (const s of [-1, 1]) {
-      g.add(box(0.07, h, 0.07, M.woodRed, s * (w / 2 - 0.06), h / 2, d / 2 - 0.06));
-      g.add(box(0.07, h, 0.07, M.woodRed, s * (w / 2 - 0.06), h / 2, -d / 2 + 0.06));
+      g.add(box(0.07, h, 0.07, M.shrineRed, s * (w / 2 - 0.06), h / 2, d / 2 - 0.06));
+      g.add(box(0.07, h, 0.07, M.shrineRed, s * (w / 2 - 0.06), h / 2, -d / 2 + 0.06));
     }
     return g;
   }
@@ -36334,8 +36406,8 @@ void main() {
     const g = new Group();
     g.add(box(w, h, d, mat, 0, h / 2, 0));
     for (const s of [-1, 1]) {
-      g.add(box(w + 0.01, 0.03, 0.03, M.woodDark, 0, h * 0.18, s * (d / 2 + 5e-3)));
-      g.add(box(w + 0.01, 0.03, 0.03, M.woodDark, 0, h * 0.86, s * (d / 2 + 5e-3)));
+      g.add(box(w + 0.01, 0.03, 0.03, M.woodTable, 0, h * 0.18, s * (d / 2 + 5e-3)));
+      g.add(box(w + 0.01, 0.03, 0.03, M.woodTable, 0, h * 0.86, s * (d / 2 + 5e-3)));
     }
     return g;
   }
@@ -36552,19 +36624,6 @@ void main() {
     m.receiveShadow = true;
     return m;
   }
-  function curtain(w = 1, h = 2, mat = M.curtain) {
-    const geo = new PlaneGeometry(w, h, 24, 12);
-    const pos = geo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i);
-      pos.setZ(i, Math.sin(x / w * Math.PI * 6) * 0.045 + Math.sin(x / w * Math.PI * 2.3) * 0.02);
-    }
-    geo.computeVertexNormals();
-    const m = new Mesh(geo, mat);
-    m.castShadow = true;
-    m.receiveShadow = true;
-    return m;
-  }
 
   // src/world/alley.js
   var ALLEY = { x0: -8.4, x1: 8.4, z0: 6, z1: 14 };
@@ -36573,7 +36632,9 @@ void main() {
     const g = new Group();
     W.root.add(g);
     const floorMat = M.floorAsphalt.clone();
-    W.wetFloor(floorMat, { room: "alley", amount: 1, distortion: 0.05, puddle: true, puddleScale: 0.075, tint: 16771544 });
+    W.wetFloor(floorMat, { room: "alley", amount: 0, distortion: 0.05, puddle: true, puddleScale: 0.075, tint: 16771544 });
+    floorMat.roughness = 0.24;
+    floorMat.metalness = 0.22;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(0, 0, (z0 + z1) / 2);
@@ -36610,7 +36671,7 @@ void main() {
       pm.transparent = true;
       pm.opacity = 0.92;
       pm.depthWrite = false;
-      W.wetFloor(pm, { room: "alley", amount: 1, distortion: 0.06, tint: 16772829 });
+      W.wetFloor(pm, { room: "alley", amount: 0, distortion: 0.06, tint: 16772829 });
       const p = new Mesh(new PlaneGeometry(sx, sz, 1, 1), pm);
       p.rotation.x = -Math.PI / 2;
       p.position.set(px2, 6e-3, pz2);
@@ -36725,7 +36786,7 @@ void main() {
       const baseY = 3.28;
       const topY = 11.3;
       const fh = topY - baseY;
-      const winA = { x0: 4.45, x1: 6.95, y0: 1.22, y1: 2.62 };
+      const winA = { x0: 3.45, x1: 5.35, y0: 1.27, y1: 2.62 };
       const winB = { x0: 1.62, x1: 3.02, y0: 1.44, y1: 2.36 };
       const openings = [winA, winB];
       const facMat2 = M.concreteWet.clone();
@@ -36761,17 +36822,11 @@ void main() {
           grp.add(jamb);
         }
         if (!lit2) {
-          const pane = new Mesh(
-            new PlaneGeometry(ww - 0.04, wh - 0.04),
-            new MeshBasicMaterial({ color: new Color(0.03, 0.036, 0.045) })
-          );
-          pane.position.set(cxw, cyw, z0 - 0.15);
-          grp.add(pane);
           for (const s2 of [-1, 1]) {
-            grp.add(box(0.07, wh, 0.1, M.woodDark, cxw + s2 * ww / 2, cyw, z0 - 0.06));
-            grp.add(box(ww, 0.07, 0.1, M.woodDark, cxw, cyw + s2 * wh / 2, z0 - 0.06));
+            grp.add(box(0.07, wh, 0.1, M.framePaintGreen, cxw + s2 * ww / 2, cyw, z0 - 0.06));
+            grp.add(box(ww, 0.07, 0.1, M.framePaintGreen, cxw, cyw + s2 * wh / 2, z0 - 0.06));
           }
-          grp.add(box(0.05, wh, 0.09, M.woodDark, cxw, cyw, z0 - 0.06));
+          grp.add(box(0.05, wh, 0.09, M.framePaintGreen, cxw, cyw, z0 - 0.06));
         }
         grp.add(box(ww + 0.28, 0.075, 0.26, M.concreteDark, cxw, baseY + o.y0 - 0.09, z0 + 0.06));
         grp.add(box(ww + 0.24, 0.03, 0.06, M.concreteDark, cxw, baseY + o.y0 - 0.135, z0 + 0.16));
@@ -36783,25 +36838,24 @@ void main() {
           grp.add(box(ww, 0.012, 0.012, M.metalRust, cxw, cyw - 0.18, z0 + 0.035));
         }
       }
-      g.add(box(bx * 2 + 0.06, 0.2, 0.34, M.woodBlack, 0, 3.36, z0 + 0.02));
-      const canopy2 = box(bx * 2 - 0.2, 0.05, 0.36, M.corrugatedRust, 0, 3.5, z0 + 0.24);
+      const canopy2 = box(bx * 2 - 0.2, 0.05, 0.42, M.corrugatedRust, 0, 4.12, z0 + 0.3);
       canopy2.rotation.x = -0.2;
       g.add(canopy2);
       for (const bxp of [-3.9, -1.3, 1.3, 3.9]) {
-        const br = box(0.05, 0.42, 0.05, M.metalRust, bxp, 3.28, z0 + 0.3);
-        br.rotation.x = 0.55;
+        const br = box(0.05, 0.46, 0.05, M.metalRust, bxp, 3.9, z0 + 0.34);
+        br.rotation.x = 0.5;
         g.add(br);
-        g.add(box(0.05, 0.05, 0.26, M.metalRust, bxp, 3.1, z0 + 0.16));
+        g.add(box(0.05, 0.05, 0.3, M.metalRust, bxp, 3.72, z0 + 0.16));
       }
       const neonTube = new Mesh(
         new BoxGeometry(6.4, 0.032, 0.032),
         new MeshBasicMaterial({ color: new Color(1.15, 0.3, 0.14) })
       );
-      neonTube.position.set(0, 3.6, z0 + 0.42);
+      neonTube.position.set(0, 4.02, z0 + 0.46);
       g.add(neonTube);
       for (const s2 of [-1, 1]) {
         const t2 = new Mesh(new BoxGeometry(0.032, 0.032, 0.5), new MeshBasicMaterial({ color: new Color(0.9, 0.24, 0.12) }));
-        t2.position.set(s2 * 3.2, 3.6, z0 - 0.06);
+        t2.position.set(s2 * 3.2, 4.02, z0 - 0.02);
         g.add(t2);
       }
       const wain = new Mesh(planeGeo(bx * 2 - 0.08, 1.02), M.tileWallDirty);
@@ -36890,11 +36944,11 @@ void main() {
       }
       W.addLight("alley", (() => {
         const l = new PointLight(16754792, 16, 7.5, 2);
-        l.position.set(0.55, 4.45, z0 + 0.55);
+        l.position.set(0.55, 3.95, z0 + 0.5);
         return l;
       })(), { keep: true });
       const shade = new Mesh(new CylinderGeometry(0.16, 0.1, 0.09, 12, 1, true), M.metalDark);
-      shade.position.set(0.55, 4.62, z0 + 0.42);
+      shade.position.set(0.55, 4.02, z0 + 0.44);
       g.add(shade);
       W.addLight("alley", (() => {
         const l = new PointLight(16756848, 11, 7, 2);
@@ -36965,8 +37019,11 @@ void main() {
       g.add(po);
     }
     for (let i = 0; i < 6; i++) {
-      const st = sticker("stain", rand(0.4, 0.9), rand(0.5, 1.2), rand(0.2, 0.4));
-      st.position.set(rand(x0 + 0.4, x1 - 0.4), rand(0.3, 2.4), z0 + 0.07);
+      const sw = rand(0.4, 0.9), sh = rand(0.5, 1.2);
+      const st = sticker("stain", sw, sh, rand(0.2, 0.4));
+      let sx = rand(x0 + 0.4, x1 - 0.4);
+      if (sx + sw / 2 > 0.62 && sx - sw / 2 < 1.62) sx = sx < 1.12 ? rand(x0 + 0.4, 0.55 - sw / 2) : rand(1.68 + sw / 2, x1 - 0.4);
+      st.position.set(sx, rand(0.3, 2.4), z0 + 0.07);
       st.rotation.z = rand(0, 6);
       g.add(st);
     }
@@ -37049,7 +37106,7 @@ void main() {
       c.rotation.y = rand(-0.2, 0.2);
       g.add(c);
     }
-    const pallet = box(1.1, 0.12, 0.9, M.woodRaw, 6.2, 0.06, 12.6);
+    const pallet = box(1.1, 0.12, 0.9, M.cratePine, 6.2, 0.06, 12.6);
     g.add(pallet);
     W.colliders.push({ minX: 5.6, maxX: 7.1, minZ: 11, maxZ: 13, minY: 0, maxY: 0.9, enabled: true });
     for (let i = 0; i < 5; i++) {
@@ -37077,45 +37134,6 @@ void main() {
     mo2.position.set(5.1, 0, 6.5);
     mo2.rotation.z = 0.3;
     g.add(mo2);
-    const bridge = new Group();
-    g.add(bridge);
-    bridge.add(box(1.75, 0.42, z1 - z0 + 0.4, M.concreteDark, -3.7, 4.55, (z0 + z1) / 2));
-    for (const zz of [z0 + 0.1, z1 - 0.1]) {
-      bridge.add(box(1.85, 0.75, 0.18, M.concreteDark, -3.7, 4.78, zz));
-    }
-    for (const [zz, lit2] of [[7, false], [9.2, true], [11.4, false], [13.2, false]]) {
-      const pane = new Mesh(
-        new PlaneGeometry(1, 0.78),
-        lit2 ? new MeshBasicMaterial({ color: new Color(0.75, 0.45, 0.22) }) : new MeshStandardMaterial({ color: 658446, roughness: 0.3, metalness: 0.2 })
-      );
-      pane.geometry.rotateY(Math.PI / 2);
-      pane.position.set(-2.83, 4.62, zz);
-      bridge.add(pane);
-      bridge.add(box(0.05, 0.06, 1.08, M.woodBlack, -2.82, 5.03, zz));
-      bridge.add(box(0.05, 0.06, 1.08, M.woodBlack, -2.82, 4.21, zz));
-      for (const dz of [-0.52, 0.52]) bridge.add(box(0.05, 0.84, 0.05, M.woodBlack, -2.82, 4.62, zz + dz));
-      bridge.add(box(0.04, 0.78, 0.03, M.woodBlack, -2.82, 4.62, zz));
-    }
-    for (const zz of [7.2, 9, 10.8, 12.6]) {
-      bridge.add(box(1.9, 0.12, 0.14, M.woodBlack, -3.7, 4.28, zz));
-    }
-    bridge.add(cyl(0.06, 0.06, z1 - z0 - 0.2, M.pipeGreen, 8).rotateX(Math.PI / 2).translateX(-2.95).translateY(4.2).translateZ((z0 + z1) / 2));
-    bridge.add(cyl(0.03, 0.03, z1 - z0 - 0.2, M.metalRust, 6).rotateX(Math.PI / 2).translateX(-4.4).translateY(4.24).translateZ((z0 + z1) / 2));
-    const underBulb = bulbLamp({ cord: 0.34, shade: false });
-    underBulb.position.set(-3.6, 4.3, 10.2);
-    g.add(underBulb);
-    W.addLight("alley", (() => {
-      const l = new PointLight(16760968, 7, 4.5, 2);
-      l.position.set(-3.6, 3.9, 10.2);
-      return l;
-    })());
-    g.add(cable([-3, 4.1, 8], [-3, 4, 12.2], 0.12, 6e-3));
-    for (let i = 0; i < 3; i++) {
-      const cl = hangingCloth(0.34, 0.5, [M.fabricCream, M.fabricBlue, M.fabricRed][i]);
-      cl.position.set(-3, 3.82, 8.6 + i * 1.3);
-      cl.rotation.y = 1.57 + rand(-0.15, 0.15);
-      g.add(cl);
-    }
     const canopy = new Group();
     g.add(canopy);
     canopy.add(box(3, 0.07, 2.2, M.corrugatedRust, 5.9, 3.15, 8));
@@ -37273,8 +37291,8 @@ void main() {
     lad.position.set(7.55, 0, 6.6);
     lad.rotation.z = 0.12;
     g.add(lad);
-    for (const s of [-1, 1]) lad.add(box(0.04, 2.2, 0.05, M.woodRaw, s * 0.22, 1.1, 0));
-    for (let i = 0; i < 6; i++) lad.add(box(0.48, 0.03, 0.04, M.woodRaw, 0, 0.3 + i * 0.33, 0));
+    for (const s of [-1, 1]) lad.add(box(0.04, 2.2, 0.05, M.cratePine, s * 0.22, 1.1, 0));
+    for (let i = 0; i < 6; i++) lad.add(box(0.48, 0.03, 0.04, M.cratePine, 0, 0.3 + i * 0.33, 0));
     const pot = new Group();
     pot.position.set(-7.55, 0, 6.7);
     g.add(pot);
@@ -37380,7 +37398,9 @@ void main() {
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     const floorMat = M.floorChecker.clone();
-    W.wetFloor(floorMat, { room: "shop", amount: 0.85, distortion: 0.018, tint: 16773858 });
+    W.wetFloor(floorMat, { room: "shop", amount: 0, distortion: 0.05, blur: 35e-4, tint: 16773858 });
+    floorMat.roughness = 0.34;
+    floorMat.metalness = 0.08;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, 0.02, cz);
@@ -37392,14 +37412,14 @@ void main() {
     ceil.position.set(cx, h, cz);
     g.add(ceil);
     for (let i = 0; i < 3; i++) {
-      const b = box(x1 - x0 + 0.02, 0.16, 0.12, M.woodBlack, cx, h - 0.09, z0 + 1.4 + i * 2.2);
+      const b = box(x1 - x0 + 0.02, 0.16, 0.12, M.beamRough, cx, h - 0.09, z0 + 1.4 + i * 2.2);
       g.add(b);
     }
-    const back = wallGroup(x1 - x0, h, M.wallPeelGreen, [{ x0: 3.28, x1: 4.72, y0: 0, y1: 2.3 }]);
+    const back = wallGroup(x1 - x0, h, M.wallPeelGreen, [{ x0: 3.46, x1: 4.54, y0: 0, y1: 2.3 }]);
     back.position.set(cx, 0, z0);
     g.add(back);
-    W.colliders.push({ minX: x0, maxX: -0.72, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: 0, maxY: h, enabled: true });
-    W.colliders.push({ minX: 0.72, maxX: x1, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: 0, maxY: h, enabled: true });
+    W.colliders.push({ minX: x0, maxX: -0.54, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: 0, maxY: h, enabled: true });
+    W.colliders.push({ minX: 0.54, maxX: x1, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: 0, maxY: h, enabled: true });
     W.colliders.push({ minX: -0.72, maxX: 0.72, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: 2.3, maxY: h, enabled: true });
     const west = new Mesh(planeGeo(z1 - z0, h), M.wallPeelGreen);
     west.rotation.y = Math.PI / 2;
@@ -37436,12 +37456,11 @@ void main() {
     const glassStore = new Mesh(new PlaneGeometry(4.1, 2), M.glass);
     glassStore.position.set(-1.45, 1.92, -0.02);
     sf.add(glassStore);
-    sf.add(box(0.1, 2.85, 0.22, wfMat, 0.7, 1.425, 0));
-    sf.add(box(0.1, 2.85, 0.22, wfMat, 1.66, 1.425, 0));
-    sf.add(box(1.06, 0.2, 0.22, wfMat, 1.18, 2.95, 0));
-    sf.add(box(1.02, 0.06, 0.24, wfMat, 1.18, 2.86, 0));
-    sf.add(box(1.06, 0.14, 0.2, plaster, 1.18, 3.02, 0));
-    sf.add(box(4.3, 0.26, 0.3, M.metalRust, -1.4, 3.12, 0.02));
+    sf.add(box(0.1, 2.85, 0.22, wfMat, 0.7, 1.425, -0.012));
+    sf.add(box(0.1, 2.85, 0.22, wfMat, 1.6, 1.425, -0.012));
+    sf.add(box(1, 0.2, 0.22, wfMat, 1.15, 2.95, -0.012));
+    sf.add(box(0.96, 0.06, 0.24, wfMat, 1.15, 2.86, -0.012));
+    sf.add(box(1, 0.14, 0.2, plaster, 1.15, 3.02, -0.012));
     const sign2 = new Mesh(new PlaneGeometry(2.9, 0.79), new MeshStandardMaterial({
       map: T.art.shop_sign,
       roughness: 0.6,
@@ -37451,7 +37470,7 @@ void main() {
     }));
     sign2.position.set(-1.35, 3.62, 0.18);
     sf.add(sign2);
-    sf.add(box(3.04, 0.92, 0.12, M.woodBlack, -1.35, 3.62, 0.1));
+    sf.add(box(3.04, 0.92, 0.12, M.signBack, -1.35, 3.62, 0.1));
     const neonMat = new MeshBasicMaterial({
       map: T.art.neon_fuan,
       transparent: true,
@@ -37493,8 +37512,8 @@ void main() {
     })());
     const door = { setOpen: () => {
     } };
-    W.colliders.push({ minX: -4, maxX: 0.68, minZ: z1 - 0.12, maxZ: z1 + 0.12, minY: 0, maxY: h, enabled: true });
-    W.colliders.push({ minX: 1.66, maxX: 4, minZ: z1 - 0.12, maxZ: z1 + 0.12, minY: 0, maxY: h, enabled: true });
+    W.colliders.push({ minX: -4, maxX: 0.75, minZ: z1 - 0.12, maxZ: z1 + 0.12, minY: 0, maxY: h, enabled: true });
+    W.colliders.push({ minX: 1.5, maxX: 4, minZ: z1 - 0.12, maxZ: z1 + 0.12, minY: 0, maxY: h, enabled: true });
     W.addLight("shop", (() => {
       const l = new PointLight(12571848, 5, 5, 2);
       l.position.set(1.2, 2.55, 5.4);
@@ -37597,7 +37616,7 @@ void main() {
     pb.rotation.y = Math.PI / 2;
     g.add(pb);
     const tb = sticker("talisman", 0.19, 0.66, 0.95);
-    tb.position.set(-0.45, 1.85, z0 + 0.02);
+    tb.position.set(-0.78, 1.85, z0 + 0.02);
     g.add(tb);
     for (let i = 0; i < 4; i++) {
       const c = crate(rand(0.35, 0.5), rand(0.25, 0.36), rand(0.3, 0.4));
@@ -37685,7 +37704,7 @@ void main() {
     sh.position.set(x0 + 0.2, 1.55, 1);
     sh.rotation.y = Math.PI / 2;
     g.add(sh);
-    sh.add(box(0.3, 0.4, 0.16, M.woodRed, 0, 0.2, 0));
+    sh.add(box(0.3, 0.4, 0.16, M.shrineRed, 0, 0.2, 0));
     const shGlow = new Mesh(new PlaneGeometry(0.17, 0.22), new MeshBasicMaterial({ color: new Color(1, 0.12, 0.06) }));
     shGlow.position.set(0, 0.22, 0.081);
     sh.add(shGlow);
@@ -37701,8 +37720,11 @@ void main() {
     ledger.position.set(-0.95, 1.05, 2.95);
     g.add(ledger);
     for (let i = 0; i < 7; i++) {
-      const s = sticker("stain", rand(0.5, 1.1), rand(0.6, 1.4), rand(0.25, 0.5));
-      s.position.set(rand(-3.8, 3.8), rand(0.4, 3.2), z0 + 0.015);
+      const sw = rand(0.5, 1.1), sh2 = rand(0.6, 1.4);
+      const s = sticker("stain", sw, sh2, rand(0.25, 0.5));
+      let sx = rand(-3.8, 3.8);
+      if (sx + sw / 2 > -0.62 && sx - sw / 2 < 0.62) sx = (sx < 0 ? -1 : 1) * rand(0.75, 3.6);
+      s.position.set(sx, rand(0.4, 3.2), z0 + 0.015);
       s.rotation.z = rand(0, 6);
       g.add(s);
     }
@@ -37815,12 +37837,12 @@ void main() {
     north.position.set(cx, 0, z0);
     g.add(north);
     W.colliders.push({ minX: x0, maxX: x1, minZ: z0 - 0.2, maxZ: z0 + 0.05, minY: 0, maxY: h, enabled: true });
-    const south = wallGroup(x1 - x0, h, M.concrete, [{ x0: 1.08, x1: 2.52, y0: 0, y1: 2.3 }, { x0: 0.25, x1: 1.25, y0: 3.6, y1: 5.85 }]);
+    const south = wallGroup(x1 - x0, h, M.concrete, [{ x0: 1.26, x1: 2.34, y0: 0, y1: 2.3 }, { x0: 0.25, x1: 1.25, y0: 3.6, y1: 5.85 }]);
     south.position.set(cx, 0, z1);
     south.rotation.y = Math.PI;
     g.add(south);
-    W.colliders.push({ minX: x0, maxX: -0.72, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 0, maxY: 3.6, enabled: true });
-    W.colliders.push({ minX: 0.72, maxX: x1, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 0, maxY: 3.6, enabled: true });
+    W.colliders.push({ minX: x0, maxX: -0.54, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 0, maxY: 3.6, enabled: true });
+    W.colliders.push({ minX: 0.54, maxX: x1, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 0, maxY: 3.6, enabled: true });
     W.colliders.push({ minX: -0.72, maxX: 0.55, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 2.3, maxY: h, enabled: true });
     W.colliders.push({ minX: 0.55, maxX: 1.55, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 2.3, maxY: 3.6, enabled: true });
     W.colliders.push({ minX: 1.55, maxX: x1, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 2.3, maxY: h, enabled: true });
@@ -37843,9 +37865,9 @@ void main() {
           const s = box(w, height, STEPS.run + 0.01, stepMatSide, cxA, base + height / 2, zc);
           g.add(s);
         }
-        const tread = box(w + 0.02, 0.03, STEPS.run + 0.02, stepMatTop, cxA, topY - 0.015, zc);
+        const tread = box(w + 0.02, 0.03, STEPS.run + 0.02, stepMatTop, cxA, topY - 0.011, zc);
         g.add(tread);
-        const nose = box(w + 0.03, 0.012, 0.035, M.metalRust, cxA, topY - 5e-3, zc + dir * (STEPS.run / 2 - 0.01));
+        const nose = box(w + 0.03, 0.012, 0.035, M.metalRust, cxA, topY + 0, zc + dir * (STEPS.run / 2 - 0.01));
         g.add(nose);
       }
       if (!thin) {
@@ -37878,10 +37900,19 @@ void main() {
       g.add(tube(railPts, 0.02, railMat, 8));
     }
     for (let i = 0; i < 10; i++) {
-      const s = sticker("stain", rand(0.4, 1), rand(0.5, 1.4), rand(0.2, 0.45));
-      s.position.set(rand(x0 + 0.2, x1 - 0.2), rand(0.3, 3.2), z1 - 0.02);
+      const sw = rand(0.4, 0.95);
+      const s = sticker("stain", sw, rand(0.5, 1.4), rand(0.2, 0.45));
+      const piers = [[x0 + 0.12, -0.66 - sw / 2], [0.66 + sw / 2, x1 - 0.12]];
+      const ok = piers.filter(([a2, b3]) => b3 - a2 > 0.05);
+      if (!ok.length) {
+        s.visible = false;
+        g.add(s);
+        continue;
+      }
+      const [a, b] = ok[Math.floor(Math.random() * ok.length)];
+      s.position.set(rand(a, b), rand(0.3, 3.2), z1 - 0.02);
       s.rotation.y = Math.PI;
-      s.rotation.z = rand(0, 6);
+      s.rotation.z = rand(-0.25, 0.25);
       g.add(s);
     }
     const graf = new Mesh(new PlaneGeometry(1.4, 1.4), new MeshBasicMaterial({
@@ -37929,7 +37960,7 @@ void main() {
     sh.position.set(-1.35, 1.8, -6.35);
     sh.rotation.y = 0.25;
     g.add(sh);
-    sh.add(box(0.4, 0.55, 0.24, M.woodRed, 0, 0.28, 0));
+    sh.add(box(0.4, 0.55, 0.24, M.shrineRed, 0, 0.28, 0));
     const glowM = new MeshBasicMaterial({ color: new Color(1.2, 0.12, 0.06) });
     const glow = new Mesh(new PlaneGeometry(0.24, 0.3), glowM);
     glow.position.set(0, 0.32, 0.121);
@@ -37942,7 +37973,7 @@ void main() {
       o.position.set(dx, 0.66, 0.18);
       sh.add(o);
     }
-    sh.add(box(0.34, 0.02, 0.1, M.woodRed, 0, 0.62, 0.16));
+    sh.add(box(0.34, 0.02, 0.1, M.shrineDark, 0, 0.62, 0.16));
     const bk = bucket(0.16, 0.26, M.plasticRed);
     bk.position.set(0.9, 1.82, -5.9);
     g.add(bk);
@@ -37960,12 +37991,13 @@ void main() {
     mopG.position.set(1.35, 0, -1.5);
     mopG.rotation.z = 0.1;
     g.add(mopG);
-    const lampA = bulbLamp({ cord: 0.5, shade: false });
-    lampA.position.set(-1.1, 3.25, -2.1);
+    const lampA = bulbLamp({ cord: 3.3, shade: false });
+    lampA.position.set(-1.1, 6.6, -2.1);
     g.add(lampA);
+    g.add(box(0.14, 0.06, 0.14, M.metalDark, -1.1, 6.58, -2.1));
     const la = W.addLight("stairs", (() => {
       const l = new PointLight(16760970, 24, 8, 2);
-      l.position.set(-1.1, 2.7, -2.1);
+      l.position.set(-1.1, 3.15, -2.1);
       l.castShadow = true;
       l.shadow.mapSize.set(1024, 1024);
       l.shadow.bias = -15e-4;
@@ -37977,21 +38009,23 @@ void main() {
       lampA.rotation.z = Math.sin(t * 0.55) * 0.03;
       lampA.position.x = -1.1 + Math.sin(t * 0.55) * 0.03;
     });
-    const lampB = bulbLamp({ cord: 0.42, shade: false });
-    lampB.position.set(0.85, 3, -5.55);
+    const lampB = bulbLamp({ cord: 3.45, shade: false });
+    lampB.position.set(0.85, 6.6, -5.55);
     g.add(lampB);
+    g.add(box(0.14, 0.06, 0.14, M.metalDark, 0.85, 6.58, -5.55));
     const lb = W.addLight("stairs", (() => {
       const l = new PointLight(16756848, 15, 6.5, 2);
-      l.position.set(0.85, 2.55, -5.55);
+      l.position.set(0.85, 3, -5.55);
       return l;
     })());
     W.flicker(lb, { min: 0.75, max: 1, speed: 6, pattern: "soft" });
-    const lampC = bulbLamp({ cord: 0.9, shade: false });
-    lampC.position.set(0.2, 6.45, -2.3);
+    const lampC = bulbLamp({ cord: 1.05, shade: false });
+    lampC.position.set(0.2, 6.6, -2.3);
     g.add(lampC);
+    g.add(box(0.14, 0.06, 0.14, M.metalDark, 0.2, 6.58, -2.3));
     W.addLight("stairs", (() => {
       const l = new PointLight(16764830, 18, 8, 2);
-      l.position.set(0.2, 5.5, -2.3);
+      l.position.set(0.2, 5.4, -2.3);
       return l;
     })());
     W.addLight("stairs", (() => {
@@ -38015,9 +38049,10 @@ void main() {
       l.position.set(0, 2, -3);
       return l;
     })());
-    const stepLight = bulbLamp({ cord: 0.4, shade: false });
-    stepLight.position.set(-1.2, 3.6, -3.4);
+    const stepLight = bulbLamp({ cord: 2.85, shade: false });
+    stepLight.position.set(-1.2, 6.6, -3.4);
     g.add(stepLight);
+    g.add(box(0.14, 0.06, 0.14, M.metalDark, -1.2, 6.58, -3.4));
     W.addLight("stairs", (() => {
       const l = new PointLight(16760968, 10, 5, 2);
       l.position.set(-1.2, 3.1, -3.4);
@@ -38026,22 +38061,7 @@ void main() {
     W.room("stairs", { x0, x1, z0, z1, y0: 0 });
     W.onEnter("stairs", () => W.audio?.setAmbience("stairs"));
     W.onEnter("stairs", () => W.hud.room("\u5F8C\u6A13\u68AF"));
-    const aptDoor = makeDoor(W, {
-      x: 1.05,
-      y: 3.6,
-      z: z1 - 0.06,
-      width: 0.95,
-      height: 2.2,
-      ry: Math.PI,
-      hinge: "left",
-      label: "\u4E09\u6A13 \xB7 \u63A8\u9580",
-      mat: M.woodDark,
-      red: true,
-      openAngle: 1.7,
-      onOpen: () => W.story?.onApartmentEntered?.()
-    });
-    g.add(aptDoor.root);
-    return { aptDoor, winLight };
+    return { winLight };
   }
 
   // src/world/apartment.js
@@ -38053,8 +38073,10 @@ void main() {
     const g = new Group();
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, cy = y0 + h;
-    const floorMat = M.floorWood.clone();
-    W.wetFloor(floorMat, { room: "apt", amount: 0.35, distortion: 0.012, tint: 16771280 });
+    const floorMat = M.floorApt.clone();
+    W.wetFloor(floorMat, { room: "apt", amount: 0, distortion: 0.045, blur: 4e-3, tint: 16771280 });
+    floorMat.roughness = 0.52;
+    floorMat.metalness = 0;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, y0 + 0.01, cz);
@@ -38071,8 +38093,10 @@ void main() {
     W.colliders.push({ minX: x0, maxX: 0.55, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: y0, maxY: cy, enabled: true });
     W.colliders.push({ minX: 1.55, maxX: x1, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: y0, maxY: cy, enabled: true });
     const south = wallGroup(x1 - x0, h, M.wallPeelWarm, [
-      { x0: 1.1, x1: 3.6, y0: 0.95, y1: 2.3 },
-      { x0: 5, x1: 6.4, y0: 1.15, y1: 2.05 }
+      { x0: 2.7, x1: 4.6, y0: 0.95, y1: 2.3 },
+      // main window  -> world -0.60..1.30
+      { x0: 5.03, x1: 6.43, y0: 1.12, y1: 2.04 }
+      // small window -> world -2.43..-1.03
     ]);
     south.rotation.y = Math.PI;
     south.position.set(cx, y0, z1);
@@ -38084,15 +38108,14 @@ void main() {
     west.receiveShadow = true;
     g.add(west);
     W.colliders.push({ minX: x0 - 0.15, maxX: x0 + 0.15, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
-    const east = new Mesh(planeGeo(z1 - z0, h), M.wallPeel);
-    east.rotation.y = -Math.PI / 2;
-    east.position.set(x1, y0 + h / 2, cz);
-    east.receiveShadow = true;
-    g.add(east);
-    W.colliders.push({ minX: x1 - 0.15, maxX: x1 + 0.15, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
-    for (let i = 0; i < 2; i++) {
-      g.add(box(x1 - x0, 0.14, 0.1, M.woodBlack, cx, cy - 0.08, z0 + 2.2 + i * 2.4));
+    for (const [ez0, ez1] of [[z0, BATH.z0], [BATH.z1, z1]]) {
+      const east = new Mesh(planeGeo(ez1 - ez0, h), M.wallPeel);
+      east.rotation.y = -Math.PI / 2;
+      east.position.set(x1, y0 + h / 2, (ez0 + ez1) / 2);
+      east.receiveShadow = true;
+      g.add(east);
     }
+    W.colliders.push({ minX: x1 - 0.15, maxX: x1 + 0.15, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
     const entry = makeDoor(W, {
       x: 1.05,
       y: y0,
@@ -38102,9 +38125,10 @@ void main() {
       ry: 0,
       hinge: "left",
       label: "\u5165\u5C4B",
-      mat: M.woodDark,
-      red: true,
-      openAngle: -1.75
+      mat: M.doorEntrance,
+      red: false,
+      openAngle: -1.75,
+      onOpen: () => W.story?.onApartmentEntered?.()
     });
     g.add(entry.root);
     W.colliders.push({ minX: -3.95, maxX: -3.2, minZ: -0.65, maxZ: 0.9, minY: y0, maxY: y0 + 1.6, enabled: true });
@@ -38112,27 +38136,50 @@ void main() {
     W.colliders.push({ minX: -4, maxX: -3.32, minZ: 1.85, maxZ: 3.25, minY: y0, maxY: y0 + 1.25, enabled: true });
     W.colliders.push({ minX: 3.3, maxX: 4, minZ: 1.5, maxZ: 2.8, minY: y0, maxY: y0 + 2, enabled: true });
     W.colliders.push({ minX: -3.8, maxX: -2.5, minZ: 3.8, maxZ: 5.9, minY: y0, maxY: y0 + 0.75, enabled: true });
-    const part = wallGroup(3.4, h, M.wallPeelGreen, [{ x0: 2.6, x1: 3.4, y0: 0, y1: 2.15 }]);
-    part.position.set(-2.3, y0, 3.15);
+    const part = box(3.4, h, 0.12, M.wallPeelGreen, -2.3, y0 + h / 2, 3.15);
+    part.name = "partition";
     g.add(part);
-    W.colliders.push({ minX: x0, maxX: -1, minZ: 3, maxZ: 3.3, minY: y0, maxY: cy, enabled: true });
-    W.colliders.push({ minX: -1, maxX: 0.4, minZ: 3, maxZ: 3.3, minY: y0 + 2.15, maxY: cy, enabled: true });
-    const bw = wallGroup(BATH.z1 - BATH.z0, h, M.wallPeelGreen, [{ x0: 0.55, x1: 1.5, y0: 0, y1: 2.1 }]);
-    bw.rotation.y = Math.PI / 2;
-    bw.position.set(BATH.x0, y0, (BATH.z0 + BATH.z1) / 2);
-    g.add(bw);
-    W.colliders.push({ minX: BATH.x0 - 0.12, maxX: BATH.x0 + 0.12, minZ: BATH.z0, maxZ: 3.6, minY: y0, maxY: cy, enabled: true });
-    W.colliders.push({ minX: BATH.x0 - 0.12, maxX: BATH.x0 + 0.12, minZ: 4.55, maxZ: BATH.z1, minY: y0, maxY: cy, enabled: true });
+    W.colliders.push({ minX: x0, maxX: -0.6, minZ: 3.02, maxZ: 3.28, minY: y0, maxY: cy, enabled: true });
+    {
+      const bx0 = -0.6, bx1 = 1.75, wz = 3.12, th = 0.12;
+      const dL = 0.62, dR = 1.57;
+      const wL = dL, wR = bx1 - bx0 - dR;
+      g.add(box(wL, h, th, M.wallPeelWarm, bx0 + wL / 2, y0 + h / 2, wz));
+      g.add(box(wR, h, th, M.wallPeelWarm, bx0 + dR + wR / 2, y0 + h / 2, wz));
+      g.add(box(dR - dL, h - 2.15, th, M.wallPeelWarm, bx0 + (dL + dR) / 2, y0 + 2.15 + (h - 2.15) / 2, wz));
+      const bedDoor = makeDoor(W, {
+        x: 0.495,
+        y: y0,
+        z: wz,
+        width: 0.9,
+        height: 2.12,
+        ry: Math.PI,
+        hinge: "left",
+        label: "\u7761\u623F",
+        mat: M.doorInner,
+        knob: true,
+        openAngle: 1.6
+      });
+      g.add(bedDoor.root);
+      W.colliders.push({ minX: bx0, maxX: bx0 + dL, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0, maxY: cy, enabled: true });
+      W.colliders.push({ minX: bx0 + dR, maxX: bx1, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0, maxY: cy, enabled: true });
+      W.colliders.push({ minX: bx0 + dL, maxX: bx0 + dR, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0 + 2.15, maxY: cy, enabled: true });
+    }
+    {
+      const wx = BATH.x0;
+      g.add(box(0.12, h, 6 - BATH.z1, M.wallPeelWarm, wx - 0.06, y0 + h / 2, (BATH.z1 + 6) / 2));
+      W.colliders.push({ minX: wx - 0.12, maxX: wx, minZ: BATH.z1, maxZ: 6, minY: y0, maxY: cy, enabled: true });
+    }
     const bathDoor = makeDoor(W, {
-      x: BATH.x0,
+      x: BATH.x0 - 0.055,
       y: y0,
-      z: 4.07,
-      width: 0.82,
+      z: 4.275,
+      width: 0.9,
       height: 2.08,
       ry: Math.PI / 2,
       hinge: "left",
       label: "\u6D74\u5BA4",
-      mat: M.woodBlack,
+      mat: M.doorBath,
       knob: true,
       openAngle: 1.9
     });
@@ -38149,7 +38196,7 @@ void main() {
     g.add(altar);
     const at = altarTable(1.95, 0.62, 0.8);
     altar.add(at);
-    const cloth = new Mesh(new PlaneGeometry(1.9, 0.62, 12, 10), M.woodRed);
+    const cloth = new Mesh(new PlaneGeometry(1.9, 0.62, 12, 10), M.shrineRed);
     cloth.rotation.x = -Math.PI / 2;
     cloth.position.set(0, 0.831, 0.02);
     altar.add(cloth);
@@ -38162,7 +38209,7 @@ void main() {
     const shrine = new Group();
     shrine.position.set(0, 0.83, -0.12);
     altar.add(shrine);
-    shrine.add(box(0.62, 0.52, 0.26, M.woodRed, 0, 0.26, 0));
+    shrine.add(box(0.62, 0.52, 0.26, M.shrineRed, 0, 0.26, 0));
     const shrineInner = new Mesh(new PlaneGeometry(0.52, 0.42), new MeshStandardMaterial({ color: 3804936, roughness: 0.9, emissive: 9050634, emissiveIntensity: 0.35 }));
     shrineInner.position.set(0, 0.3, 0.131);
     shrine.add(shrineInner);
@@ -38291,7 +38338,7 @@ void main() {
     pF.rotation.y = Math.PI / 2;
     g.add(pF);
     for (let i = 0; i < 3; i++) {
-      const ph = pictureFrame(T.art[`photo_${i + 1}`], 0.2, 0.26, i === 1 ? M.woodRed : M.woodDark);
+      const ph = pictureFrame(T.art[`photo_${i + 1}`], 0.2, 0.26, i === 1 ? M.shrineDark : M.framePaint);
       ph.position.set(-3.95, y0 + 1.35 + (i === 1 ? 0.32 : 0), 1.55 + i * 0.3);
       ph.rotation.y = Math.PI / 2;
       ph.rotation.z = rand(-0.05, 0.05);
@@ -38301,21 +38348,17 @@ void main() {
     tal.position.set(-3.94, y0 + 1.55, -0.15);
     tal.rotation.y = Math.PI / 2;
     g.add(tal);
-    const curt = curtain(0.75, 2.15, M.curtain);
-    curt.position.set(-3.9, y0 + 1.25, 1.95);
-    curt.rotation.y = Math.PI / 2;
-    g.add(curt);
     const sf = sofa(2.05);
     sf.position.set(2.75, y0, 1.55);
     sf.rotation.y = -Math.PI / 2;
     g.add(sf);
     W.colliders.push({ minX: 2.3, maxX: 3.2, minZ: 0.5, maxZ: 2.6, minY: y0, maxY: y0 + 0.9, enabled: true });
-    const coffee = box(0.95, 0.05, 0.5, M.woodDark, 1.25, y0 + 0.36, 1.55);
+    const coffee = box(0.95, 0.05, 0.5, M.woodTable, 1.25, y0 + 0.36, 1.55);
     g.add(coffee);
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(cyl(0.018, 0.022, 0.36, M.woodDark, 6).translateX(1.25 + sx * 0.4).translateY(y0 + 0.18).translateZ(1.55 + sz * 0.2));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(cyl(0.018, 0.022, 0.36, M.woodTable, 6).translateX(1.25 + sx * 0.4).translateY(y0 + 0.18).translateZ(1.55 + sz * 0.2));
     g.add(cyl(0.035, 0.028, 0.07, M.porcelain, 12).translateX(1.1).translateY(y0 + 0.42).translateZ(1.45));
     g.add(cyl(0.05, 0.05, 0.018, M.ceramicGreen, 14).translateX(1.35).translateY(y0 + 0.39).translateZ(1.62));
-    const cab = box(1.1, 0.55, 0.42, M.woodDark, x0 + 0.28, y0 + 0.275, 2.55);
+    const cab = box(1.1, 0.55, 0.42, M.plyLight, x0 + 0.28, y0 + 0.275, 2.55);
     g.add(cab);
     const tv = tvSet();
     tv.position.set(x0 + 0.3, y0 + 0.55, 2.55);
@@ -38327,8 +38370,8 @@ void main() {
     kt.position.set(x1 - 0.3, y0, -0.35);
     kt.rotation.y = -Math.PI / 2;
     g.add(kt);
-    kt.add(box(1.3, 0.86, 0.56, M.woodDark, 0, 0.43, 0));
-    kt.add(box(1.34, 0.05, 0.6, M.woodBlack, 0, 0.88, 0));
+    kt.add(box(1.3, 0.86, 0.56, M.laminateDark, 0, 0.43, 0));
+    kt.add(box(1.34, 0.05, 0.6, M.counterTop, 0, 0.88, 0));
     const stove = box(0.52, 0.06, 0.42, M.blackMetal, -0.25, 0.915, 0.02);
     kt.add(stove);
     for (const s of [-1, 1]) {
@@ -38372,7 +38415,7 @@ void main() {
     bd.position.set(-3.15, y0, 4.85);
     g.add(bd);
     W.colliders.push({ minX: -3.75, maxX: -2.55, minZ: 3.85, maxZ: 5.85, minY: y0, maxY: y0 + 0.6, enabled: true });
-    const night = box(0.42, 0.5, 0.4, M.woodDark, -2.25, y0 + 0.25, 4.3);
+    const night = box(0.42, 0.5, 0.4, M.plyLight, -2.25, y0 + 0.25, 4.3);
     g.add(night);
     const nlamp = new Group();
     nlamp.position.set(-2.25, y0 + 0.5, 4.3);
@@ -38389,45 +38432,26 @@ void main() {
     g.add(pictureFrame(T.art.photo_4, 0.16, 0.2).translateX(-2.25).translateY(y0 + 0.58).translateZ(4.2).rotateY(0.2));
     g.add(stackOfBooks(2).translateX(-2.3).translateY(y0 + 0.5).translateZ(4.42));
     const winFrame = new Group();
-    winFrame.position.set(1.65, y0 + 0.95, z1 - 0.03);
+    winFrame.position.set(0.35, y0 + 0.95, z1 - 0.03);
     g.add(winFrame);
-    winFrame.add(box(2.5, 0.08, 0.12, M.woodDark, 0, 1.35, 0));
-    winFrame.add(box(2.5, 0.08, 0.12, M.woodDark, 0, 0, 0));
-    winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, -1.25, 0.675, 0));
-    winFrame.add(box(0.08, 1.35, 0.12, M.woodDark, 1.25, 0.675, 0));
-    winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0, 0.675, 0));
-    winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, -0.62, 0.675, 0));
-    winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0.62, 0.675, 0));
-    const winGlassMat = M.glass.clone();
-    winGlassMat.opacity = 0.16;
-    winGlassMat.roughness = 0.06;
-    winGlassMat.normalMap = T.art.water_normal;
-    winGlassMat.normalScale.set(0.25, 0.25);
-    const wg = new Mesh(new PlaneGeometry(2.4, 1.3), winGlassMat);
-    wg.position.set(0, 0.675, 0);
-    winFrame.add(wg);
-    W.animators.push((t) => {
-      winGlassMat.normalMap.offset.y = -t * 0.05;
-      winGlassMat.normalMap.offset.x = t * 0.01;
-    });
-    const cu = curtain(1, 2.2, M.curtain);
-    cu.position.set(0.75, y0 + 1.15, z1 - 0.13);
-    g.add(cu);
-    const cu2 = curtain(0.75, 2.2, M.curtain);
-    cu2.position.set(2.6, y0 + 1.15, z1 - 0.13);
-    g.add(cu2);
-    g.add(cyl(0.012, 0.012, 2.6, M.metalDark, 6).rotateZ(Math.PI / 2).translateX(1.65).translateY(y0 + 2.35).translateZ(z1 - 0.13));
-    const ll1 = new Vector3(x0 + 0.2, y0 + 2.45, 4);
-    const ll2 = new Vector3(1.35, y0 + 2.35, 5.6);
-    g.add(cable([ll1.x, ll1.y, ll1.z], [ll2.x, ll2.y, ll2.z], 0.25, 6e-3));
-    const cl1 = hangingCloth(0.42, 0.6, M.fabricCream);
-    cl1.position.set(-1.7, y0 + 2.1, 4.25);
-    cl1.rotation.set(0, 0.4, 0.02);
-    g.add(cl1);
-    const cl2 = hangingCloth(0.5, 0.7, M.fabricBlue);
-    cl2.position.set(-0.8, y0 + 2.05, 4.6);
-    cl2.rotation.set(0, 0.25, -0.03);
-    g.add(cl2);
+    winFrame.add(box(1.9, 0.08, 0.12, M.framePaint, 0, 1.35, 0));
+    winFrame.add(box(1.9, 0.08, 0.12, M.framePaint, 0, 0, 0));
+    winFrame.add(box(0.08, 1.35, 0.12, M.framePaint, -0.95, 0.675, 0));
+    winFrame.add(box(0.08, 1.35, 0.12, M.framePaint, 0.95, 0.675, 0));
+    winFrame.add(box(0.06, 1.35, 0.1, M.framePaint, 0, 0.675, 0));
+    winFrame.add(box(0.06, 1.35, 0.1, M.framePaint, -0.48, 0.675, 0));
+    winFrame.add(box(0.06, 1.35, 0.1, M.framePaint, 0.48, 0.675, 0));
+    {
+      const wf = new Group();
+      wf.position.set(-1.73, y0 + 1.12, z1 - 0.03);
+      g.add(wf);
+      wf.add(box(1.4, 0.07, 0.12, M.framePaintGreen, 0, 0.92, 0));
+      wf.add(box(1.4, 0.07, 0.12, M.framePaintGreen, 0, 0, 0));
+      for (const sx of [-0.67, 0.67]) wf.add(box(0.07, 0.92, 0.12, M.framePaintGreen, sx, 0.46, 0));
+      wf.add(box(0.05, 0.92, 0.1, M.framePaintGreen, 0, 0.46, 0));
+      wf.add(box(1.52, 0.06, 0.18, M.concreteDark, 0, -0.03, 0.03));
+      for (let i = -2; i <= 2; i++) wf.add(box(0.018, 0.92, 0.018, M.metalRust, i * 0.26, 0.46, -0.02));
+    }
     const bx3 = cardboardBox(0.5, 0.38, 0.4);
     bx3.position.set(-3.3, y0, 3.6);
     bx3.rotation.y = 0.3;
@@ -38450,18 +38474,30 @@ void main() {
       sl.rotation.y = s * 0.12;
       g.add(sl);
     }
-    for (let i = 0; i < 12; i++) {
-      const s = sticker("stain", rand(0.5, 1.3), rand(0.5, 1.6), rand(0.2, 0.45));
-      s.position.set(rand(x0 + 0.1, x1 - 0.1), rand(y0 + 0.3, y0 + 2.6), rand(z0 + 0.1, z1 - 0.1));
-      s.rotation.y = rand(0, Math.PI * 2);
+    for (let i = 0; i < 9; i++) {
+      const s = sticker("stain", rand(0.5, 1.15), rand(0.5, 1.3), rand(0.16, 0.3));
+      const yy = rand(y0 + 0.35, y0 + 2.5);
+      switch (i % 3) {
+        case 0: {
+          let sx0 = rand(x0 + 0.5, x1 - 0.5);
+          const sw0 = s.geometry.parameters.width;
+          if (sx0 + sw0 / 2 > 0.45 && sx0 - sw0 / 2 < 1.65) sx0 = sx0 < 1.05 ? 0.45 - sw0 / 2 - 0.05 : 1.65 + sw0 / 2 + 0.05;
+          s.position.set(sx0, yy, z0 + 0.02);
+          break;
+        }
+        case 1: {
+          let sx = rand(x0 + 0.5, x1 - 0.5);
+          const sw = s.geometry.parameters.width;
+          if (sx + sw / 2 > -0.72 && sx - sw / 2 < 1.42) sx = 0.35 + (sx < 0.35 ? -1 : 1) * (0.95 + sw / 2 + 0.06);
+          s.position.set(sx, yy, z1 - 0.02);
+          s.rotation.y = Math.PI;
+          break;
+        }
+        default:
+          s.position.set(x1 - 0.02, yy, rand(z0 + 0.5, z1 - 0.5));
+          s.rotation.y = -Math.PI / 2;
+      }
       s.rotation.z = rand(0, 6);
-      s.rotation.x = -Math.PI / 2;
-      g.add(s);
-    }
-    for (let i = 0; i < 4; i++) {
-      const s = sticker("mold", rand(0.4, 0.9), rand(0.4, 0.9), rand(0.2, 0.35));
-      s.position.set(rand(x0 + 0.2, x0 + 0.6), rand(y0 + 1.8, y0 + 2.7), rand(z0 + 0.4, 4.4));
-      s.rotation.y = Math.PI / 2;
       g.add(s);
     }
     const np = stuckPoster("notice", 0.3, 0.42, { tint: 14076852 });
@@ -38534,11 +38570,15 @@ void main() {
   function buildBathroom(W) {
     const { x0, x1, z0, z1 } = BATH;
     const y0 = APT.y0, h = 2.6, cy = y0 + h;
+    const hWall = APT.h;
+    const cyw = y0 + hWall / 2;
     const g = new Group();
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     const floorMat = M.floorBath.clone();
-    W.wetFloor(floorMat, { room: "bath", amount: 0.7, distortion: 0.014, tint: 14674146 });
+    floorMat.roughness = 0.26;
+    floorMat.metalness = 0.18;
+    floorMat.color = new Color(10463394);
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, y0 + 8e-3, cz);
@@ -38549,23 +38589,45 @@ void main() {
     ceil.rotation.x = Math.PI / 2;
     ceil.position.set(cx, cy, cz);
     g.add(ceil);
-    const north = new Mesh(planeGeo(x1 - x0, h), M.tileWallDirty);
-    north.position.set(cx, y0 + h / 2, z0);
-    north.receiveShadow = true;
-    g.add(north);
-    W.colliders.push({ minX: x0, maxX: x1, minZ: z0 - 0.1, maxZ: z0 + 0.1, minY: y0, maxY: cy, enabled: true });
-    const south = new Mesh(planeGeo(x1 - x0, h), M.tileWallDirty);
-    south.rotation.y = Math.PI;
-    south.position.set(cx, y0 + h / 2, z1);
-    south.receiveShadow = true;
-    g.add(south);
-    W.colliders.push({ minX: x0, maxX: x1, minZ: z1 - 0.1, maxZ: z1 + 0.1, minY: y0, maxY: cy, enabled: true });
-    const east = new Mesh(planeGeo(z1 - z0, h), M.tileWallDirty);
-    east.rotation.y = -Math.PI / 2;
-    east.position.set(x1, y0 + h / 2, cz);
-    east.receiveShadow = true;
-    g.add(east);
-    W.colliders.push({ minX: x1 - 0.1, maxX: x1 + 0.1, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
+    const WALL_T = 0.12;
+    const tileMat = (len, hh) => {
+      const m = M.tileWallDirty.clone();
+      if (m.map) {
+        m.map = m.map.clone();
+        m.map.wrapS = m.map.wrapT = RepeatWrapping;
+        m.map.repeat.set(Math.max(1, len / 1.35), Math.max(1, hh / 1.35));
+        m.map.needsUpdate = true;
+      }
+      m.roughness = 0.42;
+      m.metalness = 0.04;
+      return m;
+    };
+    const wallBox = (w, hh, d, cx2, cy2, cz2, innerFace, len, hh2) => {
+      const inner2 = tileMat(len, hh2);
+      const mats = [M.wallPeelWarm, M.wallPeelWarm, M.wallPeelWarm, M.wallPeelWarm, M.wallPeelWarm, M.wallPeelWarm];
+      mats[innerFace] = inner2;
+      const m = new Mesh(new BoxGeometry(w, hh, d), mats);
+      m.position.set(cx2, cy2, cz2);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      m.userData.dynamic = true;
+      g.add(m);
+      return m;
+    };
+    const bw = x1 - x0, bd = z1 - z0;
+    const cyc = y0 + h / 2;
+    wallBox(bw + WALL_T * 2, hWall, WALL_T, cx, cyw, z0 - WALL_T / 2, 4, bw, hWall);
+    W.colliders.push({ minX: x0 - 0.05, maxX: x1 + 0.05, minZ: z0 - WALL_T, maxZ: z0, minY: y0, maxY: cy, enabled: true });
+    wallBox(bw + WALL_T * 2, hWall, WALL_T, cx, cyw, z1 + WALL_T / 2, 5, bw, hWall);
+    W.colliders.push({ minX: x0 - 0.05, maxX: x1 + 0.05, minZ: z1, maxZ: z1 + WALL_T, minY: y0, maxY: cy, enabled: true });
+    wallBox(WALL_T, hWall, bd, x1 + WALL_T / 2, cyw, cz, 1, bd, hWall);
+    W.colliders.push({ minX: x1, maxX: x1 + WALL_T, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
+    const WD0 = 3.8, WD1 = 4.75, WD_H = 2.1;
+    wallBox(WALL_T, hWall, WD0 - z0, x0 - WALL_T / 2, cyw, (z0 + WD0) / 2, 0, WD0 - z0, hWall);
+    wallBox(WALL_T, hWall, z1 - WD1, x0 - WALL_T / 2, cyw, (WD1 + z1) / 2, 0, z1 - WD1, hWall);
+    wallBox(WALL_T, hWall - WD_H, WD1 - WD0, x0 - WALL_T / 2, y0 + WD_H + (hWall - WD_H) / 2, (WD0 + WD1) / 2, 0, WD1 - WD0, hWall - WD_H);
+    W.colliders.push({ minX: x0 - WALL_T, maxX: x0, minZ: z0, maxZ: WD0, minY: y0, maxY: cy, enabled: true });
+    W.colliders.push({ minX: x0 - WALL_T, maxX: x0, minZ: WD1, maxZ: z1, minY: y0, maxY: cy, enabled: true });
     const band = new Mesh(planeGeo(x1 - x0, 0.9), M.tileWallBlue);
     band.position.set(cx, y0 + 0.45, z0 + 0.012);
     g.add(band);
@@ -38573,6 +38635,16 @@ void main() {
     band2.rotation.y = Math.PI;
     band2.position.set(cx, y0 + 0.45, z1 - 0.012);
     g.add(band2);
+    const band3 = new Mesh(planeGeo(z1 - z0, 0.9), M.tileWallBlue);
+    band3.rotation.y = -Math.PI / 2;
+    band3.position.set(x1 - 0.012, y0 + 0.45, cz);
+    g.add(band3);
+    for (const [bz0, bz1] of [[z0, WD0], [WD1, z1]]) {
+      const band4 = new Mesh(planeGeo(bz1 - bz0, 0.9), M.tileWallBlue);
+      band4.rotation.y = Math.PI / 2;
+      band4.position.set(x0 + 0.012, y0 + 0.45, (bz0 + bz1) / 2);
+      g.add(band4);
+    }
     const sink = new Group();
     sink.position.set(2.45, y0, z0 + 0.3);
     g.add(sink);
@@ -38648,14 +38720,6 @@ void main() {
       const a = i / 12 * Math.PI * 2;
       sh.add(cyl(2e-3, 2e-3, 0.2, M.glass, 3).translateX(Math.cos(a) * 0.05).translateY(1.98).translateZ(0.27 + Math.sin(a) * 0.05));
     }
-    const curtainM = new MeshStandardMaterial({ color: 11056294, roughness: 0.5, transparent: true, opacity: 0.45, side: DoubleSide, envMapIntensity: 0.6 });
-    const pc = new Mesh(new PlaneGeometry(1.05, 1.55, 16, 8), curtainM);
-    const pp = pc.geometry.attributes.position;
-    for (let i = 0; i < pp.count; i++) pp.setZ(i, Math.sin(pp.getX(i) * 12) * 0.03);
-    pc.geometry.computeVertexNormals();
-    pc.position.set(2.1, y0 + 1.35, z1 - 0.18);
-    g.add(pc);
-    g.add(cyl(0.01, 0.01, 1.1, M.metalGalv, 6).rotateZ(Math.PI / 2).translateX(2.1).translateY(y0 + 2.12).translateZ(z1 - 0.18));
     g.add(cyl(0.06, 0.06, 6e-3, M.metalRust, 12).translateX(2.1).translateY(y0 + 0.012).translateZ(4.9));
     for (let i = 0; i < 5; i++) g.add(box(0.1, 4e-3, 6e-3, M.blackMetal, 2.1, y0 + 0.016, 4.86 + i * 0.018));
     const wh = new Group();
@@ -38686,9 +38750,20 @@ void main() {
     g.add(towel);
     for (let i = 0; i < 8; i++) {
       const s = sticker("mold", rand(0.3, 0.8), rand(0.3, 0.8), rand(0.2, 0.5));
-      s.position.set(rand(x0 + 0.1, x1 - 0.1), rand(y0 + 0.2, y0 + 2.2), rand(z0 + 0.2, z1 - 0.2));
-      s.rotation.y = rand(0, Math.PI * 2);
-      s.rotation.x = -Math.PI / 2;
+      const yy = rand(y0 + 1.65, y0 + 2.55);
+      switch (i % 3) {
+        case 0:
+          s.position.set(rand(x0 + 0.35, x1 - 0.35), yy, z0 + 0.02);
+          break;
+        case 1:
+          s.position.set(rand(x0 + 0.35, x1 - 0.35), yy, z1 - 0.02);
+          s.rotation.y = Math.PI;
+          break;
+        default:
+          s.position.set(x1 - 0.02, yy, rand(z0 + 0.35, z1 - 0.35));
+          s.rotation.y = -Math.PI / 2;
+      }
+      s.rotation.z = rand(0, 6);
       g.add(s);
     }
     for (let i = 0; i < 6; i++) {
@@ -38995,10 +39070,19 @@ void main() {
       addEventListener("keyup", (e) => {
         this.keys[e.code] = false;
       });
+      let lockAt = 0;
+      document.addEventListener("pointerlockchange", () => {
+        if (document.pointerLockElement != null) lockAt = performance.now();
+      });
       addEventListener("mousemove", (e) => {
         if (!this.enabled || document.pointerLockElement == null) return;
-        this.yaw -= e.movementX * 17e-4;
-        this.pitch = clamp2(this.pitch - e.movementY * 15e-4, -1.25, 1.25);
+        if (performance.now() - lockAt < 140) return;
+        let dx = e.movementX || 0, dy = e.movementY || 0;
+        if (Math.abs(dx) > 240 || Math.abs(dy) > 240) return;
+        dx = clamp2(dx, -110, 110);
+        dy = clamp2(dy, -110, 110);
+        this.yaw -= dx * 17e-4;
+        this.pitch = clamp2(this.pitch - dy * 15e-4, -1.25, 1.25);
       });
     }
     toggleFlash() {
@@ -39914,6 +39998,16 @@ void main() {
           engine.renderer.compile(scene, camera);
           engine.renderer.shadowMap.needsUpdate = true;
           engine.renderer.render(scene, camera);
+          engine.composer.render(0.016);
+        }
+        camera.position.set(cx0, cy0, cz0);
+        camera.lookAt(cx0, cy0, cz0 + 1);
+        camera.updateMatrixWorld();
+        world.update(0.016, 0, camera);
+        world.update(0.016, 0, camera);
+        for (const m of world.mirrors) {
+          m.refl.enabled = true;
+          m.refl.update(camera);
         }
         engine.composer.render(0.016);
         engine.renderer.shadowMap.needsUpdate = true;
@@ -39947,7 +40041,7 @@ void main() {
     world.hotspot({ x: -3.15, y: 4.45, z: -0.15, w: 0.5, h: 0.6, d: 0.6, prompt: "\u4E0A\u9999", use: () => story.lightIncense() });
     world.hotspot({ x: 2.45, y: 4.6, z: 3.32, w: 0.45, h: 0.4, d: 0.45, prompt: "\u958B\u6C34\u5589", use: () => story.useTap() });
     world.hotspot({ x: 2.45, y: 4.95, z: 3.25, w: 0.6, h: 0.7, d: 0.2, prompt: "\u671B\u93E1", use: () => story.lookMirror() });
-    world.hotspot({ x: 0.4, y: 5.2, z: 5.86, w: 1.4, h: 1, d: 0.3, prompt: "\u671B\u51FA\u7A97\u5916", use: () => ui.subtitle("\u6A13\u4E0B\u5605\u5DF7\uFF0C\u6709\u4EBA\u4F01\u55BA\u96E8\u5165\u9762\uFF0C\u62AC\u982D\u671B\u4F4F\u4F60\u3002", 5200) });
+    world.hotspot({ x: 0.35, y: 5.15, z: 5.86, w: 1.7, h: 1.3, d: 0.3, prompt: "\u671B\u51FA\u7A97\u5916", use: () => ui.subtitle("\u6A13\u4E0B\u5605\u5DF7\uFF0C\u6709\u4EBA\u4F01\u55BA\u96E8\u5165\u9762\uFF0C\u62AC\u982D\u671B\u4F4F\u4F60\u3002", 5200) });
     ui.boot(0.94);
     await new Promise((r) => setTimeout(r, 60));
     ui.boot(1);
@@ -39996,10 +40090,18 @@ void main() {
       }, 1800);
       const canvas = engine.renderer.domElement;
       try {
-        const pr = canvas.requestPointerLock?.();
-        pr?.catch?.((e) => {
+        const pr = canvas.requestPointerLock?.({ unadjustedMovement: true });
+        pr?.catch?.(() => {
+          try {
+            canvas.requestPointerLock?.();
+          } catch (e) {
+          }
         });
       } catch (e) {
+        try {
+          canvas.requestPointerLock?.();
+        } catch (e2) {
+        }
       }
     }
     function pause(v) {
@@ -40010,9 +40112,19 @@ void main() {
       if (v) document.exitPointerLock?.();
       else {
         try {
-          engine.renderer.domElement.requestPointerLock?.()?.catch?.(() => {
+          const el = engine.renderer.domElement;
+          const pr = el.requestPointerLock?.({ unadjustedMovement: true });
+          pr?.catch?.(() => {
+            try {
+              el.requestPointerLock?.();
+            } catch (e) {
+            }
           });
         } catch (e) {
+          try {
+            engine.renderer.domElement.requestPointerLock?.();
+          } catch (e2) {
+          }
         }
       }
     }
@@ -40113,7 +40225,7 @@ void main() {
     }
     audio.setAmbience("alley", 0.1);
     const clock = new Clock();
-    let t = 0, fpsAcc = 0, fpsN = 0, fpsShown = 0;
+    let t = 0, fpsAcc = 0, fpsN = 0, fpsShown = 0, slowT = 0, adaptDone = false;
     function frame() {
       requestAnimationFrame(frame);
       if (window.__manual) return;
@@ -40133,6 +40245,15 @@ void main() {
       }
       world.update(dt, t, camera);
       engine.render(dt);
+      if (state === "play" && !adaptDone) {
+        if (dt > 0.024) slowT += dt;
+        else slowT = Math.max(0, slowT - dt * 0.5);
+        if (slowT > 1.6) {
+          adaptDone = true;
+          engine.setQuality(engine.quality === "high" ? "med" : "low");
+          if (engine.quality !== "high") world.qualityRefl = 0;
+        }
+      }
       fpsAcc += dt;
       fpsN++;
       if (fpsAcc > 0.6) {
