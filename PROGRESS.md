@@ -227,3 +227,28 @@ node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 
 2. **不要用 D 盘的 `dist/bundle.js` 覆盖仓库**——会静默回退温和模式、标题卡、滤镜、颗粒修复。
 3. 推仓库优先用 `gh api` 单文件写入（`PUT /repos/{owner}/{repo}/contents/<path>`，带 `sha`）。本机 `git fetch` 实测会被 `Connection was reset` 打断（`git push` 偶发可成功），整仓同步请到能连 GitHub 的机器做。本地 `hk-horror-web` 停在 `b10b47c`，落后远端 4 个提交。
 4. 提交信息里写清楚动的是哪一块（剧情 / 画面 / 性能），方便另一台 rebase。
+
+### 9.1 源码同步包（2026-11-04 打包）
+
+D 盘那台 `git fetch` 会被 reset，所以整仓同步走「下载 zip」而不是 `git pull`：
+
+| 项 | 值 |
+|---|---|
+| 下载 | https://github.com/Cl0ud-99/hui-nam-demo/releases/download/src-2026-11-04/hui-nam-src-2026-11-04.zip |
+| 体积 / 校验 | 1.45 MB / `sha256 f262e71f…`（完整值见 Release 说明） |
+| 内容 | `src/`（21 模块）、`tools/`（build / capture / manifest / shots.json）、`index.html`、`dist/bundle.js`、`package.json`、`README.md`、`PROGRESS.md`、`docs/screens/` |
+
+步骤：
+
+```bash
+# 1) 解压到临时目录，覆盖源码（保留 D 盘原本的 assets/，assets 不在包里）
+# 2) 装依赖 + 重新构建
+npm install
+npm run build
+# 3) 校验：29 个文件的 sha256 必须全部 OK
+sha256sum -c SRC-MANIFEST.txt
+# 4) 抽查画面（7 个固定机位）
+node tools/capture.mjs --batch tools/shots.json
+```
+
+改完代码后，在本机执行 `node tools/manifest.mjs` 更新 `SRC-MANIFEST.txt`，再打新包，另一台用 `node tools/manifest.mjs --check` 就能立刻知道有没有漂移。
