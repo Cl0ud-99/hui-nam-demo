@@ -46,8 +46,14 @@ export function buildApartment(W) {
   const west = new THREE.Mesh(planeGeo(z1 - z0, h), M.wallPeel);
   west.rotation.y = Math.PI / 2; west.position.set(x0, y0 + h / 2, cz); west.receiveShadow = true; g.add(west);
   W.colliders.push({ minX: x0 - 0.15, maxX: x0 + 0.15, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
-  const east = new THREE.Mesh(planeGeo(z1 - z0, h), M.wallPeel);
-  east.rotation.y = -Math.PI / 2; east.position.set(x1, y0 + h / 2, cz); east.receiveShadow = true; g.add(east);
+  // the bathroom hangs its own 12 cm shell on x = x1 between z 3.05 and 5.3; a full-length plane
+  // here sat exactly on that shell's inner face and z-fought with it behind the toilet
+  for (const [ez0, ez1] of [[z0, BATH.z0], [BATH.z1, z1]]) {
+    const east = new THREE.Mesh(planeGeo(ez1 - ez0, h), M.wallPeel);
+    east.rotation.y = -Math.PI / 2;
+    east.position.set(x1, y0 + h / 2, (ez0 + ez1) / 2);
+    east.receiveShadow = true; g.add(east);
+  }
   W.colliders.push({ minX: x1 - 0.15, maxX: x1 + 0.15, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
 
   // ceiling beams
@@ -59,6 +65,7 @@ export function buildApartment(W) {
   const entry = makeDoor(W, {
     x: 1.05, y: y0, z: z0 + 0.04, width: 0.95, height: 2.18, ry: 0, hinge: 'left',
     label: '入屋', mat: M.woodDark, red: true, openAngle: -1.75,
+    onOpen: () => W.story?.onApartmentEntered?.(),
   });
   g.add(entry.root);
 

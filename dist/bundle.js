@@ -38028,22 +38028,7 @@ void main() {
     W.room("stairs", { x0, x1, z0, z1, y0: 0 });
     W.onEnter("stairs", () => W.audio?.setAmbience("stairs"));
     W.onEnter("stairs", () => W.hud.room("\u5F8C\u6A13\u68AF"));
-    const aptDoor = makeDoor(W, {
-      x: 1.05,
-      y: 3.6,
-      z: z1 - 0.06,
-      width: 0.95,
-      height: 2.2,
-      ry: Math.PI,
-      hinge: "left",
-      label: "\u4E09\u6A13 \xB7 \u63A8\u9580",
-      mat: M.woodDark,
-      red: true,
-      openAngle: 1.7,
-      onOpen: () => W.story?.onApartmentEntered?.()
-    });
-    g.add(aptDoor.root);
-    return { aptDoor, winLight };
+    return { winLight };
   }
 
   // src/world/apartment.js
@@ -38086,11 +38071,13 @@ void main() {
     west.receiveShadow = true;
     g.add(west);
     W.colliders.push({ minX: x0 - 0.15, maxX: x0 + 0.15, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
-    const east = new Mesh(planeGeo(z1 - z0, h), M.wallPeel);
-    east.rotation.y = -Math.PI / 2;
-    east.position.set(x1, y0 + h / 2, cz);
-    east.receiveShadow = true;
-    g.add(east);
+    for (const [ez0, ez1] of [[z0, BATH.z0], [BATH.z1, z1]]) {
+      const east = new Mesh(planeGeo(ez1 - ez0, h), M.wallPeel);
+      east.rotation.y = -Math.PI / 2;
+      east.position.set(x1, y0 + h / 2, (ez0 + ez1) / 2);
+      east.receiveShadow = true;
+      g.add(east);
+    }
     W.colliders.push({ minX: x1 - 0.15, maxX: x1 + 0.15, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
     for (let i = 0; i < 2; i++) {
       g.add(box(x1 - x0, 0.14, 0.1, M.woodBlack, cx, cy - 0.08, z0 + 2.2 + i * 2.4));
@@ -38106,7 +38093,8 @@ void main() {
       label: "\u5165\u5C4B",
       mat: M.woodDark,
       red: true,
-      openAngle: -1.75
+      openAngle: -1.75,
+      onOpen: () => W.story?.onApartmentEntered?.()
     });
     g.add(entry.root);
     W.colliders.push({ minX: -3.95, maxX: -3.2, minZ: -0.65, maxZ: 0.9, minY: y0, maxY: y0 + 1.6, enabled: true });

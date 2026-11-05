@@ -259,11 +259,7 @@ export function buildStairs(W) {
   W.onEnter('stairs', () => W.hud.room('後樓梯'));
 
   // apartment door at the top landing
-  const aptDoor = makeDoor(W, {
-    x: 1.05, y: 3.6, z: z1 - 0.06, width: 0.95, height: 2.2, ry: Math.PI, hinge: 'left',
-    label: '三樓 · 推門', mat: M.woodDark, red: true, openAngle: 1.7,
-    onOpen: () => W.story?.onApartmentEntered?.(),
-  });
-  g.add(aptDoor.root);
-  return { aptDoor, winLight };
+  // the flat's own front door (apartment.js) fills this opening — a second leaf hung on the
+  // landing side made the player open the same doorway twice
+  return { winLight };
 }
