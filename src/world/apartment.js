@@ -56,10 +56,6 @@ export function buildApartment(W) {
   }
   W.colliders.push({ minX: x1 - 0.15, maxX: x1 + 0.15, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
 
-  // ceiling beams
-  for (let i = 0; i < 2; i++) {
-    g.add(box(x1 - x0, 0.14, 0.1, M.woodBlack, cx, cy - 0.08, z0 + 2.2 + i * 2.4));
-  }
 
   // entry door (from stair landing)
   const entry = makeDoor(W, {
