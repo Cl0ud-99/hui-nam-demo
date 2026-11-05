@@ -35,9 +35,11 @@ export function buildApartment(W) {
   W.colliders.push({ minX: 1.55, maxX: x1, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: y0, maxY: cy, enabled: true });
 
   // south wall (windows)
+  // the wall is rotated 180°, so a local opening spans world x = 4 - u:
+  // u 2.70..4.60 -> world -0.60..1.30, exactly behind the bedroom window frame.
+  // (the old pair of openings sat behind the bathroom and off the frame, hence the mismatch)
   const south = wallGroup(x1 - x0, h, M.wallPeelWarm, [
-    { x0: 1.1, x1: 3.6, y0: 0.95, y1: 2.3 },
-    { x0: 5.0, x1: 6.4, y0: 1.15, y1: 2.05 },
+    { x0: 2.70, x1: 4.60, y0: 0.95, y1: 2.30 },
   ]);
   south.rotation.y = Math.PI; south.position.set(cx, y0, z1); g.add(south);
   W.colliders.push({ minX: x0, maxX: x1, minZ: z1 - 0.15, maxZ: z1 + 0.15, minY: y0, maxY: cy, enabled: true });
