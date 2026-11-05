@@ -119,10 +119,18 @@ export function buildStairs(W) {
   }
 
   // ---------------------------------------------------------------- grime & details
+  // the south wall of the stairwell carries the ground-floor doorway, so decals are placed only
+  // on the two solid piers beside it — a stain over the opening hangs in mid air
   for (let i = 0; i < 10; i++) {
-    const s = sticker('stain', rand(0.4, 1.0), rand(0.5, 1.4), rand(0.2, 0.45));
-    s.position.set(rand(x0 + 0.2, x1 - 0.2), rand(0.3, 3.2), z1 - 0.02);
-    s.rotation.y = Math.PI; s.rotation.z = rand(0, 6); g.add(s);
+    const sw = rand(0.4, 0.95);
+    const s = sticker('stain', sw, rand(0.5, 1.4), rand(0.2, 0.45));
+    const piers = [[x0 + 0.12, -0.66 - sw / 2], [0.66 + sw / 2, x1 - 0.12]];
+    const ok = piers.filter(([a, b]) => b - a > 0.05);
+    if (!ok.length) { s.visible = false; g.add(s); continue; }
+    const [a, b] = ok[Math.floor(Math.random() * ok.length)];
+    s.position.set(rand(a, b), rand(0.3, 3.2), z1 - 0.02);
+    s.rotation.y = Math.PI; s.rotation.z = rand(-0.25, 0.25);
+    g.add(s);
   }
   const graf = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.4), new THREE.MeshBasicMaterial({
     map: T.art.graffiti, transparent: true, opacity: 0.75, depthWrite: false, color: 0xb8ada0, toneMapped: false,

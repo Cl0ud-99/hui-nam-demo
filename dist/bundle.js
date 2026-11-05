@@ -37583,7 +37583,7 @@ void main() {
     pb.rotation.y = Math.PI / 2;
     g.add(pb);
     const tb = sticker("talisman", 0.19, 0.66, 0.95);
-    tb.position.set(-0.45, 1.85, z0 + 0.02);
+    tb.position.set(-0.78, 1.85, z0 + 0.02);
     g.add(tb);
     for (let i = 0; i < 4; i++) {
       const c = crate(rand(0.35, 0.5), rand(0.25, 0.36), rand(0.3, 0.4));
@@ -37687,8 +37687,11 @@ void main() {
     ledger.position.set(-0.95, 1.05, 2.95);
     g.add(ledger);
     for (let i = 0; i < 7; i++) {
-      const s = sticker("stain", rand(0.5, 1.1), rand(0.6, 1.4), rand(0.25, 0.5));
-      s.position.set(rand(-3.8, 3.8), rand(0.4, 3.2), z0 + 0.015);
+      const sw = rand(0.5, 1.1), sh2 = rand(0.6, 1.4);
+      const s = sticker("stain", sw, sh2, rand(0.25, 0.5));
+      let sx = rand(-3.8, 3.8);
+      if (sx + sw / 2 > -0.62 && sx - sw / 2 < 0.62) sx = (sx < 0 ? -1 : 1) * rand(0.75, 3.6);
+      s.position.set(sx, rand(0.4, 3.2), z0 + 0.015);
       s.rotation.z = rand(0, 6);
       g.add(s);
     }
@@ -37864,10 +37867,19 @@ void main() {
       g.add(tube(railPts, 0.02, railMat, 8));
     }
     for (let i = 0; i < 10; i++) {
-      const s = sticker("stain", rand(0.4, 1), rand(0.5, 1.4), rand(0.2, 0.45));
-      s.position.set(rand(x0 + 0.2, x1 - 0.2), rand(0.3, 3.2), z1 - 0.02);
+      const sw = rand(0.4, 0.95);
+      const s = sticker("stain", sw, rand(0.5, 1.4), rand(0.2, 0.45));
+      const piers = [[x0 + 0.12, -0.66 - sw / 2], [0.66 + sw / 2, x1 - 0.12]];
+      const ok = piers.filter(([a2, b3]) => b3 - a2 > 0.05);
+      if (!ok.length) {
+        s.visible = false;
+        g.add(s);
+        continue;
+      }
+      const [a, b] = ok[Math.floor(Math.random() * ok.length)];
+      s.position.set(rand(a, b), rand(0.3, 3.2), z1 - 0.02);
       s.rotation.y = Math.PI;
-      s.rotation.z = rand(0, 6);
+      s.rotation.z = rand(-0.25, 0.25);
       g.add(s);
     }
     const graf = new Mesh(new PlaneGeometry(1.4, 1.4), new MeshBasicMaterial({

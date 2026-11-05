@@ -205,7 +205,8 @@ export function buildShop(W) {
   const chart2 = poster('poster_buddha', 0.44, 0.64, { tint: 0xb9ae94 }); chart2.position.set(x1 - 0.02, 1.8, 3.7); chart2.rotation.y = -Math.PI / 2; g.add(chart2);
   const cal = poster('calendar', 0.34, 0.5); cal.position.set(x1 - 0.02, 1.35, 5.35); cal.rotation.y = -Math.PI / 2; g.add(cal);
   const pb = poster('price_board', 0.38, 0.56); pb.position.set(x0 + 0.02, 1.55, 4.3); pb.rotation.y = Math.PI / 2; g.add(pb);
-  const tb = sticker('talisman', 0.19, 0.66, 0.95); tb.position.set(-0.45, 1.85, z0 + 0.02); g.add(tb);
+  // beside the back door, not across it: the doorway is x -0.54..0.54 and this used to hang in the gap
+  const tb = sticker('talisman', 0.19, 0.66, 0.95); tb.position.set(-0.78, 1.85, z0 + 0.02); g.add(tb);
 
   // back area: crates, boxes, kettle
   for (let i = 0; i < 4; i++) {
@@ -294,8 +295,12 @@ export function buildShop(W) {
   // spider web corners (cheap planes with alpha)
   // dust/stains on walls
   for (let i = 0; i < 7; i++) {
-    const s = sticker('stain', rand(0.5, 1.1), rand(0.6, 1.4), rand(0.25, 0.5));
-    s.position.set(rand(-3.8, 3.8), rand(0.4, 3.2), z0 + 0.015);
+    const sw = rand(0.5, 1.1), sh = rand(0.6, 1.4);
+    const s = sticker('stain', sw, sh, rand(0.25, 0.5));
+    let sx = rand(-3.8, 3.8);
+    // the back wall has the stair doorway cut out of it: a decal there hangs in thin air
+    if (sx + sw / 2 > -0.62 && sx - sw / 2 < 0.62) sx = (sx < 0 ? -1 : 1) * rand(0.75, 3.6);
+    s.position.set(sx, rand(0.4, 3.2), z0 + 0.015);
     s.rotation.z = rand(0, 6); g.add(s);
   }
   for (let i = 0; i < 5; i++) {
