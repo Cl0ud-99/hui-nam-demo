@@ -38424,17 +38424,6 @@ void main() {
       wf.add(box(1.52, 0.06, 0.18, M.concreteDark, 0, -0.03, 0.03));
       for (let i = -2; i <= 2; i++) wf.add(box(0.018, 0.92, 0.018, M.metalRust, i * 0.26, 0.46, -0.02));
     }
-    const ll1 = new Vector3(x0 + 0.2, y0 + 2.45, 4);
-    const ll2 = new Vector3(1.35, y0 + 2.35, 5.6);
-    g.add(cable([ll1.x, ll1.y, ll1.z], [ll2.x, ll2.y, ll2.z], 0.25, 6e-3));
-    const cl1 = hangingCloth(0.42, 0.6, M.fabricCream);
-    cl1.position.set(-1.7, y0 + 2.1, 4.25);
-    cl1.rotation.set(0, 0.4, 0.02);
-    g.add(cl1);
-    const cl2 = hangingCloth(0.5, 0.7, M.fabricBlue);
-    cl2.position.set(-0.8, y0 + 2.05, 4.6);
-    cl2.rotation.set(0, 0.25, -0.03);
-    g.add(cl2);
     const bx3 = cardboardBox(0.5, 0.38, 0.4);
     bx3.position.set(-3.3, y0, 3.6);
     bx3.rotation.y = 0.3;

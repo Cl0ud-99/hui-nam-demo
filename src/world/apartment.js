@@ -329,14 +329,8 @@ export function buildApartment(W) {
 
   // (the dark curtains and their rod were removed: they read as black slabs across the window)
 
-  // laundry line across the bedroom
-  const ll1 = new THREE.Vector3(x0 + 0.2, y0 + 2.45, 4.0);
-  const ll2 = new THREE.Vector3(1.35, y0 + 2.35, 5.6);
-  g.add(cable([ll1.x, ll1.y, ll1.z], [ll2.x, ll2.y, ll2.z], 0.25, 0.006));
-  const cl1 = hangingCloth(0.42, 0.6, M.fabricCream);
-  cl1.position.set(-1.7, y0 + 2.1, 4.25); cl1.rotation.set(0, 0.4, 0.02); g.add(cl1);
-  const cl2 = hangingCloth(0.5, 0.7, M.fabricBlue);
-  cl2.position.set(-0.8, y0 + 2.05, 4.6); cl2.rotation.set(0, 0.25, -0.03); g.add(cl2);
+  // (the laundry line, its cable and the two hanging cloths were removed: they hung right
+  // over the bed and read as dangling wire + paper charms)
 
   // floor clutter
   const bx3 = cardboardBox(0.5, 0.38, 0.4); bx3.position.set(-3.3, y0, 3.6); bx3.rotation.y = 0.3; g.add(bx3);
