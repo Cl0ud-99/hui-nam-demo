@@ -37842,9 +37842,9 @@ void main() {
           const s = box(w, height, STEPS.run + 0.01, stepMatSide, cxA, base + height / 2, zc);
           g.add(s);
         }
-        const tread = box(w + 0.02, 0.03, STEPS.run + 0.02, stepMatTop, cxA, topY - 0.015, zc);
+        const tread = box(w + 0.02, 0.03, STEPS.run + 0.02, stepMatTop, cxA, topY - 0.011, zc);
         g.add(tread);
-        const nose = box(w + 0.03, 0.012, 0.035, M.metalRust, cxA, topY - 5e-3, zc + dir * (STEPS.run / 2 - 0.01));
+        const nose = box(w + 0.03, 0.012, 0.035, M.metalRust, cxA, topY + 0, zc + dir * (STEPS.run / 2 - 0.01));
         g.add(nose);
       }
       if (!thin) {
