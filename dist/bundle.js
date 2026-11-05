@@ -38539,6 +38539,8 @@ void main() {
   function buildBathroom(W) {
     const { x0, x1, z0, z1 } = BATH;
     const y0 = APT.y0, h = 2.6, cy = y0 + h;
+    const hWall = APT.h;
+    const cyw = y0 + hWall / 2;
     const g = new Group();
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
@@ -38583,16 +38585,16 @@ void main() {
     };
     const bw = x1 - x0, bd = z1 - z0;
     const cyc = y0 + h / 2;
-    wallBox(bw + WALL_T * 2, h, WALL_T, cx, cyc, z0 - WALL_T / 2, 4, bw, h);
+    wallBox(bw + WALL_T * 2, hWall, WALL_T, cx, cyw, z0 - WALL_T / 2, 4, bw, hWall);
     W.colliders.push({ minX: x0 - 0.05, maxX: x1 + 0.05, minZ: z0 - WALL_T, maxZ: z0, minY: y0, maxY: cy, enabled: true });
-    wallBox(bw + WALL_T * 2, h, WALL_T, cx, cyc, z1 + WALL_T / 2, 5, bw, h);
+    wallBox(bw + WALL_T * 2, hWall, WALL_T, cx, cyw, z1 + WALL_T / 2, 5, bw, hWall);
     W.colliders.push({ minX: x0 - 0.05, maxX: x1 + 0.05, minZ: z1, maxZ: z1 + WALL_T, minY: y0, maxY: cy, enabled: true });
-    wallBox(WALL_T, h, bd, x1 + WALL_T / 2, cyc, cz, 1, bd, h);
+    wallBox(WALL_T, hWall, bd, x1 + WALL_T / 2, cyw, cz, 1, bd, hWall);
     W.colliders.push({ minX: x1, maxX: x1 + WALL_T, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
     const WD0 = 3.8, WD1 = 4.75, WD_H = 2.1;
-    wallBox(WALL_T, h, WD0 - z0, x0 - WALL_T / 2, cyc, (z0 + WD0) / 2, 0, WD0 - z0, h);
-    wallBox(WALL_T, h, z1 - WD1, x0 - WALL_T / 2, cyc, (WD1 + z1) / 2, 0, z1 - WD1, h);
-    wallBox(WALL_T, h - WD_H, WD1 - WD0, x0 - WALL_T / 2, y0 + WD_H + (h - WD_H) / 2, (WD0 + WD1) / 2, 0, WD1 - WD0, h - WD_H);
+    wallBox(WALL_T, hWall, WD0 - z0, x0 - WALL_T / 2, cyw, (z0 + WD0) / 2, 0, WD0 - z0, hWall);
+    wallBox(WALL_T, hWall, z1 - WD1, x0 - WALL_T / 2, cyw, (WD1 + z1) / 2, 0, z1 - WD1, hWall);
+    wallBox(WALL_T, hWall - WD_H, WD1 - WD0, x0 - WALL_T / 2, y0 + WD_H + (hWall - WD_H) / 2, (WD0 + WD1) / 2, 0, WD1 - WD0, hWall - WD_H);
     W.colliders.push({ minX: x0 - WALL_T, maxX: x0, minZ: z0, maxZ: WD0, minY: y0, maxY: cy, enabled: true });
     W.colliders.push({ minX: x0 - WALL_T, maxX: x0, minZ: WD1, maxZ: z1, minY: y0, maxY: cy, enabled: true });
     const band = new Mesh(planeGeo(x1 - x0, 0.9), M.tileWallBlue);
