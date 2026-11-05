@@ -382,7 +382,7 @@ export class World {
     const r = this.engine.renderer;
     // only the rainy alley still uses a planar floor reflection; the indoor floors are matte,
     // so their pass would be pure cost (and the source of the lamp ghosts when looking down)
-    this.groundMirror.enabled = this.qualityRefl > 0 && this.currentRoom === 'alley';
+    this.groundMirror.enabled = false;   // no floor reflection passes left anywhere
     this.upperMirror.enabled = false;
     this._reflTick = (this._reflTick || 0) + 1;
     const doRefl = (this._reflTick & 1) === 0;

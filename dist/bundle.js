@@ -35583,7 +35583,7 @@ void main() {
       if (found) this.setRoom(found);
       this.updateRoomLights(camera);
       const r = this.engine.renderer;
-      this.groundMirror.enabled = this.qualityRefl > 0 && this.currentRoom === "alley";
+      this.groundMirror.enabled = false;
       this.upperMirror.enabled = false;
       this._reflTick = (this._reflTick || 0) + 1;
       const doRefl = (this._reflTick & 1) === 0;
@@ -36609,7 +36609,9 @@ void main() {
     const g = new Group();
     W.root.add(g);
     const floorMat = M.floorAsphalt.clone();
-    W.wetFloor(floorMat, { room: "alley", amount: 1, distortion: 0.05, puddle: true, puddleScale: 0.075, tint: 16771544 });
+    W.wetFloor(floorMat, { room: "alley", amount: 0, distortion: 0.05, puddle: true, puddleScale: 0.075, tint: 16771544 });
+    floorMat.roughness = 0.24;
+    floorMat.metalness = 0.22;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(0, 0, (z0 + z1) / 2);
@@ -36646,7 +36648,7 @@ void main() {
       pm.transparent = true;
       pm.opacity = 0.92;
       pm.depthWrite = false;
-      W.wetFloor(pm, { room: "alley", amount: 1, distortion: 0.06, tint: 16772829 });
+      W.wetFloor(pm, { room: "alley", amount: 0, distortion: 0.06, tint: 16772829 });
       const p = new Mesh(new PlaneGeometry(sx, sz, 1, 1), pm);
       p.rotation.x = -Math.PI / 2;
       p.position.set(px2, 6e-3, pz2);
@@ -36994,8 +36996,11 @@ void main() {
       g.add(po);
     }
     for (let i = 0; i < 6; i++) {
-      const st = sticker("stain", rand(0.4, 0.9), rand(0.5, 1.2), rand(0.2, 0.4));
-      st.position.set(rand(x0 + 0.4, x1 - 0.4), rand(0.3, 2.4), z0 + 0.07);
+      const sw = rand(0.4, 0.9), sh = rand(0.5, 1.2);
+      const st = sticker("stain", sw, sh, rand(0.2, 0.4));
+      let sx = rand(x0 + 0.4, x1 - 0.4);
+      if (sx + sw / 2 > 0.62 && sx - sw / 2 < 1.62) sx = sx < 1.12 ? rand(x0 + 0.4, 0.55 - sw / 2) : rand(1.68 + sw / 2, x1 - 0.4);
+      st.position.set(sx, rand(0.3, 2.4), z0 + 0.07);
       st.rotation.z = rand(0, 6);
       g.add(st);
     }
