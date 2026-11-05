@@ -114,3 +114,9 @@ node tools/test_game.mjs          # 全流程，errs 必须为 []
 node tools/capture.mjs tools/nav4.json   # 三层可达性（opened≥4, 上层4点全 true）
 node tools/capture.mjs tools/turn_rooms.json  # 转身帧时间，over33 应为 0
 ```
+
+## 2026-11-06 — 材質分組與合併 main
+
+- 合併 `bath-rebuild`：浴室牆體重建、入浴室卡頓修復、窗與門洞對齊、材質分組 A–E
+- README 重寫：加入六張實機截圖、技術數據、更新日誌
+- 室內外地面關閉平面反射；樓梯踏步板抬升 4mm 解決疊面閃爍
