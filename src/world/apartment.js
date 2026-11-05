@@ -41,7 +41,8 @@ export function buildApartment(W) {
   // u 2.70..4.60 -> world -0.60..1.30, exactly behind the bedroom window frame.
   // (the old pair of openings sat behind the bathroom and off the frame, hence the mismatch)
   const south = wallGroup(x1 - x0, h, M.wallPeelWarm, [
-    { x0: 2.70, x1: 4.60, y0: 0.95, y1: 2.30 },
+    { x0: 2.70, x1: 4.60, y0: 0.95, y1: 2.30 },   // main window  -> world -0.60..1.30
+    { x0: 5.03, x1: 6.43, y0: 1.12, y1: 2.04 },   // small window -> world -2.43..-1.03
   ]);
   south.rotation.y = Math.PI; south.position.set(cx, y0, z1); g.add(south);
   W.colliders.push({ minX: x0, maxX: x1, minZ: z1 - 0.15, maxZ: z1 + 0.15, minY: y0, maxY: cy, enabled: true });
@@ -91,9 +92,12 @@ export function buildApartment(W) {
     g.add(box(wL, h, th, M.wallPeelWarm, bx0 + wL / 2, y0 + h / 2, wz));                 // left of door
     g.add(box(wR, h, th, M.wallPeelWarm, bx0 + dR + wR / 2, y0 + h / 2, wz));            // right of door
     g.add(box(dR - dL, h - 2.15, th, M.wallPeelWarm, bx0 + (dL + dR) / 2, y0 + 2.15 + (h - 2.15) / 2, wz)); // header
-    // casing
-    for (const u of [dL, dR]) g.add(box(0.07, 2.2, 0.16, M.woodDark, bx0 + u, y0 + 1.1, wz));
-    g.add(box(dR - dL + 0.07, 0.08, 0.16, M.woodDark, bx0 + (dL + dR) / 2, y0 + 2.16, wz));
+    // a real door leaf (makeDoor brings its own casing, so no second frame here)
+    const bedDoor = makeDoor(W, {
+      x: 0.495, y: y0, z: wz, width: 0.9, height: 2.12, ry: Math.PI, hinge: 'left',
+      label: '睡房', mat: M.woodDark, knob: true, openAngle: 1.6,
+    });
+    g.add(bedDoor.root);
     W.colliders.push({ minX: bx0, maxX: bx0 + dL, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0, maxY: cy, enabled: true });
     W.colliders.push({ minX: bx0 + dR, maxX: bx1, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0, maxY: cy, enabled: true });
     W.colliders.push({ minX: bx0 + dL, maxX: bx0 + dR, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0 + 2.15, maxY: cy, enabled: true });
@@ -308,10 +312,22 @@ export function buildApartment(W) {
   winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0.48, 0.675, 0));
   // no glass slab: the rainy alley behind is the point, and the pane just read as a door
 
-  // curtain partially drawn
-  const cu = curtain(1.0, 2.2, M.curtain); cu.position.set(-0.55, y0 + 1.15, z1 - 0.13); g.add(cu);
-  const cu2 = curtain(0.75, 2.2, M.curtain); cu2.position.set(1.15, y0 + 1.15, z1 - 0.13); g.add(cu2);
-  g.add(cyl(0.012, 0.012, 2.2, M.metalDark, 6).rotateZ(Math.PI / 2).translateX(0.35).translateY(y0 + 2.35).translateZ(z1 - 0.13));
+  // small sash window on the same wall (the facade has one here; without this the inside
+  // was solid plaster and you could not see the opening at all)
+  {
+    const wf = new THREE.Group();
+    wf.position.set(-1.73, y0 + 1.12, z1 - 0.03);
+    g.add(wf);
+    wf.add(box(1.4, 0.07, 0.12, M.woodDark, 0, 0.92, 0));
+    wf.add(box(1.4, 0.07, 0.12, M.woodDark, 0, 0, 0));
+    for (const sx of [-0.67, 0.67]) wf.add(box(0.07, 0.92, 0.12, M.woodDark, sx, 0.46, 0));
+    wf.add(box(0.05, 0.92, 0.1, M.woodDark, 0, 0.46, 0));
+    // sill + a couple of iron bars so it reads as the same window seen from the alley
+    wf.add(box(1.52, 0.06, 0.18, M.concreteDark, 0, -0.03, 0.03));
+    for (let i = -2; i <= 2; i++) wf.add(box(0.018, 0.92, 0.018, M.metalRust, i * 0.26, 0.46, -0.02));
+  }
+
+  // (the dark curtains and their rod were removed: they read as black slabs across the window)
 
   // laundry line across the bedroom
   const ll1 = new THREE.Vector3(x0 + 0.2, y0 + 2.45, 4.0);
@@ -346,10 +362,15 @@ export function buildApartment(W) {
       case 0:
         s.position.set(rand(x0 + 0.5, x1 - 0.5), yy, z0 + 0.02);
         break;
-      case 1:
-        s.position.set(rand(x0 + 0.5, x1 - 0.5), yy, z1 - 0.02);
+      case 1: {
+        // keep the south wall decals off the window opening (world -0.60..1.30)
+        let sx = rand(x0 + 0.5, x1 - 0.5);
+        const sw = s.geometry.parameters.width;
+        if (sx + sw / 2 > -0.72 && sx - sw / 2 < 1.42) sx = 0.35 + (sx < 0.35 ? -1 : 1) * (0.95 + sw / 2 + 0.06);
+        s.position.set(sx, yy, z1 - 0.02);
         s.rotation.y = Math.PI;
         break;
+      }
       default:
         s.position.set(x1 - 0.02, yy, rand(z0 + 0.5, z1 - 0.5));
         s.rotation.y = -Math.PI / 2;

@@ -152,14 +152,7 @@ export function buildBathroom(W) {
     const a = i / 12 * Math.PI * 2;
     sh.add(cyl(0.002, 0.002, 0.2, M.glass, 3).translateX(Math.cos(a) * 0.05).translateY(1.98).translateZ(0.27 + Math.sin(a) * 0.05));
   }
-  // plastic curtain
-  const curtainM = new THREE.MeshStandardMaterial({ color: 0xa8b4a6, roughness: 0.5, transparent: true, opacity: 0.45, side: THREE.DoubleSide, envMapIntensity: 0.6 });
-  const pc = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 1.55, 16, 8), curtainM);
-  const pp = pc.geometry.attributes.position;
-  for (let i = 0; i < pp.count; i++) pp.setZ(i, Math.sin(pp.getX(i) * 12) * 0.03);
-  pc.geometry.computeVertexNormals();
-  pc.position.set(2.1, y0 + 1.35, z1 - 0.18); g.add(pc);
-  g.add(cyl(0.01, 0.01, 1.1, M.metalGalv, 6).rotateZ(Math.PI / 2).translateX(2.1).translateY(y0 + 2.12).translateZ(z1 - 0.18));
+  // (the translucent plastic curtain and its rail were removed: it read as a floating sheet)
   // drain
   g.add(cyl(0.06, 0.06, 0.006, M.metalRust, 12).translateX(2.1).translateY(y0 + 0.012).translateZ(4.9));
   for (let i = 0; i < 5; i++) g.add(box(0.1, 0.004, 0.006, M.blackMetal, 2.1, y0 + 0.016, 4.86 + i * 0.018));

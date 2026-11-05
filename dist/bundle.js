@@ -36601,19 +36601,6 @@ void main() {
     m.receiveShadow = true;
     return m;
   }
-  function curtain(w = 1, h = 2, mat = M.curtain) {
-    const geo = new PlaneGeometry(w, h, 24, 12);
-    const pos = geo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i);
-      pos.setZ(i, Math.sin(x / w * Math.PI * 6) * 0.045 + Math.sin(x / w * Math.PI * 2.3) * 0.02);
-    }
-    geo.computeVertexNormals();
-    const m = new Mesh(geo, mat);
-    m.castShadow = true;
-    m.receiveShadow = true;
-    return m;
-  }
 
   // src/world/alley.js
   var ALLEY = { x0: -8.4, x1: 8.4, z0: 6, z1: 14 };
@@ -36774,7 +36761,7 @@ void main() {
       const baseY = 3.28;
       const topY = 11.3;
       const fh = topY - baseY;
-      const winA = { x0: 4.45, x1: 6.95, y0: 1.22, y1: 2.62 };
+      const winA = { x0: 3.45, x1: 5.35, y0: 1.27, y1: 2.62 };
       const winB = { x0: 1.62, x1: 3.02, y0: 1.44, y1: 2.36 };
       const openings = [winA, winB];
       const facMat2 = M.concreteWet.clone();
@@ -36810,12 +36797,6 @@ void main() {
           grp.add(jamb);
         }
         if (!lit2) {
-          const pane = new Mesh(
-            new PlaneGeometry(ww - 0.04, wh - 0.04),
-            new MeshBasicMaterial({ color: new Color(0.03, 0.036, 0.045) })
-          );
-          pane.position.set(cxw, cyw, z0 - 0.15);
-          grp.add(pane);
           for (const s2 of [-1, 1]) {
             grp.add(box(0.07, wh, 0.1, M.woodDark, cxw + s2 * ww / 2, cyw, z0 - 0.06));
             grp.add(box(ww, 0.07, 0.1, M.woodDark, cxw, cyw + s2 * wh / 2, z0 - 0.06));
@@ -38084,7 +38065,10 @@ void main() {
     W.colliders.push({ minX: x0, maxX: 0.55, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: y0, maxY: cy, enabled: true });
     W.colliders.push({ minX: 1.55, maxX: x1, minZ: z0 - 0.15, maxZ: z0 + 0.15, minY: y0, maxY: cy, enabled: true });
     const south = wallGroup(x1 - x0, h, M.wallPeelWarm, [
-      { x0: 2.7, x1: 4.6, y0: 0.95, y1: 2.3 }
+      { x0: 2.7, x1: 4.6, y0: 0.95, y1: 2.3 },
+      // main window  -> world -0.60..1.30
+      { x0: 5.03, x1: 6.43, y0: 1.12, y1: 2.04 }
+      // small window -> world -2.43..-1.03
     ]);
     south.rotation.y = Math.PI;
     south.position.set(cx, y0, z1);
@@ -38135,8 +38119,20 @@ void main() {
       g.add(box(wL, h, th, M.wallPeelWarm, bx0 + wL / 2, y0 + h / 2, wz));
       g.add(box(wR, h, th, M.wallPeelWarm, bx0 + dR + wR / 2, y0 + h / 2, wz));
       g.add(box(dR - dL, h - 2.15, th, M.wallPeelWarm, bx0 + (dL + dR) / 2, y0 + 2.15 + (h - 2.15) / 2, wz));
-      for (const u of [dL, dR]) g.add(box(0.07, 2.2, 0.16, M.woodDark, bx0 + u, y0 + 1.1, wz));
-      g.add(box(dR - dL + 0.07, 0.08, 0.16, M.woodDark, bx0 + (dL + dR) / 2, y0 + 2.16, wz));
+      const bedDoor = makeDoor(W, {
+        x: 0.495,
+        y: y0,
+        z: wz,
+        width: 0.9,
+        height: 2.12,
+        ry: Math.PI,
+        hinge: "left",
+        label: "\u7761\u623F",
+        mat: M.woodDark,
+        knob: true,
+        openAngle: 1.6
+      });
+      g.add(bedDoor.root);
       W.colliders.push({ minX: bx0, maxX: bx0 + dL, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0, maxY: cy, enabled: true });
       W.colliders.push({ minX: bx0 + dR, maxX: bx1, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0, maxY: cy, enabled: true });
       W.colliders.push({ minX: bx0 + dL, maxX: bx0 + dR, minZ: wz - 0.09, maxZ: wz + 0.09, minY: y0 + 2.15, maxY: cy, enabled: true });
@@ -38417,13 +38413,17 @@ void main() {
     winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0, 0.675, 0));
     winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, -0.48, 0.675, 0));
     winFrame.add(box(0.06, 1.35, 0.1, M.woodDark, 0.48, 0.675, 0));
-    const cu = curtain(1, 2.2, M.curtain);
-    cu.position.set(-0.55, y0 + 1.15, z1 - 0.13);
-    g.add(cu);
-    const cu2 = curtain(0.75, 2.2, M.curtain);
-    cu2.position.set(1.15, y0 + 1.15, z1 - 0.13);
-    g.add(cu2);
-    g.add(cyl(0.012, 0.012, 2.2, M.metalDark, 6).rotateZ(Math.PI / 2).translateX(0.35).translateY(y0 + 2.35).translateZ(z1 - 0.13));
+    {
+      const wf = new Group();
+      wf.position.set(-1.73, y0 + 1.12, z1 - 0.03);
+      g.add(wf);
+      wf.add(box(1.4, 0.07, 0.12, M.woodDark, 0, 0.92, 0));
+      wf.add(box(1.4, 0.07, 0.12, M.woodDark, 0, 0, 0));
+      for (const sx of [-0.67, 0.67]) wf.add(box(0.07, 0.92, 0.12, M.woodDark, sx, 0.46, 0));
+      wf.add(box(0.05, 0.92, 0.1, M.woodDark, 0, 0.46, 0));
+      wf.add(box(1.52, 0.06, 0.18, M.concreteDark, 0, -0.03, 0.03));
+      for (let i = -2; i <= 2; i++) wf.add(box(0.018, 0.92, 0.018, M.metalRust, i * 0.26, 0.46, -0.02));
+    }
     const ll1 = new Vector3(x0 + 0.2, y0 + 2.45, 4);
     const ll2 = new Vector3(1.35, y0 + 2.35, 5.6);
     g.add(cable([ll1.x, ll1.y, ll1.z], [ll2.x, ll2.y, ll2.z], 0.25, 6e-3));
@@ -38464,10 +38464,14 @@ void main() {
         case 0:
           s.position.set(rand(x0 + 0.5, x1 - 0.5), yy, z0 + 0.02);
           break;
-        case 1:
-          s.position.set(rand(x0 + 0.5, x1 - 0.5), yy, z1 - 0.02);
+        case 1: {
+          let sx = rand(x0 + 0.5, x1 - 0.5);
+          const sw = s.geometry.parameters.width;
+          if (sx + sw / 2 > -0.72 && sx - sw / 2 < 1.42) sx = 0.35 + (sx < 0.35 ? -1 : 1) * (0.95 + sw / 2 + 0.06);
+          s.position.set(sx, yy, z1 - 0.02);
           s.rotation.y = Math.PI;
           break;
+        }
         default:
           s.position.set(x1 - 0.02, yy, rand(z0 + 0.5, z1 - 0.5));
           s.rotation.y = -Math.PI / 2;
@@ -38695,14 +38699,6 @@ void main() {
       const a = i / 12 * Math.PI * 2;
       sh.add(cyl(2e-3, 2e-3, 0.2, M.glass, 3).translateX(Math.cos(a) * 0.05).translateY(1.98).translateZ(0.27 + Math.sin(a) * 0.05));
     }
-    const curtainM = new MeshStandardMaterial({ color: 11056294, roughness: 0.5, transparent: true, opacity: 0.45, side: DoubleSide, envMapIntensity: 0.6 });
-    const pc = new Mesh(new PlaneGeometry(1.05, 1.55, 16, 8), curtainM);
-    const pp = pc.geometry.attributes.position;
-    for (let i = 0; i < pp.count; i++) pp.setZ(i, Math.sin(pp.getX(i) * 12) * 0.03);
-    pc.geometry.computeVertexNormals();
-    pc.position.set(2.1, y0 + 1.35, z1 - 0.18);
-    g.add(pc);
-    g.add(cyl(0.01, 0.01, 1.1, M.metalGalv, 6).rotateZ(Math.PI / 2).translateX(2.1).translateY(y0 + 2.12).translateZ(z1 - 0.18));
     g.add(cyl(0.06, 0.06, 6e-3, M.metalRust, 12).translateX(2.1).translateY(y0 + 0.012).translateZ(4.9));
     for (let i = 0; i < 5; i++) g.add(box(0.1, 4e-3, 6e-3, M.blackMetal, 2.1, y0 + 0.016, 4.86 + i * 0.018));
     const wh = new Group();

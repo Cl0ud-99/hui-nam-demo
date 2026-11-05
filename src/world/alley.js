@@ -149,7 +149,10 @@ export function buildAlley(W) {
     const topY = 11.3;
     const fh = topY - baseY;
     // openings are in local wall units (wallGroup measures from the left edge)
-    const winA = { x0: 4.45, x1: 6.95, y0: 1.22, y1: 2.62 };   // wide window over the shopfront
+    // this opening must be EXACTLY the apartment's bedroom window (world x -0.60..1.30,
+    // y 4.55..5.90). It used to sit at world 0.40..2.90, so the two holes only half overlapped:
+    // from inside you saw facade wall inside the frame, from outside the frame was half buried.
+    const winA = { x0: 3.45, x1: 5.35, y0: 1.27, y1: 2.62 };
     const winB = { x0: 1.62, x1: 3.02, y0: 1.44, y1: 2.36 };   // small window to the left
     const openings = [winA, winB];
 
@@ -188,9 +191,8 @@ export function buildAlley(W) {
       // the lit opening is the apartment's own sash, seen through the reveal:
       // no second frame or glass here, or the two frames read as a misalignment
       if (!lit) {
-        const pane = new THREE.Mesh(new THREE.PlaneGeometry(ww - 0.04, wh - 0.04),
-          new THREE.MeshBasicMaterial({ color: new THREE.Color(0.03, 0.036, 0.045) }));
-        pane.position.set(cxw, cyw, z0 - 0.15); grp.add(pane);
+        // no opaque pane: the flat now has a real opening + sash behind this, and a dark
+        // plane here read as "the window is walled up" from inside
         // wooden sash + mullion for the dark window
         for (const s2 of [-1, 1]) {
           grp.add(box(0.07, wh, 0.1, M.woodDark, cxw + s2 * ww / 2, cyw, z0 - 0.06));
