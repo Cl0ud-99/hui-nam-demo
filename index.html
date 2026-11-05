@@ -22,6 +22,10 @@
       radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 52%, rgba(0,0,0,.38) 100%),
       linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,.03) 50%);
     background-size:100% 100%, 100% 4px; mix-blend-mode:multiply; opacity:.55}
+  #grain{position:fixed;inset:-50%;pointer-events:none;z-index:6;opacity:.028;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/></filter><rect width='180' height='180' filter='url(%23n)' opacity='.9'/></svg>");
+    animation:grainShift .9s steps(3) infinite}
+  @keyframes grainShift{0%{transform:translate(0,0)}33%{transform:translate(-2%,1%)}66%{transform:translate(1%,-2%)}100%{transform:translate(0,0)}}
 
   /* ---------- menu ---------- */
   #menu{position:fixed;inset:0;z-index:20;display:flex;align-items:stretch;
@@ -45,14 +49,6 @@
   nav button:hover{color:#efe6d6;transform:translateX(6px)}
   nav button:hover .idx{color:var(--red-bright)}
   nav button small{font-family:var(--sans);font-size:10px;letter-spacing:.24em;color:#5f574d}
-  .online{display:flex;align-items:center;gap:9px;margin-top:2.4vh;text-decoration:none;
-    font-family:var(--sans);font-size:10.5px;letter-spacing:.26em;color:#6d655a;transition:color .25s}
-  .online:hover{color:#c05445}
-  .online .dot{width:5px;height:5px;border-radius:50%;background:#7e2a22;box-shadow:0 0 9px rgba(200,50,40,.55)}
-  .online b{font-weight:400;letter-spacing:.1em;color:#585046}
-  .online:hover b{color:#a8625a}
-  nav button.warm{color:#c9c2b2} nav button.warm .idx{color:#8a6a3a}
-  nav button.warm small{color:#8a6a3a}
   .foot{font-family:var(--sans);font-size:10.5px;letter-spacing:.2em;color:#5c544a;line-height:2.1}
   .foot b{color:#7e7466;font-weight:400}
   .menuright{flex:1;position:relative;overflow:hidden}
@@ -103,16 +99,6 @@
   #pvtitle{position:fixed;left:0;right:0;bottom:17vh;z-index:13;text-align:center;pointer-events:none;
     opacity:0;transition:opacity 1.4s}
   #pvtitle.on{opacity:1}
-  #pvtitle.center{top:50%;bottom:auto;transform:translateY(-50%)}
-  body.titlemode #hud,body.titlemode .clickhint{display:none!important}
-  #pvtitle.center:before{content:"";position:absolute;left:50%;top:calc(50% - 6px);transform:translate(-50%,-50%);
-    width:min(920px,88vw);height:280px;pointer-events:none;z-index:-1;
-    background:radial-gradient(closest-side,rgba(6,5,4,.62),rgba(6,5,4,.28) 62%,rgba(6,5,4,0))}
-  #pvtitle.center .zh{font-size:clamp(46px,6.2vw,96px);letter-spacing:.44em;margin-left:.44em}
-  #pvtitle.center .en{margin-top:22px;font-size:11.5px;color:#ded2c0;letter-spacing:.5em;text-shadow:0 1px 12px #000,0 0 26px #000,0 0 44px rgba(0,0,0,.9)}
-  #pvtitle.center .zh{text-shadow:0 2px 26px rgba(0,0,0,.9),0 0 70px rgba(0,0,0,.65)}
-  #pvtitle.center .rule{box-shadow:0 0 18px rgba(0,0,0,.8)}
-  #pvtitle.center .rule{height:44px;margin-bottom:20px}
   #pvtitle .zh{font-family:var(--serif);font-size:clamp(28px,3.4vw,52px);letter-spacing:.34em;color:#e4dac8;margin-left:.34em}
   #pvtitle .en{font-family:var(--sans);font-size:10px;letter-spacing:.55em;color:#8d8172;margin-top:14px;margin-left:.55em}
   #pvtitle .rule{width:1px;height:34px;background:#7e2a22;margin:0 auto 18px}
@@ -133,6 +119,7 @@
 <body>
 <div id="app"></div>
 <div id="grade"></div>
+<div id="grain"></div>
 
 <div id="hud">
   <div id="reticle"></div>
@@ -157,15 +144,11 @@
       <button data-act="play"><span class="idx">01</span>開始 <small>ENTER</small></button>
       <button data-act="pv"><span class="idx">02</span>宣傳片 <small>TRAILER</small></button>
       <button data-act="quality"><span class="idx">03</span>畫質 <small id="qlabel">高</small></button>
-      <button data-act="mode"><span class="idx">04</span>模式 <small id="mlabel">驚嚇</small></button>
-      <button data-act="help"><span class="idx">05</span>操作 <small>CONTROLS</small></button>
+      <button data-act="help"><span class="idx">04</span>操作 <small>CONTROLS</small></button>
     </nav>
-    <a class="online" href="https://cl0ud-99.github.io/hui-nam-demo/" target="_blank" rel="noopener">
-      <span class="dot"></span>線上版 ONLINE <b>cl0ud-99.github.io/hui-nam-demo</b> ↗
-    </a>
     <div class="foot">
       <b>WASD</b> 移動 · <b>SHIFT</b> 快走 · <b>F</b> 電筒 · <b>E</b> 互動 · <b>ESC</b> 暫停<br>
-      建議佩戴耳機 · 本作含閃爍光源；怕驚嚇可於「模式」切換溫和
+      建議佩戴耳機 · 本作含閃爍光源與驚嚇內容
     </div>
   </div>
   <div class="menuright">
