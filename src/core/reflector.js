@@ -192,16 +192,18 @@ export function wetify(material, {
           vec3 vn = normalize(vNormal);
           vec2 ruv = gl_FragCoord.xy / uResolution;
           ruv += vn.xy * uReflDistort * (0.35 + puddle * 0.9);
-          // multi-tap blur: a matte, damp floor should smear the reflection, not mirror it
-          vec3 refl;
-          if (uReflBlur > 0.0001) {
+          // multi-tap blur: a matte, damp floor should smear the reflection, not mirror it.
+          // gated on uReflAmount so the reflector's own pass (which zeroes it) never samples
+          // the target it is currently rendering into — that feedback loop killed the context
+          vec3 refl = vec3(0.0);
+          if (uReflAmount > 0.0005 && uReflBlur > 0.0001) {
             vec2 b = vec2(uReflBlur, uReflBlur * 0.75);
             refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb * 0.36
                  + texture2D(tReflect, clamp(ruv + vec2( b.x, 0.0), 0.001, 0.999)).rgb * 0.16
                  + texture2D(tReflect, clamp(ruv + vec2(-b.x, 0.0), 0.001, 0.999)).rgb * 0.16
                  + texture2D(tReflect, clamp(ruv + vec2(0.0,  b.y), 0.001, 0.999)).rgb * 0.16
                  + texture2D(tReflect, clamp(ruv + vec2(0.0, -b.y), 0.001, 0.999)).rgb * 0.16;
-          } else {
+          } else if (uReflAmount > 0.0005) {
             refl = texture2D(tReflect, clamp(ruv, 0.001, 0.999)).rgb;
           }
           refl *= uReflTint;
