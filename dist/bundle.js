@@ -1,8 +1,13 @@
 (() => {
   var __defProp = Object.defineProperty;
   var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __esm = (fn, res) => function __init() {
-    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  var __esm = (fn, res, err) => function __init() {
+    if (err) throw err[0];
+    try {
+      return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+    } catch (e) {
+      throw err = [e], e;
+    }
   };
   var __export = (target, all) => {
     for (var name in all)
@@ -34615,7 +34620,7 @@ void main() {
       this.resizeCbs && this.resizeCbs.forEach((f) => f(w, h));
     }
     onResize(fn) {
-      (this.resizeCbs ||= []).push(fn);
+      (this.resizeCbs || (this.resizeCbs = [])).push(fn);
     }
     render(dt) {
       this.grade.uniforms.uTime.value += dt;
@@ -35267,7 +35272,7 @@ void main() {
       geo.setAttribute("position", new BufferAttribute(pos, 3));
       geo.setAttribute("aSeed", new BufferAttribute(seed, 1));
       const mat = new ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uTex: { value: T.art.soft_dot }, uColor: { value: new Color(0.9, 0.82, 0.7) }, uOpacity: { value: 0.35 } },
+        uniforms: { uTime: { value: 0 }, uTex: { value: T.art.soft_dot }, uColor: { value: new Color(0.9, 0.82, 0.7) }, uOpacity: { value: 0.22 } },
         vertexShader: `
         attribute float aSeed; varying float vA;
         uniform float uTime;
@@ -35278,8 +35283,9 @@ void main() {
           p.z += cos(uTime * 0.13 + aSeed * 21.0) * 0.45;
           vec4 mv = modelViewMatrix * vec4(p, 1.0);
           gl_Position = projectionMatrix * mv;
-          gl_PointSize = (1.2 + aSeed * 2.4) * (14.0 / -mv.z);
-          vA = (0.25 + 0.75 * aSeed) * smoothstep(18.0, 6.0, -mv.z);
+          float dz = max(0.5, -mv.z);
+          gl_PointSize = clamp((0.7 + aSeed * 1.5) * (5.0 / dz), 0.7, 4.0);
+          vA = (0.10 + 0.40 * aSeed) * smoothstep(20.0, 7.0, dz) * smoothstep(0.8, 2.6, dz);
         }`,
         fragmentShader: `
         uniform sampler2D uTex; uniform vec3 uColor; uniform float uOpacity; varying float vA;
@@ -35301,11 +35307,12 @@ void main() {
       this.rooms[id] = box2;
     }
     onEnter(id, fn) {
-      (this.enterHooks[id] ||= []).push(fn);
+      var _a;
+      ((_a = this.enterHooks)[id] || (_a[id] = [])).push(fn);
     }
     addLight(roomId, light, opts = {}) {
       light.intensity *= 0.55;
-      if (opts.global) (this.globalLights ||= []).push(light);
+      if (opts.global) (this.globalLights || (this.globalLights = [])).push(light);
       if (opts.keep) light.userData.keep = true;
       if (light.userData.keepShadow) light.userData.keepShadow = true;
       light.userData.base = light.intensity;
@@ -35490,15 +35497,16 @@ void main() {
     }
     makeRain(zone) {
       const N = 2600;
-      const geo = new PlaneGeometry(0.012, 0.5);
+      const geo = new PlaneGeometry(9e-3, 0.36);
       const mat = new ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uTex: { value: T.art.rain_streak }, uOpacity: { value: 0.55 } },
+        uniforms: { uTime: { value: 0 }, uTex: { value: T.art.rain_streak }, uOpacity: { value: 0.4 } },
         vertexShader: `
         attribute vec3 aOffset; attribute float aSpeed; attribute float aSeed;
         uniform float uTime;
-        varying vec2 vUv; varying float vFade;
+        varying vec2 vUv; varying float vFade; varying float vSeed;
         void main(){
           vUv = uv;
+          vSeed = aSeed;
           vec3 p = aOffset;
           p.y = mod(aOffset.y - uTime * aSpeed, 11.0);
           p.x += sin(uTime * 0.6 + aSeed * 6.0) * 0.5 + (11.0 - p.y) * 0.045;
@@ -35506,16 +35514,19 @@ void main() {
           vec4 mv = modelViewMatrix * vec4(p, 1.0);
           vec3 right = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
           vec3 up = normalize(vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]));
-          mv.xyz += right * position.x + up * position.y * 1.0;
+          float len = mix(0.55, 1.35, aSeed);
+          mv.xyz += right * position.x + up * position.y * len;
           gl_Position = projectionMatrix * mv;
-          vFade = smoothstep(25.0, 6.0, -mv.z);
+          float dist = -mv.z;
+          vFade = smoothstep(26.0, 5.0, dist) * smoothstep(0.45, 1.8, dist);
         }`,
         fragmentShader: `
         uniform sampler2D uTex; uniform float uOpacity;
-        varying vec2 vUv; varying float vFade;
+        varying vec2 vUv; varying float vFade; varying float vSeed;
         void main(){
           vec4 t = texture2D(uTex, vUv);
-          gl_FragColor = vec4(vec3(0.62, 0.70, 0.76), t.a * uOpacity * vFade);
+          float lum = mix(0.40, 1.10, fract(vSeed * 7.31));
+          gl_FragColor = vec4(vec3(0.62, 0.70, 0.76) * lum, t.a * uOpacity * vFade);
         }`,
         transparent: true,
         depthWrite: false,
