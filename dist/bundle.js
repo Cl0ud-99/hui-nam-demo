@@ -34572,12 +34572,14 @@ void main() {
       this.composer.addPass(new RenderPass(scene, camera));
       this.gtao = new GTAOPass(scene, camera, w, h);
       this.gtao.output = GTAOPass.OUTPUT.Default;
-      this.gtao.blendIntensity = 1;
+      this.gtao.blendIntensity = 1.55;
       this.gtao.updateGtaoMaterial({
-        radius: 0.42,
-        distanceExponent: 1.4,
+        // wider world-space radius + stronger scale: furniture bases now sit in a visible
+        // contact shadow instead of looking pasted onto the floor
+        radius: 0.7,
+        distanceExponent: 1.25,
         thickness: 1,
-        scale: 1,
+        scale: 1.6,
         samples: 16,
         distanceFallOff: 1,
         screenSpaceRadius: false
@@ -34920,9 +34922,16 @@ void main() {
     M.water = new MeshStandardMaterial({ color: 1712932, roughness: 0.05, metalness: 0.25, envMapIntensity: 1.2 });
     M.bulb = new MeshStandardMaterial({ color: 16770749, emissive: 16767392, emissiveIntensity: 1.45, roughness: 0.35 });
     M.bulbRed = new MeshStandardMaterial({ color: 16738890, emissive: 16726556, emissiveIntensity: 7, roughness: 0.4 });
+    M.tubeDiffuser = new MeshStandardMaterial({
+      color: 16052710,
+      roughness: 0.9,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false
+    });
     M.chrome = new MeshStandardMaterial({ color: 14146004, metalness: 0.92, roughness: 0.22, envMapIntensity: 1.1 });
     M.tube = new MeshStandardMaterial({ color: 15133920, emissive: 15264470, emissiveIntensity: 1.25, roughness: 0.4 });
-    M.tubeGreen = new MeshStandardMaterial({ color: 14083279, emissive: 12114096, emissiveIntensity: 4, roughness: 0.3 });
+    M.tubeGreen = new MeshStandardMaterial({ color: 14083279, emissive: 12114096, emissiveIntensity: 2.2, roughness: 0.35 });
     M.tvGlow = new MeshStandardMaterial({ color: 8163210, emissive: 7311240, emissiveIntensity: 3, roughness: 0.25 });
     M.candleWax = solid(14208436, 0.7);
     M.incense = solid(6965810, 0.9);
@@ -36071,6 +36080,12 @@ void main() {
     const t = new Mesh(new CylinderGeometry(0.018, 0.018, len, 10), green ? M.tubeGreen : M.tube);
     t.rotation.z = Math.PI / 2;
     g.add(t);
+    const diff = new Mesh(
+      new CylinderGeometry(0.027, 0.027, len + 0.02, 12, 1, true),
+      M.tubeDiffuser
+    );
+    diff.rotation.z = Math.PI / 2;
+    g.add(diff);
     for (const s of [-1, 1]) {
       const cap = new Mesh(new CylinderGeometry(0.023, 0.023, 0.06, 10), M.metalGalv);
       cap.rotation.z = Math.PI / 2;

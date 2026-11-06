@@ -57,9 +57,11 @@ export class Engine {
 
     this.gtao = new GTAOPass(scene, camera, w, h);
     this.gtao.output = GTAOPass.OUTPUT.Default;
-    this.gtao.blendIntensity = 1.0;
+    this.gtao.blendIntensity = 1.55;
     this.gtao.updateGtaoMaterial({
-      radius: 0.42, distanceExponent: 1.4, thickness: 1.0, scale: 1.0,
+      // wider world-space radius + stronger scale: furniture bases now sit in a visible
+      // contact shadow instead of looking pasted onto the floor
+      radius: 0.7, distanceExponent: 1.25, thickness: 1.0, scale: 1.6,
       samples: 16, distanceFallOff: 1.0, screenSpaceRadius: false,
     });
     this.gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });

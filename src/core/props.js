@@ -60,6 +60,12 @@ export function fluorescent(len = 1.2, { green = false, fixture = true } = {}) {
   body.position.y = 0.05; body.castShadow = true; g.add(body);
   const t = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, len, 10), green ? M.tubeGreen : M.tube);
   t.rotation.z = Math.PI / 2; g.add(t);
+  // frosted sleeve: a bare emissive cylinder read as a hard white/green bar at close range
+  const diff = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.027, 0.027, len + 0.02, 12, 1, true),
+    M.tubeDiffuser
+  );
+  diff.rotation.z = Math.PI / 2; g.add(diff);
   for (const s of [-1, 1]) {
     const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.023, 0.023, 0.06, 10), M.metalGalv);
     cap.rotation.z = Math.PI / 2; cap.position.x = s * len / 2; g.add(cap);

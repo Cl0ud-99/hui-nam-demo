@@ -160,9 +160,12 @@ export function buildMaterials() {
   // ---------------- light emitting
   M.bulb = new THREE.MeshStandardMaterial({ color: 0xffe6bd, emissive: 0xffd9a0, emissiveIntensity: 1.45, roughness: 0.35 });
   M.bulbRed = new THREE.MeshStandardMaterial({ color: 0xff6a4a, emissive: 0xff3a1c, emissiveIntensity: 7, roughness: 0.4 });
+  M.tubeDiffuser = new THREE.MeshStandardMaterial({
+    color: 0xf4f1e6, roughness: 0.9, transparent: true, opacity: 0.55, depthWrite: false,
+  });
   M.chrome = new THREE.MeshStandardMaterial({ color: 0xd7d9d4, metalness: 0.92, roughness: 0.22, envMapIntensity: 1.1 });
   M.tube = new THREE.MeshStandardMaterial({ color: 0xe6ece0, emissive: 0xe8ead6, emissiveIntensity: 1.25, roughness: 0.4 });
-  M.tubeGreen = new THREE.MeshStandardMaterial({ color: 0xd6e4cf, emissive: 0xb8d8b0, emissiveIntensity: 4, roughness: 0.3 });
+  M.tubeGreen = new THREE.MeshStandardMaterial({ color: 0xd6e4cf, emissive: 0xb8d8b0, emissiveIntensity: 2.2, roughness: 0.35 });
   M.tvGlow = new THREE.MeshStandardMaterial({ color: 0x7c8f8a, emissive: 0x6f8f88, emissiveIntensity: 3, roughness: 0.25 });
   M.candleWax = solid(0xd8cdb4, 0.7);
   M.incense = solid(0x6a4a32, 0.9);
