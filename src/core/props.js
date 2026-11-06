@@ -150,6 +150,8 @@ export function shopCounter(w = 1.9, d = 0.62, h = 1.02) {
   g.add(box(w, h - 0.06, d, M.counterBody, 0, (h - 0.06) / 2, 0));
   const top = box(w + 0.1, 0.06, d + 0.08, M.counterTop, 0, h - 0.03, 0);
   g.add(top);
+  // brass nosing on the front edge: gives the counter a readable silhouette on a dark floor
+  g.add(box(w + 0.1, 0.012, 0.022, M.brass, 0, h - 0.002, d / 2 + 0.045));
   // front panels
   for (let i = 0; i < 3; i++) {
     const pw = (w - 0.16) / 3;

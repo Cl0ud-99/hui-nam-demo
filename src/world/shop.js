@@ -254,8 +254,8 @@ export function buildShop(W) {
   const bulb = bulbLamp({ cord: 0.62, shade: true });
   bulb.position.set(-0.7, 3.44, 2.55); g.add(bulb);
   const bulbLight = W.addLight('shop', (() => {
-    const l = new THREE.PointLight(0xffb877, 44, 9, 2);
-    l.position.set(-0.7, 2.72, 2.55); return l;
+    const l = new THREE.PointLight(0xffb877, 26, 8.5, 2);
+    l.position.set(-0.7, 2.56, 2.55); return l;
   })(), { global: true });
   W.flicker(bulbLight, { min: 0.9, max: 1, speed: 7, pattern: 'soft' });
   const bulb2 = bulbLamp({ cord: 0.8, shade: false });

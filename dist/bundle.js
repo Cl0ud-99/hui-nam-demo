@@ -34854,8 +34854,8 @@ void main() {
     M.framePaintGreen = std("dark_paneled_wood", { color: 9214090, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
     M.cabRosewood = std("dark_wooden_planks", { color: 5907480, roughness: 0.55, normalScale: 0.45, env: 0.45, tileMul: 1.5 });
     M.cabDrawer = std("dark_wooden_planks", { color: 10774852, roughness: 0.48, normalScale: 0.35, env: 0.5, tileMul: 2.3 });
-    M.counterTop = std("dark_paneled_wood", { color: 3358778, roughness: 0.32, normalScale: 0.15, env: 0.6, tileMul: 3 });
-    M.counterBody = std("dark_paneled_wood", { color: 4214847, roughness: 0.68, normalScale: 0.35, env: 0.25, tileMul: 2 });
+    M.counterTop = std("dark_paneled_wood", { color: 4871496, roughness: 0.3, normalScale: 0.2, env: 0.55, tileMul: 1.6 });
+    M.counterBody = std("dark_paneled_wood", { color: 5859407, roughness: 0.55, normalScale: 0.45, env: 0.4, tileMul: 1.2 });
     M.beamRough = std("dark_wooden_planks", { color: 8215096, roughness: 0.93, normalScale: 1.25, env: 0.12, tileMul: 1.15 });
     M.signBack = std("painted_metal_shutter", { color: 4147780, roughness: 0.62, metalness: 0.3, env: 0.35, normalScale: 0.6 });
     M.woodSeat = std("dark_wooden_planks", { color: 11569754, roughness: 0.74, normalScale: 1, env: 0.3, tileMul: 1.9 });
@@ -34892,7 +34892,7 @@ void main() {
     M.plasticRed = solid(8202786, 0.45, 0.05);
     M.plasticGreen = solid(3099186, 0.5, 0.05);
     M.enamelWhite = std("dirty_tiles", { color: 13617851, roughness: 0.35, normalScale: 0.4, env: 0.5 });
-    M.porcelain = solid(14209730, 0.18, 0, { envMapIntensity: 0.8 });
+    M.porcelain = solid(14209730, 0.3, 0, { envMapIntensity: 0.45 });
     M.ceramicGreen = solid(7241064, 0.3, 0, { envMapIntensity: 0.7 });
     M.rubber = solid(1710360, 0.9, 0);
     M.dirt = solid(4866100, 1, 0);
@@ -34918,9 +34918,10 @@ void main() {
     });
     M.mirror = new MeshStandardMaterial({ color: 9343632, roughness: 0.05, metalness: 1, envMapIntensity: 1.4 });
     M.water = new MeshStandardMaterial({ color: 1712932, roughness: 0.05, metalness: 0.25, envMapIntensity: 1.2 });
-    M.bulb = new MeshStandardMaterial({ color: 16770749, emissive: 16767392, emissiveIntensity: 2.4, roughness: 0.3 });
+    M.bulb = new MeshStandardMaterial({ color: 16770749, emissive: 16767392, emissiveIntensity: 1.45, roughness: 0.35 });
     M.bulbRed = new MeshStandardMaterial({ color: 16738890, emissive: 16726556, emissiveIntensity: 7, roughness: 0.4 });
-    M.tube = new MeshStandardMaterial({ color: 14674662, emissive: 13625055, emissiveIntensity: 2.6, roughness: 0.3 });
+    M.chrome = new MeshStandardMaterial({ color: 14146004, metalness: 0.92, roughness: 0.22, envMapIntensity: 1.1 });
+    M.tube = new MeshStandardMaterial({ color: 15133920, emissive: 15264470, emissiveIntensity: 1.25, roughness: 0.4 });
     M.tubeGreen = new MeshStandardMaterial({ color: 14083279, emissive: 12114096, emissiveIntensity: 4, roughness: 0.3 });
     M.tvGlow = new MeshStandardMaterial({ color: 8163210, emissive: 7311240, emissiveIntensity: 3, roughness: 0.25 });
     M.candleWax = solid(14208436, 0.7);
@@ -36108,6 +36109,7 @@ void main() {
     g.add(box(w, h - 0.06, d, M.counterBody, 0, (h - 0.06) / 2, 0));
     const top = box(w + 0.1, 0.06, d + 0.08, M.counterTop, 0, h - 0.03, 0);
     g.add(top);
+    g.add(box(w + 0.1, 0.012, 0.022, M.brass, 0, h - 2e-3, d / 2 + 0.045));
     for (let i = 0; i < 3; i++) {
       const pw = (w - 0.16) / 3;
       g.add(box(pw - 0.03, h - 0.22, 0.02, M.counterBody, -w / 2 + 0.08 + pw * (i + 0.5), (h - 0.06) / 2, d / 2 + 5e-3));
@@ -37683,8 +37685,8 @@ void main() {
     bulb.position.set(-0.7, 3.44, 2.55);
     g.add(bulb);
     const bulbLight = W.addLight("shop", (() => {
-      const l = new PointLight(16758903, 44, 9, 2);
-      l.position.set(-0.7, 2.72, 2.55);
+      const l = new PointLight(16758903, 26, 8.5, 2);
+      l.position.set(-0.7, 2.56, 2.55);
       return l;
     })(), { global: true });
     W.flicker(bulbLight, { min: 0.9, max: 1, speed: 7, pattern: "soft" });
@@ -38614,9 +38616,9 @@ void main() {
       return m;
     };
     const wallBox = (w, hh, d, cx2, cy2, cz2, innerFace, len, hh2) => {
-      const inner2 = tileMat(len, hh2);
+      const inner = tileMat(len, hh2);
       const mats = [M.wallPeelWarm, M.wallPeelWarm, M.wallPeelWarm, M.wallPeelWarm, M.wallPeelWarm, M.wallPeelWarm];
-      mats[innerFace] = inner2;
+      mats[innerFace] = inner;
       const m = new Mesh(new BoxGeometry(w, hh, d), mats);
       m.position.set(cx2, cy2, cz2);
       m.castShadow = true;
@@ -38659,41 +38661,85 @@ void main() {
     const sink = new Group();
     sink.position.set(2.45, y0, z0 + 0.3);
     g.add(sink);
-    const basin = new Mesh(new CylinderGeometry(0.23, 0.13, 0.1, 24, 1, true), M.porcelain);
-    basin.scale.x = 1.2;
-    basin.position.y = 0.8;
+    const pedestal = new Mesh(new CylinderGeometry(0.142, 0.105, 0.655, 20, 1, true), M.porcelain);
+    pedestal.position.set(0, 0.3275, -0.02);
+    sink.add(pedestal);
+    const basinMat = M.porcelain.clone();
+    basinMat.side = DoubleSide;
+    basinMat.color = new Color(13617592);
+    const bowlPts = [
+      new Vector2(0.028, 0.6575),
+      new Vector2(0.058, 0.6605),
+      new Vector2(0.092, 0.668),
+      new Vector2(0.122, 0.68),
+      new Vector2(0.148, 0.7005),
+      new Vector2(0.17, 0.734),
+      new Vector2(0.194, 0.782),
+      new Vector2(0.215, 0.822),
+      new Vector2(0.2305, 0.855),
+      new Vector2(0.235, 0.867)
+    ];
+    const basin = new Mesh(new LatheGeometry(bowlPts, 48), basinMat);
+    basin.scale.x = 1.18;
     sink.add(basin);
-    const rimT = new Mesh(new TorusGeometry(0.23, 0.018, 6, 26), M.porcelain);
+    const rimT = new Mesh(new TorusGeometry(0.235, 0.013, 8, 32), M.porcelain);
     rimT.rotation.x = Math.PI / 2;
-    rimT.scale.x = 1.2;
-    rimT.position.y = 0.85;
+    rimT.scale.x = 1.18;
+    rimT.position.y = 0.867;
     sink.add(rimT);
-    const inner = new Mesh(new CylinderGeometry(0.2, 0.12, 0.09, 22), new MeshStandardMaterial({ color: 9407872, roughness: 0.35 }));
-    inner.scale.x = 1.2;
-    inner.position.y = 0.795;
-    sink.add(inner);
-    sink.add(box(0.58, 0.06, 0.42, M.porcelain, 0, 0.755, 0));
-    sink.add(cyl(0.05, 0.05, 0.5, M.porcelain, 10).translateY(0.52).translateZ(0.02));
-    sink.add(cyl(0.012, 0.012, 0.16, M.metalGalv, 6).translateY(0.94).translateZ(-0.06));
+    const drain = new Mesh(new CylinderGeometry(0.021, 0.021, 6e-3, 12), M.metalDark);
+    drain.position.set(0, 0.666, 0.02);
+    sink.add(drain);
     const tap = new Group();
-    tap.position.set(0, 0.96, -0.16);
+    tap.position.set(0.02, 0.866, -0.176);
+    tap.rotation.y = 0.12;
     sink.add(tap);
-    tap.add(cyl(0.012, 0.012, 0.18, M.metalGalv, 8).rotateX(Math.PI / 2).translateZ(0.09));
-    tap.add(cyl(0.012, 0.012, 0.1, M.metalGalv, 8).translateY(-0.05));
-    const water = new Mesh(new CylinderGeometry(35e-4, 5e-3, 0.22, 6, 1, true), M.glass);
-    water.position.set(0, 0.86, 0.02);
+    tap.add(cyl(0.044, 0.047, 0.012, M.chrome, 24).translateY(6e-3));
+    tap.add(cyl(0.027, 0.0235, 0.062, M.chrome, 20).translateY(0.043));
+    tap.add(cyl(0.0285, 0.0285, 8e-3, M.chrome, 20).translateY(0.077));
+    const spoutCurve = new CatmullRomCurve3([
+      // 4 gooseneck sweep
+      new Vector3(0, 0.079, 0),
+      new Vector3(0, 0.106, 9e-3),
+      new Vector3(0, 0.126, 0.042),
+      new Vector3(0, 0.129, 0.092),
+      new Vector3(0, 0.12, 0.136),
+      new Vector3(0, 0.107, 0.158)
+    ], false, "catmullrom", 0.4);
+    const spout = new Mesh(new TubeGeometry(spoutCurve, 34, 0.0115, 14, false), M.chrome);
+    spout.castShadow = true;
+    tap.add(spout);
+    tap.add(cyl(0.0145, 0.0135, 0.034, M.chrome, 16).translateY(0.094).translateZ(0.158));
+    tap.add(cyl(0.0122, 0.0122, 7e-3, M.metalDark, 14).translateY(0.0755).translateZ(0.158));
+    const lever = new Mesh(new BoxGeometry(0.076, 0.011, 0.02), M.chrome);
+    lever.position.set(0.035, 0.097, -8e-3);
+    lever.rotation.z = 0.24;
+    tap.add(lever);
+    const leverCap = new Mesh(new CylinderGeometry(0.0115, 0.0115, 0.02, 14), M.chrome);
+    leverCap.position.set(0.071, 0.106, -8e-3);
+    leverCap.rotation.z = Math.PI / 2;
+    tap.add(leverCap);
+    tap.add(cyl(0.0175, 0.0175, 0.02, M.chrome, 14).translateY(0.084).translateZ(-4e-3));
+    const water = new Mesh(new CylinderGeometry(26e-4, 4e-3, 0.275, 8, 1, true), M.glass);
+    water.position.set(0, -0.065, 0.158);
     tap.add(water);
-    tap.add(cyl(0.018, 0.018, 0.02, M.metalGalv, 8).translateY(0.03).translateZ(-0.02));
-    sink.add(cyl(0.03, 0.03, 0.3, M.metalRust, 8).translateY(0.25).translateZ(-0.12));
-    sink.add(cyl(0.03, 0.03, 0.26, M.metalRust, 8).rotateX(Math.PI / 2).translateY(0.12).translateZ(0));
+    sink.add(cyl(0.026, 0.026, 0.22, M.metalRust, 8).translateY(0.16).translateZ(-0.1));
+    sink.add(cyl(0.026, 0.026, 0.2, M.metalRust, 8).rotateX(Math.PI / 2).translateY(0.1).translateZ(-0.02));
     W.colliders.push({ minX: 2.1, maxX: 2.8, minZ: z0, maxZ: z0 + 0.5, minY: y0, maxY: y0 + 1, enabled: true });
     W.colliders.push({ minX: 2.12, maxX: 2.78, minZ: z0 + 0.02, maxZ: z0 + 0.68, minY: y0, maxY: y0 + 1, enabled: true });
     const mirror = W.makeMirror({ width: 0.66, height: 0.88, x: 2.45, y: y0 + 1.32, z: z0 + 0.045, ry: 0, room: "bath" });
     g.add(box(0.8, 0.05, 0.08, M.metalGalv, 2.45, y0 + 1.82, z0 + 0.1));
-    const mTube = new Mesh(new CylinderGeometry(0.014, 0.014, 0.7, 8), M.tube);
+    const mTube = new Mesh(new CylinderGeometry(0.013, 0.013, 0.7, 10), M.tube);
     mTube.rotation.z = Math.PI / 2;
     mTube.position.set(2.45, y0 + 1.79, z0 + 0.12);
     g.add(mTube);
+    const diffuser = new Mesh(
+      new CylinderGeometry(0.026, 0.026, 0.74, 12, 1, true),
+      new MeshStandardMaterial({ color: 15921122, roughness: 0.9, transparent: true, opacity: 0.55, depthWrite: false })
+    );
+    diffuser.rotation.z = Math.PI / 2;
+    diffuser.position.set(2.45, y0 + 1.79, z0 + 0.12);
+    g.add(diffuser);
     W.addLight("bath", (() => {
       const l2 = new PointLight(16767408, 6, 3.2, 2);
       l2.position.set(2.45, y0 + 1.72, z0 + 0.24);

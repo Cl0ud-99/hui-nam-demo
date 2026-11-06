@@ -92,8 +92,8 @@ export function buildMaterials() {
   // ---------------- B: shop joinery (herb cabinets / counter / structure)
   M.cabRosewood = std('dark_wooden_planks', { color: 0x5a2418, roughness: 0.55, normalScale: 0.45, env: 0.45, tileMul: 1.5 });
   M.cabDrawer = std('dark_wooden_planks', { color: 0xa46944, roughness: 0.48, normalScale: 0.35, env: 0.5, tileMul: 2.3 });
-  M.counterTop = std('dark_paneled_wood', { color: 0x33403a, roughness: 0.32, normalScale: 0.15, env: 0.6, tileMul: 3.0 });
-  M.counterBody = std('dark_paneled_wood', { color: 0x40503f, roughness: 0.68, normalScale: 0.35, env: 0.25, tileMul: 2.0 });
+  M.counterTop = std('dark_paneled_wood', { color: 0x4a5548, roughness: 0.30, normalScale: 0.2, env: 0.55, tileMul: 1.6 });
+  M.counterBody = std('dark_paneled_wood', { color: 0x59684f, roughness: 0.55, normalScale: 0.45, env: 0.4, tileMul: 1.2 });
   M.beamRough = std('dark_wooden_planks', { color: 0x7d5a38, roughness: 0.93, normalScale: 1.25, env: 0.12, tileMul: 1.15 });
   M.signBack = std('painted_metal_shutter', { color: 0x3f4a44, roughness: 0.62, metalness: 0.3, env: 0.35, normalScale: 0.6 });
 
@@ -142,7 +142,7 @@ export function buildMaterials() {
   M.plasticRed = solid(0x7d2a22, 0.45, 0.05);
   M.plasticGreen = solid(0x2f4a32, 0.5, 0.05);
   M.enamelWhite = std('dirty_tiles', { color: 0xcfcabb, roughness: 0.35, normalScale: 0.4, env: 0.5 });
-  M.porcelain = solid(0xd8d2c2, 0.18, 0.0, { envMapIntensity: 0.8 });
+  M.porcelain = solid(0xd8d2c2, 0.3, 0.0, { envMapIntensity: 0.45 });
   M.ceramicGreen = solid(0x6e7d68, 0.3, 0.0, { envMapIntensity: 0.7 });
   M.rubber = solid(0x1a1918, 0.9, 0.0);
   M.dirt = solid(0x4a4034, 1.0, 0.0);
@@ -158,9 +158,10 @@ export function buildMaterials() {
   M.water = new THREE.MeshStandardMaterial({ color: 0x1a2324, roughness: 0.05, metalness: 0.25, envMapIntensity: 1.2 });
 
   // ---------------- light emitting
-  M.bulb = new THREE.MeshStandardMaterial({ color: 0xffe6bd, emissive: 0xffd9a0, emissiveIntensity: 2.4, roughness: 0.3 });
+  M.bulb = new THREE.MeshStandardMaterial({ color: 0xffe6bd, emissive: 0xffd9a0, emissiveIntensity: 1.45, roughness: 0.35 });
   M.bulbRed = new THREE.MeshStandardMaterial({ color: 0xff6a4a, emissive: 0xff3a1c, emissiveIntensity: 7, roughness: 0.4 });
-  M.tube = new THREE.MeshStandardMaterial({ color: 0xdfeae6, emissive: 0xcfe6df, emissiveIntensity: 2.6, roughness: 0.3 });
+  M.chrome = new THREE.MeshStandardMaterial({ color: 0xd7d9d4, metalness: 0.92, roughness: 0.22, envMapIntensity: 1.1 });
+  M.tube = new THREE.MeshStandardMaterial({ color: 0xe6ece0, emissive: 0xe8ead6, emissiveIntensity: 1.25, roughness: 0.4 });
   M.tubeGreen = new THREE.MeshStandardMaterial({ color: 0xd6e4cf, emissive: 0xb8d8b0, emissiveIntensity: 4, roughness: 0.3 });
   M.tvGlow = new THREE.MeshStandardMaterial({ color: 0x7c8f8a, emissive: 0x6f8f88, emissiveIntensity: 3, roughness: 0.25 });
   M.candleWax = solid(0xd8cdb4, 0.7);

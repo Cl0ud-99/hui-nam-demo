@@ -95,25 +95,62 @@ export function buildBathroom(W) {
   // ---------------------------------------------------------------- fixtures
   // sink
   const sink = new THREE.Group(); sink.position.set(2.45, y0, z0 + 0.3); g.add(sink);
-  const basin = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.13, 0.1, 24, 1, true), M.porcelain);
-  basin.scale.x = 1.2; basin.position.y = 0.8; sink.add(basin);
-  const rimT = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.018, 6, 26), M.porcelain);
-  rimT.rotation.x = Math.PI / 2; rimT.scale.x = 1.2; rimT.position.y = 0.85; sink.add(rimT);
-  const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.12, 0.09, 22), new THREE.MeshStandardMaterial({ color: 0x8f8d80, roughness: 0.35 }));
-  inner.scale.x = 1.2; inner.position.y = 0.795; sink.add(inner);
-  sink.add(box(0.58, 0.06, 0.42, M.porcelain, 0, 0.755, 0));
-  sink.add(cyl(0.05, 0.05, 0.5, M.porcelain, 10).translateY(0.52).translateZ(0.02));
-  sink.add(cyl(0.012, 0.012, 0.16, M.metalGalv, 6).translateY(0.94).translateZ(-0.06));
-  // tap
-  const tap = new THREE.Group(); tap.position.set(0, 0.96, -0.16); sink.add(tap);
-  tap.add(cyl(0.012, 0.012, 0.18, M.metalGalv, 8).rotateX(Math.PI / 2).translateZ(0.09));
-  tap.add(cyl(0.012, 0.012, 0.1, M.metalGalv, 8).translateY(-0.05));
-  const water = new THREE.Mesh(new THREE.CylinderGeometry(0.0035, 0.005, 0.22, 6, 1, true), M.glass);
-  water.position.set(0, 0.86, 0.02); tap.add(water);
-  tap.add(cyl(0.018, 0.018, 0.02, M.metalGalv, 8).translateY(0.03).translateZ(-0.02));
+  // pedestal (slim, tapered — was a fat pipe that read as a stick)
+  // pedestal: open cone that tucks under the bowl (its closed top cap was the flat disc seen inside the basin)
+  const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.142, 0.105, 0.655, 20, 1, true), M.porcelain);
+  pedestal.position.set(0, 0.3275, -0.02); sink.add(pedestal);
+  // basin: tapered bowl + closing bottom
+  const basinMat = M.porcelain.clone(); basinMat.side = THREE.DoubleSide; basinMat.color = new THREE.Color(0xcfc9b8);
+  // one lathe profile = one continuous ceramic bowl (cylinder + cone gave a hard crease across the basin)
+  const bowlPts = [
+    new THREE.Vector2(0.028, 0.6575),
+    new THREE.Vector2(0.058, 0.6605),
+    new THREE.Vector2(0.092, 0.6680),
+    new THREE.Vector2(0.122, 0.6800),
+    new THREE.Vector2(0.148, 0.7005),
+    new THREE.Vector2(0.170, 0.7340),
+    new THREE.Vector2(0.194, 0.7820),
+    new THREE.Vector2(0.215, 0.8220),
+    new THREE.Vector2(0.2305, 0.8550),
+    new THREE.Vector2(0.2350, 0.8670),
+  ];
+  const basin = new THREE.Mesh(new THREE.LatheGeometry(bowlPts, 48), basinMat);
+  basin.scale.x = 1.18; sink.add(basin);
+  // rim
+  const rimT = new THREE.Mesh(new THREE.TorusGeometry(0.235, 0.013, 8, 32), M.porcelain);
+  rimT.rotation.x = Math.PI / 2; rimT.scale.x = 1.18; rimT.position.y = 0.867; sink.add(rimT);
+  // drain
+  const drain = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.021, 0.006, 12), M.metalDark);
+  drain.position.set(0, 0.666, 0.02); sink.add(drain);
+  // --- basin mixer tap, modelled on a real single-lever monobloc ---
+  // escutcheon -> straight body -> swept gooseneck -> nozzle/aerator, with one lever on top
+  const tap = new THREE.Group(); tap.position.set(0.02, 0.866, -0.176); tap.rotation.y = 0.12; sink.add(tap);
+  tap.add(cyl(0.044, 0.047, 0.012, M.chrome, 24).translateY(0.006));                 // 1 base plate on the deck
+  tap.add(cyl(0.027, 0.0235, 0.062, M.chrome, 20).translateY(0.043));                // 2 body column
+  tap.add(cyl(0.0285, 0.0285, 0.008, M.chrome, 20).translateY(0.077));               // 3 collar
+  const spoutCurve = new THREE.CatmullRomCurve3([                                     // 4 gooseneck sweep
+    new THREE.Vector3(0, 0.079, 0),
+    new THREE.Vector3(0, 0.106, 0.009),
+    new THREE.Vector3(0, 0.126, 0.042),
+    new THREE.Vector3(0, 0.129, 0.092),
+    new THREE.Vector3(0, 0.120, 0.136),
+    new THREE.Vector3(0, 0.107, 0.158),
+  ], false, 'catmullrom', 0.4);
+  const spout = new THREE.Mesh(new THREE.TubeGeometry(spoutCurve, 34, 0.0115, 14, false), M.chrome);
+  spout.castShadow = true; tap.add(spout);
+  tap.add(cyl(0.0145, 0.0135, 0.034, M.chrome, 16).translateY(0.094).translateZ(0.158));     // 5 nozzle
+  tap.add(cyl(0.0122, 0.0122, 0.007, M.metalDark, 14).translateY(0.0755).translateZ(0.158)); // 6 aerator
+  // 7 lever: flat bar lying over the body, tilted back — reads as a handle, not an antenna
+  const lever = new THREE.Mesh(new THREE.BoxGeometry(0.076, 0.011, 0.020), M.chrome);
+  lever.position.set(0.035, 0.097, -0.008); lever.rotation.z = 0.24; tap.add(lever);
+  const leverCap = new THREE.Mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.020, 14), M.chrome);
+  leverCap.position.set(0.071, 0.106, -0.008); leverCap.rotation.z = Math.PI / 2; tap.add(leverCap);
+  tap.add(cyl(0.0175, 0.0175, 0.020, M.chrome, 14).translateY(0.084).translateZ(-0.004));   // lever boss
+  const water = new THREE.Mesh(new THREE.CylinderGeometry(0.0026, 0.0040, 0.275, 8, 1, true), M.glass);
+  water.position.set(0, -0.065, 0.158); tap.add(water);                             // stream
   // plumbing below
-  sink.add(cyl(0.03, 0.03, 0.3, M.metalRust, 8).translateY(0.25).translateZ(-0.12));
-  sink.add(cyl(0.03, 0.03, 0.26, M.metalRust, 8).rotateX(Math.PI / 2).translateY(0.12).translateZ(0.0));
+  sink.add(cyl(0.026, 0.026, 0.22, M.metalRust, 8).translateY(0.16).translateZ(-0.1));
+  sink.add(cyl(0.026, 0.026, 0.2, M.metalRust, 8).rotateX(Math.PI / 2).translateY(0.1).translateZ(-0.02));
   W.colliders.push({ minX: 2.1, maxX: 2.8, minZ: z0, maxZ: z0 + 0.5, minY: y0, maxY: y0 + 1.0, enabled: true });
 
   W.colliders.push({ minX: 2.12, maxX: 2.78, minZ: z0 + 0.02, maxZ: z0 + 0.68, minY: y0, maxY: y0 + 1.0, enabled: true }); // vanity
@@ -122,8 +159,14 @@ export function buildBathroom(W) {
   const mirror = W.makeMirror({ width: 0.66, height: 0.88, x: 2.45, y: y0 + 1.32, z: z0 + 0.045, ry: 0, room: 'bath' });
   // mirror light (a small warm tube above the glass)
   g.add(box(0.8, 0.05, 0.08, M.metalGalv, 2.45, y0 + 1.82, z0 + 0.1));
-  const mTube = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.7, 8), M.tube);
+  const mTube = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.7, 10), M.tube);
   mTube.rotation.z = Math.PI / 2; mTube.position.set(2.45, y0 + 1.79, z0 + 0.12); g.add(mTube);
+  // frosted cover: softens the hard white bar and kills the green rim
+  const diffuser = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.026, 0.026, 0.74, 12, 1, true),
+    new THREE.MeshStandardMaterial({ color: 0xf2efe2, roughness: 0.9, transparent: true, opacity: 0.55, depthWrite: false })
+  );
+  diffuser.rotation.z = Math.PI / 2; diffuser.position.set(2.45, y0 + 1.79, z0 + 0.12); g.add(diffuser);
   W.addLight('bath', (() => {
     const l = new THREE.PointLight(0xffd9b0, 6, 3.2, 2);
     l.position.set(2.45, y0 + 1.72, z0 + 0.24); return l;
