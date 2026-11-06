@@ -11,6 +11,15 @@ import {
 
 export const ALLEY = { x0: -8.4, x1: 8.4, z0: 6, z1: 14 };
 
+function strut(ax, ay, az, bx, by, bz, r, mat) {
+  const dir = new THREE.Vector3(bx - ax, by - ay, bz - az);
+  const len = dir.length();
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), mat);
+  m.position.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+  return m;
+}
+
 export function buildAlley(W) {
   const { x0, x1, z0, z1 } = ALLEY;
   const g = new THREE.Group(); W.root.add(g);
@@ -18,8 +27,8 @@ export function buildAlley(W) {
   // ---------------------------------------------------------------- ground
   const floorMat = M.floorAsphalt.clone();
   // no planar reflection anywhere now: looking down produced lamp ghosts on the asphalt too
-  W.wetFloor(floorMat, { room: 'alley', amount: 0.0, distortion: 0.05, puddle: true, puddleScale: 0.075, tint: 0xffe9d8 });
-  floorMat.roughness = 0.24; floorMat.metalness = 0.22;
+  W.wetFloor(floorMat, { room: 'alley', amount: 0.0, distortion: 0.075, puddle: true, puddleScale: 0.075, tint: 0xffe9d8 });
+  floorMat.roughness = 0.33; floorMat.metalness = 0.12;
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, (z0 + z1) / 2);
   floor.receiveShadow = true; g.add(floor); W.groundHide.push(floor);
@@ -480,9 +489,17 @@ export function buildAlley(W) {
   const canopy = new THREE.Group(); g.add(canopy);
   canopy.add(box(3.0, 0.07, 2.2, M.corrugatedRust, 5.9, 3.15, 8.0));
   canopy.add(box(3.06, 0.06, 0.14, M.metalRust, 5.9, 3.18, 6.95));
-  for (const xx of [4.6, 7.2]) {
-    canopy.add(cyl(0.05, 0.05, 0.5, M.metalRust, 8).translateX(xx).translateY(2.9).translateZ(6.98));
+  // the deck used to hang off two short rods that connected to nothing: three struts
+  // run from the building wall down to the outer edge, plus a wall plate
+  // no spare point light in the alley (all rooms sit at the 14 cap), so the struts get a
+  // material that stays readable in the canopy's shadow instead of going pure black
+  const steelDim = new THREE.MeshStandardMaterial({
+    color: 0x7c7c72, metalness: 0.5, roughness: 0.55, emissive: 0x121211, emissiveIntensity: 0.7,
+  });
+  for (const zz of [6.98, 8.0, 9.02]) {
+    canopy.add(strut(7.36, 2.56, zz, 4.54, 3.11, zz, 0.038, steelDim));
   }
+  canopy.add(box(0.06, 0.12, 2.2, steelDim, 7.33, 2.56, 8.0));
   canopy.add(box(0.1, 0.55, 2.2, M.metalRust, 4.42, 3.4, 8.0));
   // junk on top of the canopy
   for (let i = 0; i < 3; i++) {

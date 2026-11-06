@@ -36645,14 +36645,22 @@ void main() {
 
   // src/world/alley.js
   var ALLEY = { x0: -8.4, x1: 8.4, z0: 6, z1: 14 };
+  function strut(ax, ay, az, bx, by, bz, r, mat) {
+    const dir = new Vector3(bx - ax, by - ay, bz - az);
+    const len = dir.length();
+    const m = new Mesh(new CylinderGeometry(r, r, len, 8), mat);
+    m.position.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2);
+    m.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), dir.normalize());
+    return m;
+  }
   function buildAlley(W) {
     const { x0, x1, z0, z1 } = ALLEY;
     const g = new Group();
     W.root.add(g);
     const floorMat = M.floorAsphalt.clone();
-    W.wetFloor(floorMat, { room: "alley", amount: 0, distortion: 0.05, puddle: true, puddleScale: 0.075, tint: 16771544 });
-    floorMat.roughness = 0.24;
-    floorMat.metalness = 0.22;
+    W.wetFloor(floorMat, { room: "alley", amount: 0, distortion: 0.075, puddle: true, puddleScale: 0.075, tint: 16771544 });
+    floorMat.roughness = 0.33;
+    floorMat.metalness = 0.12;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(0, 0, (z0 + z1) / 2);
@@ -37156,9 +37164,17 @@ void main() {
     g.add(canopy);
     canopy.add(box(3, 0.07, 2.2, M.corrugatedRust, 5.9, 3.15, 8));
     canopy.add(box(3.06, 0.06, 0.14, M.metalRust, 5.9, 3.18, 6.95));
-    for (const xx of [4.6, 7.2]) {
-      canopy.add(cyl(0.05, 0.05, 0.5, M.metalRust, 8).translateX(xx).translateY(2.9).translateZ(6.98));
+    const steelDim = new MeshStandardMaterial({
+      color: 8158322,
+      metalness: 0.5,
+      roughness: 0.55,
+      emissive: 1184273,
+      emissiveIntensity: 0.7
+    });
+    for (const zz of [6.98, 8, 9.02]) {
+      canopy.add(strut(7.36, 2.56, zz, 4.54, 3.11, zz, 0.038, steelDim));
     }
+    canopy.add(box(0.06, 0.12, 2.2, steelDim, 7.33, 2.56, 8));
     canopy.add(box(0.1, 0.55, 2.2, M.metalRust, 4.42, 3.4, 8));
     for (let i = 0; i < 3; i++) {
       const c = crate(rand(0.35, 0.5), rand(0.22, 0.32), rand(0.3, 0.4));
