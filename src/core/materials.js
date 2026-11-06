@@ -203,8 +203,14 @@ export function posterMat(name, { tint = 0xffffff, emissive = 0.06, opacity = 1 
 
 export function decalMat(name, opacity = 1, tint = 0xffffff) {
   const t = T.art[name];
-  return new THREE.MeshBasicMaterial({
-    map: t, transparent: true, opacity, depthWrite: false, color: tint, toneMapped: false,
+  // lit decals: a MeshBasicMaterial read as a sticker pasted over the wall (no reaction to
+  // the lamp, no falloff into shadow). Standard keeps them coplanar but shaded with the wall.
+  return new THREE.MeshStandardMaterial({
+    map: t, transparent: true, opacity, depthWrite: false, color: tint,
+    roughness: 0.94, metalness: 0.0,
+    // a little self-lit contribution so grime survives in shadowed corners (pure diffuse
+    // decals disappear there, which reads as "the stain was deleted")
+    emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.3,
     polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
   });
 }

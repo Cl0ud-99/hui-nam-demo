@@ -228,7 +228,7 @@ export function buildBathroom(W) {
   // ---------------------------------------------------------------- grime
   // mould sits on a wall face, near the ceiling — not floating in the middle of the room
   for (let i = 0; i < 8; i++) {
-    const s = sticker('mold', rand(0.3, 0.8), rand(0.3, 0.8), rand(0.2, 0.5));
+    const s = sticker('mold', rand(0.3, 0.9), rand(0.3, 0.9), rand(0.52, 0.78));
     const yy = rand(y0 + 1.65, y0 + 2.55);
     switch (i % 3) {
       case 0:

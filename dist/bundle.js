@@ -34982,13 +34982,19 @@ void main() {
   }
   function decalMat(name, opacity = 1, tint = 16777215) {
     const t = T.art[name];
-    return new MeshBasicMaterial({
+    return new MeshStandardMaterial({
       map: t,
       transparent: true,
       opacity,
       depthWrite: false,
       color: tint,
-      toneMapped: false,
+      roughness: 0.94,
+      metalness: 0,
+      // a little self-lit contribution so grime survives in shadowed corners (pure diffuse
+      // decals disappear there, which reads as "the stain was deleted")
+      emissive: 16777215,
+      emissiveMap: t,
+      emissiveIntensity: 0.3,
       polygonOffset: true,
       polygonOffsetFactor: -2,
       polygonOffsetUnits: -2
@@ -38820,7 +38826,7 @@ void main() {
     towel.position.set(2.9, y0 + 1.35, z1 - 0.1);
     g.add(towel);
     for (let i = 0; i < 8; i++) {
-      const s = sticker("mold", rand(0.3, 0.8), rand(0.3, 0.8), rand(0.2, 0.5));
+      const s = sticker("mold", rand(0.3, 0.9), rand(0.3, 0.9), rand(0.52, 0.78));
       const yy = rand(y0 + 1.65, y0 + 2.55);
       switch (i % 3) {
         case 0:
