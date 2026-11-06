@@ -111,7 +111,7 @@ export function buildMaterials() {
   M.shrineDark = std('dark_wooden_planks', { color: 0x61211a, roughness: 0.38, normalScale: 0.32, env: 0.55, tileMul: 1.9 });
 
   // ---------------- E: floors & rough timber
-  M.floorApt = std('dark_wooden_planks', { color: 0xab8a5f, roughness: 0.8, normalScale: 0.9, env: 0.28, tileMul: 1.7 });
+  M.floorApt = std('dark_wooden_planks', { color: 0xcaa97a, roughness: 0.8, normalScale: 0.9, env: 0.28, tileMul: 1.7 });
   M.cratePine = std('dark_wooden_planks', { color: 0xa88a62, roughness: 0.9, normalScale: 1.1, env: 0.15, tileMul: 1.6 });
 
   // ---------------- metals

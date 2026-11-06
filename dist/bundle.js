@@ -34867,7 +34867,7 @@ void main() {
     M.laminateDark = std("dark_paneled_wood", { color: 3883579, roughness: 0.42, normalScale: 0.18, env: 0.42, tileMul: 2.6 });
     M.shrineRed = std("dark_wooden_planks", { color: 10629924, roughness: 0.3, normalScale: 0.28, env: 0.7, tileMul: 1.35 });
     M.shrineDark = std("dark_wooden_planks", { color: 6365466, roughness: 0.38, normalScale: 0.32, env: 0.55, tileMul: 1.9 });
-    M.floorApt = std("dark_wooden_planks", { color: 11242079, roughness: 0.8, normalScale: 0.9, env: 0.28, tileMul: 1.7 });
+    M.floorApt = std("dark_wooden_planks", { color: 13281658, roughness: 0.8, normalScale: 0.9, env: 0.28, tileMul: 1.7 });
     M.cratePine = std("dark_wooden_planks", { color: 11045474, roughness: 0.9, normalScale: 1.1, env: 0.15, tileMul: 1.6 });
     M.metalRust = std("rusty_metal_02", { color: 9202254, roughness: 0.85, metalness: 0.55, normalScale: 1.2, env: 0.6 });
     M.metalGalv = std("rusty_painted_metal", { color: 10133664, roughness: 0.6, metalness: 0.65, normalScale: 1, env: 0.8 });
@@ -38595,7 +38595,7 @@ void main() {
     bulbA.position.set(-2.35, cy - 0.02, 0.28);
     g.add(bulbA);
     const lA = W.addLight("apt", (() => {
-      const l = new PointLight(16758903, 8, 6, 2);
+      const l = new PointLight(16758903, 10.5, 6.5, 2);
       l.position.set(-2.35, cy - 0.75, 0.28);
       l.castShadow = true;
       l.shadow.mapSize.set(1024, 1024);
@@ -38617,20 +38617,20 @@ void main() {
     })());
     W.flicker(tvLight, { min: 0.45, max: 1.2, speed: 14, pattern: "tv" });
     const lampLight = W.addLight("apt", (() => {
-      const l = new PointLight(16756848, 5, 3.6, 2);
+      const l = new PointLight(16756848, 9.5, 4.6, 2);
       l.position.set(-2.25, y0 + 0.85, 4.3);
       return l;
     })());
     W.flicker(lampLight, { min: 0.85, max: 1, speed: 5, pattern: "soft" });
     W.addLight("apt", (() => {
-      const l = new RectAreaLight(7312296, 3.2, 2.2, 1.2);
+      const l = new RectAreaLight(7312296, 6, 2.2, 1.2);
       l.position.set(0.4, y0 + 1.9, z1 - 0.12);
       l.lookAt(0.4, y0 + 1.5, z1 - 3);
       return l;
     })());
     W.addLight("apt", (() => {
-      const l = new PointLight(8024166, 6, 7, 2);
-      l.position.set(0, y0 + 1.5, 2.6);
+      const l = new PointLight(9405044, 9, 8.5, 2);
+      l.position.set(-0.2, y0 + 1.58, 2);
       return l;
     })());
     W.room("apt", { x0, x1, z0, z1, y0 });

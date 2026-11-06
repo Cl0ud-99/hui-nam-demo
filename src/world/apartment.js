@@ -400,7 +400,7 @@ export function buildApartment(W) {
   const bulbA = bulbLamp({ cord: 0.55, shade: true });
   bulbA.position.set(-2.35, cy - 0.02, 0.28); g.add(bulbA);
   const lA = W.addLight('apt', (() => {
-    const l = new THREE.PointLight(0xffb877, 8, 6, 2);
+    const l = new THREE.PointLight(0xffb877, 10.5, 6.5, 2);
     l.position.set(-2.35, cy - 0.75, 0.28);
     l.castShadow = true; l.shadow.mapSize.set(1024, 1024); l.shadow.bias = -0.0012; l.shadow.normalBias = 0.02;
     return l;
@@ -420,21 +420,21 @@ export function buildApartment(W) {
   W.flicker(tvLight, { min: 0.45, max: 1.2, speed: 14, pattern: 'tv' });
 
   const lampLight = W.addLight('apt', (() => {
-    const l = new THREE.PointLight(0xffb070, 5, 3.6, 2);
+    const l = new THREE.PointLight(0xffb070, 9.5, 4.6, 2);
     l.position.set(-2.25, y0 + 0.85, 4.3); return l;
   })());
   W.flicker(lampLight, { min: 0.85, max: 1, speed: 5, pattern: 'soft' });
 
   // cold spill from the window
   W.addLight('apt', (() => {
-    const l = new THREE.RectAreaLight(0x6f93a8, 3.2, 2.2, 1.2);
+    const l = new THREE.RectAreaLight(0x6f93a8, 6.0, 2.2, 1.2);
     l.position.set(0.4, y0 + 1.9, z1 - 0.12);
     l.lookAt(0.4, y0 + 1.5, z1 - 3); return l;
   })());
 
   W.addLight('apt', (() => {
-    const l = new THREE.PointLight(0x7a7066, 6, 7, 2);
-    l.position.set(0, y0 + 1.5, 2.6); return l;
+    const l = new THREE.PointLight(0x8f8274, 9, 8.5, 2);
+    l.position.set(-0.2, y0 + 1.58, 2.0); return l;
   })());
 
   W.room('apt', { x0, x1, z0, z1, y0 });
