@@ -6,7 +6,7 @@ import { wallGroup } from './buildutil.js';
 import { makeDoor } from './fixtures.js';
 import {
   bulbLamp, fluorescent, sofa, bed, wardrobe, tvSet, altarTable, incenseBurner, candle,
-  pictureFrame, poster, stuckPoster, sticker, stackOfBooks, newspapers, woodenChair, woodenStool,
+  pictureFrame, poster, stuckPoster, sticker, stackOfBooks, newspapers, woodenChair,
   cardboardBox, bucket, curtain, hangingCloth, cable, tube, diningTable, herbJar, radio,
 } from '../core/props.js';
 
@@ -279,11 +279,9 @@ export function buildApartment(W) {
   // so the wardrobe keeps a static environment reflection (no person, no extra pass)
   W.addMirror(wr.userData.mirror, 'wardrobe');
 
-  // chair facing the altar, a small stool with clothes
+  // chair facing the altar (the stool that used to stand beside the basin was removed:
+  // at x 1.9 it overlapped the bathroom's west wall)
   const ch = woodenChair(); ch.position.set(-2.55, y0, 0.85); ch.rotation.y = 1.55; g.add(ch);
-  const st2 = woodenStool(0.42); st2.position.set(1.9, y0, 3.0); g.add(st2);
-  const cloth2 = hangingCloth(0.4, 0.5, M.fabricBlue);
-  cloth2.rotation.x = -Math.PI / 2; cloth2.position.set(1.9, y0 + 0.44, 3.0); g.add(cloth2);
 
   // ---------------------------------------------------------------- bedroom
   const bd = bed(1.15, 1.95); bd.position.set(-3.15, y0, 4.85); g.add(bd);

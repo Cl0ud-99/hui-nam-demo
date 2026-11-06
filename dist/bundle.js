@@ -38417,13 +38417,6 @@ void main() {
     ch.position.set(-2.55, y0, 0.85);
     ch.rotation.y = 1.55;
     g.add(ch);
-    const st2 = woodenStool(0.42);
-    st2.position.set(1.9, y0, 3);
-    g.add(st2);
-    const cloth2 = hangingCloth(0.4, 0.5, M.fabricBlue);
-    cloth2.rotation.x = -Math.PI / 2;
-    cloth2.position.set(1.9, y0 + 0.44, 3);
-    g.add(cloth2);
     const bd = bed(1.15, 1.95);
     bd.position.set(-3.15, y0, 4.85);
     g.add(bd);
