@@ -24,21 +24,44 @@ export function makeDoor(W, {
   const panelMat = red ? M.woodRed : mat;
   const panel = box(width, height, thick, panelMat, -dir * width / 2, height / 2, 0);
   pivot.add(panel);
-  // recessed panels
-  for (let i = 0; i < 2; i++) {
-    const pw = width * 0.66, ph = height * 0.32;
-    const inset = new THREE.Mesh(new THREE.BoxGeometry(pw, ph, 0.012), M.doorInset);
-    inset.position.set(-dir * width / 2, height * (0.28 + i * 0.36), thick / 2 + 0.004);
-    pivot.add(inset);
-  }
-  if (knob) {
-    const k = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), M.brass);
-    k.position.set(-dir * (width - 0.09), height * 0.46, thick / 2 + 0.03);
-    pivot.add(k);
-    const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.012, 12), M.brass);
-    plate.rotation.x = Math.PI / 2;
-    plate.position.copy(k.position).setZ(thick / 2 + 0.006);
-    pivot.add(plate);
+  // ---- both faces get the same treatment: two raised bevelled panels + a lever handle.
+  //      The back of the leaf used to be a bare slab, which read as unfinished whenever a
+  //      door stood open.
+  const panelW = width * 0.62, panelH = height * 0.30;
+  const roundedRect = (w, h, r) => {
+    const sh = new THREE.Shape();
+    const x = -w / 2, y = -h / 2;
+    sh.moveTo(x + r, y);
+    sh.lineTo(x + w - r, y); sh.quadraticCurveTo(x + w, y, x + w, y + r);
+    sh.lineTo(x + w, y + h - r); sh.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    sh.lineTo(x + r, y + h); sh.quadraticCurveTo(x, y + h, x, y + h - r);
+    sh.lineTo(x, y + r); sh.quadraticCurveTo(x, y, x + r, y);
+    return sh;
+  };
+  for (const s of [1, -1]) {
+    for (let i = 0; i < 2; i++) {
+      const geo = new THREE.ExtrudeGeometry(roundedRect(panelW, panelH, 0.022), {
+        depth: 0.009, bevelEnabled: true, bevelSize: 0.010, bevelThickness: 0.007, bevelSegments: 2, curveSegments: 4,
+      });
+      const pnl = new THREE.Mesh(geo, M.doorInset);
+      pnl.position.set(-dir * width / 2, height * (0.29 + i * 0.36), s * (thick / 2 - 0.001));
+      if (s < 0) pnl.rotation.y = Math.PI;
+      pivot.add(pnl);
+    }
+    if (knob) {
+      const hx = -dir * (width - 0.10), hy = height * 0.46;
+      const ros = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.045, 0.014, 16), M.brass);
+      ros.rotation.x = Math.PI / 2;
+      ros.position.set(hx, hy, s * (thick / 2 + 0.007));
+      pivot.add(ros);
+      // lever points back toward the hinge, like a real handle
+      const lev = box(0.128, 0.021, 0.021, M.brass, hx - Math.sign(hx) * 0.052, hy, s * (thick / 2 + 0.030));
+      pivot.add(lev);
+      const esc = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.021, 0.008, 12), M.brass);
+      esc.rotation.x = Math.PI / 2;
+      esc.position.set(hx, hy - 0.085, s * (thick / 2 + 0.005));
+      pivot.add(esc);
+    }
   }
 
   // frame (static, part of root)
@@ -48,6 +71,7 @@ export function makeDoor(W, {
   }
   root.add(box(width + fThick * 2, fThick, 0.14, frameMat, 0, height + fThick / 2, 0));
 
+  (W.doors || (W.doors = [])).push(null);   // filled below, keeps draw order stable
   const collider = { minX: 0, maxX: 0, minZ: 0, maxZ: 0, minY: y, maxY: y + height, enabled: true };
   const hw = (Math.abs(Math.cos(ry)) * width + Math.abs(Math.sin(ry)) * 0.2) / 2 + 0.05;
   const hd = (Math.abs(Math.sin(ry)) * width + Math.abs(Math.cos(ry)) * 0.2) / 2 + 0.05;
@@ -73,6 +97,7 @@ export function makeDoor(W, {
       if (open && onOpen) onOpen(obj);
     },
   });
+  W.doors[W.doors.length - 1] = obj;
   W.animate((dt) => {
     if (Math.abs(anim - target) > 0.001) {
       anim += (target - anim) * (1 - Math.exp(-9 * dt));

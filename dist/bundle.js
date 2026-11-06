@@ -35882,26 +35882,56 @@ void main() {
     const panelMat = red ? M.woodRed : mat;
     const panel = box(width, height, thick, panelMat, -dir * width / 2, height / 2, 0);
     pivot.add(panel);
-    for (let i = 0; i < 2; i++) {
-      const pw = width * 0.66, ph = height * 0.32;
-      const inset = new Mesh(new BoxGeometry(pw, ph, 0.012), M.doorInset);
-      inset.position.set(-dir * width / 2, height * (0.28 + i * 0.36), thick / 2 + 4e-3);
-      pivot.add(inset);
-    }
-    if (knob) {
-      const k = new Mesh(new SphereGeometry(0.03, 10, 8), M.brass);
-      k.position.set(-dir * (width - 0.09), height * 0.46, thick / 2 + 0.03);
-      pivot.add(k);
-      const plate = new Mesh(new CylinderGeometry(0.045, 0.045, 0.012, 12), M.brass);
-      plate.rotation.x = Math.PI / 2;
-      plate.position.copy(k.position).setZ(thick / 2 + 6e-3);
-      pivot.add(plate);
+    const panelW = width * 0.62, panelH = height * 0.3;
+    const roundedRect = (w, h, r) => {
+      const sh = new Shape();
+      const x2 = -w / 2, y2 = -h / 2;
+      sh.moveTo(x2 + r, y2);
+      sh.lineTo(x2 + w - r, y2);
+      sh.quadraticCurveTo(x2 + w, y2, x2 + w, y2 + r);
+      sh.lineTo(x2 + w, y2 + h - r);
+      sh.quadraticCurveTo(x2 + w, y2 + h, x2 + w - r, y2 + h);
+      sh.lineTo(x2 + r, y2 + h);
+      sh.quadraticCurveTo(x2, y2 + h, x2, y2 + h - r);
+      sh.lineTo(x2, y2 + r);
+      sh.quadraticCurveTo(x2, y2, x2 + r, y2);
+      return sh;
+    };
+    for (const s of [1, -1]) {
+      for (let i = 0; i < 2; i++) {
+        const geo = new ExtrudeGeometry(roundedRect(panelW, panelH, 0.022), {
+          depth: 9e-3,
+          bevelEnabled: true,
+          bevelSize: 0.01,
+          bevelThickness: 7e-3,
+          bevelSegments: 2,
+          curveSegments: 4
+        });
+        const pnl = new Mesh(geo, M.doorInset);
+        pnl.position.set(-dir * width / 2, height * (0.29 + i * 0.36), s * (thick / 2 - 1e-3));
+        if (s < 0) pnl.rotation.y = Math.PI;
+        pivot.add(pnl);
+      }
+      if (knob) {
+        const hx = -dir * (width - 0.1), hy = height * 0.46;
+        const ros = new Mesh(new CylinderGeometry(0.042, 0.045, 0.014, 16), M.brass);
+        ros.rotation.x = Math.PI / 2;
+        ros.position.set(hx, hy, s * (thick / 2 + 7e-3));
+        pivot.add(ros);
+        const lev = box(0.128, 0.021, 0.021, M.brass, hx - Math.sign(hx) * 0.052, hy, s * (thick / 2 + 0.03));
+        pivot.add(lev);
+        const esc = new Mesh(new CylinderGeometry(0.021, 0.021, 8e-3, 12), M.brass);
+        esc.rotation.x = Math.PI / 2;
+        esc.position.set(hx, hy - 0.085, s * (thick / 2 + 5e-3));
+        pivot.add(esc);
+      }
     }
     const fThick = 0.07;
     for (const s of [-1, 1]) {
       root.add(box(fThick, height + fThick, 0.14, frameMat, s * (width / 2 + fThick / 2 - 5e-3), (height + fThick) / 2, 0));
     }
     root.add(box(width + fThick * 2, fThick, 0.14, frameMat, 0, height + fThick / 2, 0));
+    (W.doors || (W.doors = [])).push(null);
     const collider = { minX: 0, maxX: 0, minZ: 0, maxZ: 0, minY: y, maxY: y + height, enabled: true };
     const hw = (Math.abs(Math.cos(ry)) * width + Math.abs(Math.sin(ry)) * 0.2) / 2 + 0.05;
     const hd = (Math.abs(Math.sin(ry)) * width + Math.abs(Math.cos(ry)) * 0.2) / 2 + 0.05;
@@ -35935,6 +35965,7 @@ void main() {
         if (open && onOpen) onOpen(obj);
       }
     });
+    W.doors[W.doors.length - 1] = obj;
     W.animate((dt) => {
       if (Math.abs(anim - target) > 1e-3) {
         anim += (target - anim) * (1 - Math.exp(-9 * dt));
