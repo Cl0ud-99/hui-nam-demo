@@ -167,8 +167,11 @@ export function buildMaterials() {
   M.candleWax = solid(0xd8cdb4, 0.7);
   M.incense = solid(0x6a4a32, 0.9);
   M.labelSheet = new THREE.MeshStandardMaterial({
-    map: T.art.drawer_labels, roughness: 0.95, envMapIntensity: 0.1,
-    color: 0xd8c9a8,
+    map: T.art.drawer_labels, roughness: 0.9, envMapIntensity: 0.1,
+    color: 0xffffff,
+    // the paper carries its own faint glow so the labels stay legible in the dim shop;
+    // using emissiveMap keeps the ink dark instead of washing the card out
+    emissive: 0xffffff, emissiveMap: T.art.drawer_labels, emissiveIntensity: 0.16,
   });
 
   // ---------------- post / decals

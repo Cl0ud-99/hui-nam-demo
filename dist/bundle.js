@@ -34928,9 +34928,14 @@ void main() {
     M.incense = solid(6965810, 0.9);
     M.labelSheet = new MeshStandardMaterial({
       map: T.art.drawer_labels,
-      roughness: 0.95,
+      roughness: 0.9,
       envMapIntensity: 0.1,
-      color: 14207400
+      color: 16777215,
+      // the paper carries its own faint glow so the labels stay legible in the dim shop;
+      // using emissiveMap keeps the ink dark instead of washing the card out
+      emissive: 16777215,
+      emissiveMap: T.art.drawer_labels,
+      emissiveIntensity: 0.16
     });
     M.stain = new MeshBasicMaterial({
       map: T.art.stain,
@@ -36092,7 +36097,7 @@ void main() {
       const fw = cw - 0.03, fh = ch - 0.03;
       const front = box(fw, fh, 0.02, M.cabDrawer, -w / 2 + cw * (c + 0.5), ch * (r + 0.5), d / 2 + 5e-3);
       g.add(front);
-      const lab = labelPlane(Math.min(0.16, fw * 0.55), 0.055, idx++);
+      const lab = labelPlane(Math.min(0.205, fw * 0.64), 0.068, idx++);
       lab.position.set(-w / 2 + cw * (c + 0.5), ch * (r + 0.5) + 0.01, d / 2 + 0.018);
       g.add(lab);
       const handle = new Mesh(new CylinderGeometry(8e-3, 8e-3, 0.06, 6), M.brass);

@@ -132,7 +132,7 @@ export function apothecary(w = 2.4, h = 2.1, d = 0.34, cols = 5, rows = 6) {
     const fw = cw - 0.03, fh = ch - 0.03;
     const front = box(fw, fh, 0.02, M.cabDrawer, -w / 2 + cw * (c + 0.5), ch * (r + 0.5), d / 2 + 0.005);
     g.add(front);
-    const lab = labelPlane(Math.min(0.16, fw * 0.55), 0.055, idx++);
+    const lab = labelPlane(Math.min(0.205, fw * 0.64), 0.068, idx++);
     lab.position.set(-w / 2 + cw * (c + 0.5), ch * (r + 0.5) + 0.01, d / 2 + 0.018);
     g.add(lab);
     const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.06, 6), M.brass);
