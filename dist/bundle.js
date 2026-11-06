@@ -34839,7 +34839,7 @@ void main() {
     M.floorAsphalt = std("asphalt_05", { color: 9342858, roughness: 0.4, normalScale: 1.2, env: 0.5, tileMul: 1.8 });
     M.tileWallBlue = std("blue_floor_tiles_01", { color: 10464924, roughness: 0.4, normalScale: 1, env: 0.6, tileMul: 3 });
     M.tileWallDirty = std("dirty_tiles", { color: 12764336, roughness: 0.38, normalScale: 1, env: 0.7, tileMul: 2.2 });
-    M.woodDark = std("dark_paneled_wood", { color: 10122824, roughness: 0.72, normalScale: 0.9, env: 0.3 });
+    M.woodDark = std("dark_paneled_wood", { color: 13214067, roughness: 0.7, normalScale: 0.9, env: 0.32 });
     M.woodBlack = std("dark_paneled_wood", { color: 6047536, roughness: 0.68, normalScale: 0.9, env: 0.3 });
     M.woodRed = std("dark_paneled_wood", { color: 8008999, roughness: 0.6, normalScale: 0.9, env: 0.35 });
     M.woodFloorMat = std("dark_wooden_planks", { color: 9136709, roughness: 0.75, normalScale: 1, env: 0.3 });
@@ -34865,7 +34865,7 @@ void main() {
     M.laminateDark = std("dark_paneled_wood", { color: 3883579, roughness: 0.42, normalScale: 0.18, env: 0.42, tileMul: 2.6 });
     M.shrineRed = std("dark_wooden_planks", { color: 10629924, roughness: 0.3, normalScale: 0.28, env: 0.7, tileMul: 1.35 });
     M.shrineDark = std("dark_wooden_planks", { color: 6365466, roughness: 0.38, normalScale: 0.32, env: 0.55, tileMul: 1.9 });
-    M.floorApt = std("dark_wooden_planks", { color: 13281658, roughness: 0.8, normalScale: 0.9, env: 0.28, tileMul: 1.7 });
+    M.floorApt = std("dark_wooden_planks", { color: 14861208, roughness: 0.72, normalScale: 0.9, env: 0.42, tileMul: 1.7 });
     M.cratePine = std("dark_wooden_planks", { color: 11045474, roughness: 0.9, normalScale: 1.1, env: 0.15, tileMul: 1.6 });
     M.metalRust = std("rusty_metal_02", { color: 9202254, roughness: 0.85, metalness: 0.55, normalScale: 1.2, env: 0.6 });
     M.metalGalv = std("rusty_painted_metal", { color: 10133664, roughness: 0.6, metalness: 0.65, normalScale: 1, env: 0.8 });
@@ -34880,7 +34880,7 @@ void main() {
     M.fabricCream = std("dirty_carpet", { color: 12168339, roughness: 1, normalScale: 1.1, env: 0.15 });
     M.fabricGreen = std("dirty_carpet", { color: 6122066, roughness: 1, normalScale: 1.1, env: 0.15 });
     M.fabricBlue = std("dirty_carpet", { color: 4147800, roughness: 1, normalScale: 1.1, env: 0.15 });
-    M.carpetRed = std("dirty_carpet", { color: 7219746, roughness: 1, normalScale: 1.4, env: 0.1 });
+    M.carpetRed = std("dirty_carpet", { color: 16761504, roughness: 0.94, normalScale: 0.9, env: 0.12, tileMul: 2.4 });
     M.leather = std("dirty_carpet", { color: 4862756, roughness: 0.55, normalScale: 0.6, env: 0.35 });
     M.curtain = std("dirty_carpet", { color: 9202222, roughness: 1, normalScale: 0.8, env: 0.1, side: DoubleSide });
     M.paper = std("damaged_plaster", { color: 13616038, roughness: 1, normalScale: 0.4, env: 0.1 });
@@ -35886,6 +35886,9 @@ void main() {
     const panelMat = red ? M.woodRed : mat;
     const panel = box(width, height, thick, panelMat, -dir * width / 2, height / 2, 0);
     pivot.add(panel);
+    const insetMat = panelMat.clone();
+    if (insetMat.color) insetMat.color.multiplyScalar(0.84);
+    insetMat.roughness = Math.min(1, (insetMat.roughness ?? 0.7) + 0.06);
     const panelW = width * 0.62, panelH = height * 0.3;
     const roundedRect = (w, h, r) => {
       const sh = new Shape();
@@ -35911,7 +35914,7 @@ void main() {
           bevelSegments: 2,
           curveSegments: 4
         });
-        const pnl = new Mesh(geo, M.doorInset);
+        const pnl = new Mesh(geo, insetMat);
         pnl.position.set(-dir * width / 2, height * (0.29 + i * 0.36), s * (thick / 2 - 1e-3));
         if (s < 0) pnl.rotation.y = Math.PI;
         pivot.add(pnl);
@@ -38275,7 +38278,53 @@ void main() {
       openAngle: 1.9
     });
     g.add(bathDoor.root);
-    const rug = new Mesh(new PlaneGeometry(2.9, 2.1), M.carpetRed);
+    const rugTex = (() => {
+      const c = document.createElement("canvas");
+      c.width = 512;
+      c.height = 384;
+      const x = c.getContext("2d");
+      x.fillStyle = "#8c3f31";
+      x.fillRect(0, 0, 512, 384);
+      x.strokeStyle = "#5e2318";
+      x.lineWidth = 26;
+      x.strokeRect(13, 13, 486, 358);
+      x.strokeStyle = "#c08a5e";
+      x.lineWidth = 4;
+      x.strokeRect(30, 30, 452, 324);
+      x.strokeStyle = "rgba(196,140,96,0.5)";
+      x.lineWidth = 3;
+      for (let i = -6; i < 14; i++) {
+        x.beginPath();
+        x.moveTo(i * 56, 60);
+        x.lineTo(i * 56 + 180, 324);
+        x.stroke();
+        x.beginPath();
+        x.moveTo(i * 56, 324);
+        x.lineTo(i * 56 + 180, 60);
+        x.stroke();
+      }
+      x.save();
+      x.translate(256, 192);
+      x.rotate(Math.PI / 4);
+      x.strokeStyle = "#d0a06e";
+      x.lineWidth = 6;
+      x.strokeRect(-58, -58, 116, 116);
+      x.strokeStyle = "#6b2a1d";
+      x.lineWidth = 10;
+      x.strokeRect(-34, -34, 68, 68);
+      x.restore();
+      for (let i = 0; i < 900; i++) {
+        const px2 = Math.random() * 512, py2 = Math.random() * 384;
+        x.fillStyle = Math.random() < 0.5 ? "rgba(60,26,18,0.06)" : "rgba(220,180,140,0.045)";
+        x.fillRect(px2, py2, 1 + Math.random() * 3, 1 + Math.random() * 2);
+      }
+      const t = new CanvasTexture(c);
+      t.colorSpace = SRGBColorSpace;
+      t.anisotropy = 4;
+      return t;
+    })();
+    const rugMat = new MeshStandardMaterial({ map: rugTex, roughness: 0.93, metalness: 0, envMapIntensity: 0.08 });
+    const rug = new Mesh(new PlaneGeometry(2.9, 2.1), rugMat);
     rug.rotation.x = -Math.PI / 2;
     rug.position.set(0.5, y0 + 0.012, 1.35);
     g.add(rug);
@@ -38639,8 +38688,13 @@ void main() {
       return l;
     })());
     W.addLight("apt", (() => {
-      const l = new PointLight(9405044, 9, 8.5, 2);
+      const l = new PointLight(10259058, 9, 8.5, 2);
       l.position.set(-0.2, y0 + 1.58, 2);
+      return l;
+    })());
+    W.addLight("apt", (() => {
+      const l = new PointLight(16753244, 4.2, 4.2, 2);
+      l.position.set(0.15, y0 + 0.42, 2.05);
       return l;
     })());
     W.room("apt", { x0, x1, z0, z1, y0 });
@@ -38870,16 +38924,27 @@ void main() {
     }
     g.add(cyl(0.06, 0.06, 6e-3, M.metalRust, 12).translateX(2.1).translateY(y0 + 0.012).translateZ(4.9));
     for (let i = 0; i < 5; i++) g.add(box(0.1, 4e-3, 6e-3, M.blackMetal, 2.1, y0 + 0.016, 4.86 + i * 0.018));
+    const whMat = new MeshStandardMaterial({ color: 14472646, roughness: 0.44, metalness: 0.06, envMapIntensity: 0.45 });
     const wh = new Group();
-    wh.position.set(x1 - 0.12, y0 + 1.55, 3.4);
+    wh.position.set(x1 - 0.076, y0 + 1.62, 3.4);
     wh.rotation.y = -Math.PI / 2;
     g.add(wh);
-    wh.add(box(0.4, 0.5, 0.18, M.enamelWhite, 0, 0, 0));
-    wh.add(cyl(8e-3, 8e-3, 0.36, M.metalGalv, 5).translateY(-0.4));
-    wh.add(cyl(8e-3, 8e-3, 0.36, M.metalGalv, 5).translateX(0.06).translateY(-0.4));
-    wh.add(box(0.12, 0.05, 0.02, M.blackMetal, 0.06, 0.18, 0.1));
-    const ledG = new Mesh(new SphereGeometry(8e-3, 6, 5), M.bulbRed);
-    ledG.position.set(-0.05, 0.18, 0.1);
+    wh.add(box(0.42, 0.52, 0.15, whMat, 0, 0, 0));
+    wh.add(box(0.385, 0.475, 0.02, whMat, 0, 0, 0.082));
+    wh.add(box(0.385, 8e-3, 8e-3, M.metalGalv, 0, 0.178, 0.093));
+    const dial = cyl(0.021, 0.021, 0.014, M.blackMetal, 14);
+    dial.rotation.x = Math.PI / 2;
+    dial.position.set(0.112, -0.132, 0.095);
+    wh.add(dial);
+    wh.add(box(0.115, 0.045, 8e-3, M.blackMetal, 0.055, 0.17, 0.093));
+    for (const px2 of [-0.062, 0.062]) {
+      wh.add(cyl(0.01, 0.01, 1.33, M.metalGalv, 6).translateX(px2).translateY(-0.925));
+      wh.add(box(0.036, 0.026, 0.036, M.metalGalv, px2, -0.268, 0));
+      wh.add(box(0.05, 0.012, 0.012, M.metalRust, px2, -1.2, 0.014));
+    }
+    wh.add(box(0.34, 0.01, 0.1, M.metalGalv, 0, -0.3, 0.03));
+    const ledG = new Mesh(new SphereGeometry(8e-3, 8, 6), M.bulbRed);
+    ledG.position.set(-0.062, 0.17, 0.095);
     wh.add(ledG);
     g.add(box(0.5, 0.03, 0.16, M.metalRust, 3.3, y0 + 1.75, z1 - 0.12));
     for (let i = 0; i < 3; i++) {

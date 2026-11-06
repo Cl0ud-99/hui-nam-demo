@@ -123,7 +123,38 @@ export function buildApartment(W) {
   g.add(bathDoor.root);
 
   // ---------------------------------------------------------------- rug
-  const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 2.1), M.carpetRed);
+  // painted here instead of reusing dirty_carpet: that scan sits at 0.20 luminance, so any tint
+  // multiplied into it stayed near black and the whole room centre read as a hole in the floor.
+  const rugTex = (() => {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 384;
+    const x = c.getContext('2d');
+    x.fillStyle = '#8c3f31'; x.fillRect(0, 0, 512, 384);
+    // border bands
+    x.strokeStyle = '#5e2318'; x.lineWidth = 26; x.strokeRect(13, 13, 486, 358);
+    x.strokeStyle = '#c08a5e'; x.lineWidth = 4; x.strokeRect(30, 30, 452, 324);
+    // inner diamond lattice
+    x.strokeStyle = 'rgba(196,140,96,0.5)'; x.lineWidth = 3;
+    for (let i = -6; i < 14; i++) {
+      x.beginPath(); x.moveTo(i * 56, 60); x.lineTo(i * 56 + 180, 324); x.stroke();
+      x.beginPath(); x.moveTo(i * 56, 324); x.lineTo(i * 56 + 180, 60); x.stroke();
+    }
+    // centre medallion
+    x.save(); x.translate(256, 192); x.rotate(Math.PI / 4);
+    x.strokeStyle = '#d0a06e'; x.lineWidth = 6; x.strokeRect(-58, -58, 116, 116);
+    x.strokeStyle = '#6b2a1d'; x.lineWidth = 10; x.strokeRect(-34, -34, 68, 68);
+    x.restore();
+    // wear: random thin dark scuffs + lighter sun-bleached patches
+    for (let i = 0; i < 900; i++) {
+      const px = Math.random() * 512, py = Math.random() * 384;
+      x.fillStyle = Math.random() < 0.5 ? 'rgba(60,26,18,0.06)' : 'rgba(220,180,140,0.045)';
+      x.fillRect(px, py, 1 + Math.random() * 3, 1 + Math.random() * 2);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    return t;
+  })();
+  const rugMat = new THREE.MeshStandardMaterial({ map: rugTex, roughness: 0.93, metalness: 0.0, envMapIntensity: 0.08 });
+  const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 2.1), rugMat);
   rug.rotation.x = -Math.PI / 2; rug.position.set(0.5, y0 + 0.012, 1.35); g.add(rug);
   const rugBorder = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 2.1), decalMat('stain', 0.0));
   rugBorder.visible = false;
@@ -433,8 +464,15 @@ export function buildApartment(W) {
   })());
 
   W.addLight('apt', (() => {
-    const l = new THREE.PointLight(0x8f8274, 9, 8.5, 2);
+    const l = new THREE.PointLight(0x9c8a72, 9, 8.5, 2);
     l.position.set(-0.2, y0 + 1.58, 2.0); return l;
+  })());
+
+  // warm bounce off the boards: the flat's ambience comes from a cold night street HDR, which
+  // was draining the floor to blue-grey no matter how far the albedo was pushed up
+  W.addLight('apt', (() => {
+    const l = new THREE.PointLight(0xffa25c, 4.2, 4.2, 2);
+    l.position.set(0.15, y0 + 0.42, 2.05); return l;
   })());
 
   W.room('apt', { x0, x1, z0, z1, y0 });

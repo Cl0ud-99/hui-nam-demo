@@ -72,7 +72,7 @@ export function buildMaterials() {
   M.tileWallDirty = std('dirty_tiles', { color: 0xc2c4b0, roughness: 0.38, normalScale: 1.0, env: 0.7, tileMul: 2.2 });
 
   // ---------------- wood / joinery
-  M.woodDark = std('dark_paneled_wood', { color: 0x9a7648, roughness: 0.72, normalScale: 0.9, env: 0.3 });
+  M.woodDark = std('dark_paneled_wood', { color: 0xc9a173, roughness: 0.7, normalScale: 0.9, env: 0.32 });
   M.woodBlack = std('dark_paneled_wood', { color: 0x5c4730, roughness: 0.68, normalScale: 0.9, env: 0.3 });
   M.woodRed = std('dark_paneled_wood', { color: 0x7a3527, roughness: 0.6, normalScale: 0.9, env: 0.35 });
   M.woodFloorMat = std('dark_wooden_planks', { color: 0x8b6a45, roughness: 0.75, normalScale: 1.0, env: 0.3 });
@@ -114,7 +114,7 @@ export function buildMaterials() {
   M.shrineDark = std('dark_wooden_planks', { color: 0x61211a, roughness: 0.38, normalScale: 0.32, env: 0.55, tileMul: 1.9 });
 
   // ---------------- E: floors & rough timber
-  M.floorApt = std('dark_wooden_planks', { color: 0xcaa97a, roughness: 0.8, normalScale: 0.9, env: 0.28, tileMul: 1.7 });
+  M.floorApt = std('dark_wooden_planks', { color: 0xe2c398, roughness: 0.72, normalScale: 0.9, env: 0.42, tileMul: 1.7 });
   M.cratePine = std('dark_wooden_planks', { color: 0xa88a62, roughness: 0.9, normalScale: 1.1, env: 0.15, tileMul: 1.6 });
 
   // ---------------- metals
@@ -133,7 +133,7 @@ export function buildMaterials() {
   M.fabricCream = std('dirty_carpet', { color: 0xb9ac93, roughness: 1, normalScale: 1.1, env: 0.15 });
   M.fabricGreen = std('dirty_carpet', { color: 0x5d6a52, roughness: 1, normalScale: 1.1, env: 0.15 });
   M.fabricBlue = std('dirty_carpet', { color: 0x3f4a58, roughness: 1, normalScale: 1.1, env: 0.15 });
-  M.carpetRed = std('dirty_carpet', { color: 0x6e2a22, roughness: 1, normalScale: 1.4, env: 0.1 });
+  M.carpetRed = std('dirty_carpet', { color: 0xffc2a0, roughness: 0.94, normalScale: 0.9, env: 0.12, tileMul: 2.4 });
   M.leather = std('dirty_carpet', { color: 0x4a3324, roughness: 0.55, normalScale: 0.6, env: 0.35 });
   M.curtain = std('dirty_carpet', { color: 0x8c6a2e, roughness: 1, normalScale: 0.8, env: 0.1, side: THREE.DoubleSide });
 

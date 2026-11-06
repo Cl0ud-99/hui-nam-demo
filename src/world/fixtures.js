@@ -27,6 +27,12 @@ export function makeDoor(W, {
   // ---- both faces get the same treatment: two raised bevelled panels + a lever handle.
   //      The back of the leaf used to be a bare slab, which read as unfinished whenever a
   //      door stood open.
+  // the raised panels were hard-coded to M.doorInset (a grey moulded paint), which made every
+  // leaf read as grey stone blocks regardless of its finish; derive the inset from the leaf
+  // material instead so red lacquer stays red and pale bath paint stays pale.
+  const insetMat = panelMat.clone();
+  if (insetMat.color) insetMat.color.multiplyScalar(0.84);
+  insetMat.roughness = Math.min(1, (insetMat.roughness ?? 0.7) + 0.06);
   const panelW = width * 0.62, panelH = height * 0.30;
   const roundedRect = (w, h, r) => {
     const sh = new THREE.Shape();
@@ -43,7 +49,7 @@ export function makeDoor(W, {
       const geo = new THREE.ExtrudeGeometry(roundedRect(panelW, panelH, 0.022), {
         depth: 0.009, bevelEnabled: true, bevelSize: 0.010, bevelThickness: 0.007, bevelSegments: 2, curveSegments: 4,
       });
-      const pnl = new THREE.Mesh(geo, M.doorInset);
+      const pnl = new THREE.Mesh(geo, insetMat);
       pnl.position.set(-dir * width / 2, height * (0.29 + i * 0.36), s * (thick / 2 - 0.001));
       if (s < 0) pnl.rotation.y = Math.PI;
       pivot.add(pnl);

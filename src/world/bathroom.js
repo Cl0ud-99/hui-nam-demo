@@ -212,14 +212,26 @@ export function buildBathroom(W) {
   g.add(cyl(0.06, 0.06, 0.006, M.metalRust, 12).translateX(2.1).translateY(y0 + 0.012).translateZ(4.9));
   for (let i = 0; i < 5; i++) g.add(box(0.1, 0.004, 0.006, M.blackMetal, 2.1, y0 + 0.016, 4.86 + i * 0.018));
 
-  // water heater
-  const wh = new THREE.Group(); wh.position.set(x1 - 0.12, y0 + 1.55, 3.4); wh.rotation.y = -Math.PI / 2; g.add(wh);
-  wh.add(box(0.4, 0.5, 0.18, M.enamelWhite, 0, 0, 0));
-  wh.add(cyl(0.008, 0.008, 0.36, M.metalGalv, 5).translateY(-0.4));
-  wh.add(cyl(0.008, 0.008, 0.36, M.metalGalv, 5).translateX(0.06).translateY(-0.4));
-  wh.add(box(0.12, 0.05, 0.02, M.blackMetal, 0.06, 0.18, 0.1));
-  const ledG = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 5), M.bulbRed);
-  ledG.position.set(-0.05, 0.18, 0.1); wh.add(ledG);
+  // water heater: flat tank + a proud front cover. The old single box used the tiled
+  // enamel material, whose UV scale made the front face read as an open cupboard door.
+  const whMat = new THREE.MeshStandardMaterial({ color: 0xdcd5c6, roughness: 0.44, metalness: 0.06, envMapIntensity: 0.45 });
+  const wh = new THREE.Group(); wh.position.set(x1 - 0.076, y0 + 1.62, 3.4); wh.rotation.y = -Math.PI / 2; g.add(wh);
+  wh.add(box(0.42, 0.52, 0.15, whMat, 0, 0, 0));
+  wh.add(box(0.385, 0.475, 0.02, whMat, 0, 0, 0.082));
+  wh.add(box(0.385, 0.008, 0.008, M.metalGalv, 0, 0.178, 0.093));
+  const dial = cyl(0.021, 0.021, 0.014, M.blackMetal, 14); dial.rotation.x = Math.PI / 2;
+  dial.position.set(0.112, -0.132, 0.095); wh.add(dial);
+  wh.add(box(0.115, 0.045, 0.008, M.blackMetal, 0.055, 0.17, 0.093));
+  // pipes run all the way down the wall instead of stopping in mid air
+  for (const px of [-0.062, 0.062]) {
+    wh.add(cyl(0.010, 0.010, 1.33, M.metalGalv, 6).translateX(px).translateY(-0.925));
+    wh.add(box(0.036, 0.026, 0.036, M.metalGalv, px, -0.268, 0.0));
+    wh.add(box(0.05, 0.012, 0.012, M.metalRust, px, -1.20, 0.014));
+  }
+  wh.add(box(0.34, 0.010, 0.10, M.metalGalv, 0, -0.30, 0.03));
+  const ledG = new THREE.Mesh(new THREE.SphereGeometry(0.008, 8, 6), M.bulbRed);
+  ledG.position.set(-0.062, 0.17, 0.095); wh.add(ledG);
+  // no extra PointLight here on purpose: the bath room already runs the full 14-light budget
 
   // shelf / toiletries
   g.add(box(0.5, 0.03, 0.16, M.metalRust, 3.3, y0 + 1.75, z1 - 0.12));
