@@ -249,6 +249,12 @@ export function buildBathroom(W) {
     s.position.set(rand(x0 + 0.2, x1 - 0.2), rand(y0 + 0.8, y0 + 2.4), z1 - 0.015);
     s.rotation.y = Math.PI; g.add(s);
   }
+  // broad faint wash so the tile grid does not read as one repeating block
+  for (let i = 0; i < 2; i++) {
+    const s = sticker('stain', rand(1.7, 2.7), rand(1.1, 1.8), rand(0.07, 0.11));
+    s.position.set(rand(x0 + 0.9, x1 - 0.9), rand(y0 + 0.7, y0 + 1.5), z0 + 0.018);
+    s.rotation.z = rand(0, 6); g.add(s);
+  }
   // hairline cracks on the mirror wall
   g.add(box(0.005, 0.8, 0.002, M.dirt, 2.9, y0 + 1.8, z0 + 0.02));
 

@@ -35831,9 +35831,14 @@ void main() {
   }
   function wallGroup(w, h, mat, openings = [], { doubleSide = false } = {}) {
     const g = new Group();
+    const ou = Math.random(), ov = Math.random();
     for (const q of wallQuads(w, h, openings)) {
       const qw = q.x1 - q.x0, qh = q.y1 - q.y0;
-      const m = new Mesh(planeGeo(qw, qh), mat);
+      const geo = planeGeo(qw, qh);
+      const uv = geo.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) + ou, uv.getY(i) + ov);
+      uv.needsUpdate = true;
+      const m = new Mesh(geo, mat);
       m.position.set((q.x0 + q.x1) / 2 - w / 2, (q.y0 + q.y1) / 2, 0);
       m.receiveShadow = true;
       if (doubleSide) {
@@ -38124,6 +38129,10 @@ void main() {
     floor.receiveShadow = true;
     g.add(floor);
     W.upperHide.push(floor);
+    const floorGrime = sticker("stain", 4.6, 3.4, 0.1);
+    floorGrime.rotation.x = -Math.PI / 2;
+    floorGrime.position.set(cx - 0.6, y0 + 0.015, cz - 0.4);
+    g.add(floorGrime);
     const ceil = new Mesh(planeGeo(x1 - x0, z1 - z0), M.ceilingDirty);
     ceil.rotation.x = Math.PI / 2;
     ceil.position.set(cx, cy, cz);
@@ -38848,6 +38857,12 @@ void main() {
       const s = sticker("stain", rand(0.3, 0.7), rand(0.4, 1.1), rand(0.2, 0.4));
       s.position.set(rand(x0 + 0.2, x1 - 0.2), rand(y0 + 0.8, y0 + 2.4), z1 - 0.015);
       s.rotation.y = Math.PI;
+      g.add(s);
+    }
+    for (let i = 0; i < 2; i++) {
+      const s = sticker("stain", rand(1.7, 2.7), rand(1.1, 1.8), rand(0.07, 0.11));
+      s.position.set(rand(x0 + 0.9, x1 - 0.9), rand(y0 + 0.7, y0 + 1.5), z0 + 0.018);
+      s.rotation.z = rand(0, 6);
       g.add(s);
     }
     g.add(box(5e-3, 0.8, 2e-3, M.dirt, 2.9, y0 + 1.8, z0 + 0.02));

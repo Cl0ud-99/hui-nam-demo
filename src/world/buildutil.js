@@ -31,9 +31,16 @@ export function wallQuads(w, h, openings = []) {
 /** Build a wall (facing +Z local) with openings, as several plane meshes. */
 export function wallGroup(w, h, mat, openings = [], { doubleSide = false } = {}) {
   const g = new THREE.Group();
+  // per-wall UV shift: every wall used to start its tile/plaster pattern at the same UV origin,
+  // so the grid lined up across corners and read as one repeating sheet
+  const ou = Math.random(), ov = Math.random();
   for (const q of wallQuads(w, h, openings)) {
     const qw = q.x1 - q.x0, qh = q.y1 - q.y0;
-    const m = new THREE.Mesh(planeGeo(qw, qh), mat);
+    const geo = planeGeo(qw, qh);
+    const uv = geo.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) + ou, uv.getY(i) + ov);
+    uv.needsUpdate = true;
+    const m = new THREE.Mesh(geo, mat);
     m.position.set((q.x0 + q.x1) / 2 - w / 2, (q.y0 + q.y1) / 2, 0);
     m.receiveShadow = true;
     if (doubleSide) { m.material = mat.clone(); m.material.side = THREE.DoubleSide; }

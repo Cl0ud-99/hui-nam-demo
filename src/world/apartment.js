@@ -26,6 +26,11 @@ export function buildApartment(W) {
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(cx, y0 + 0.01, cz);
   floor.receiveShadow = true; g.add(floor); W.upperHide.push(floor);
+  // one broad, very faint grime layer: the plank texture otherwise repeats as a single sheet
+  const floorGrime = sticker('stain', 4.6, 3.4, 0.10);
+  floorGrime.rotation.x = -Math.PI / 2;
+  floorGrime.position.set(cx - 0.6, y0 + 0.015, cz - 0.4);
+  g.add(floorGrime);
 
   const ceil = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), M.ceilingDirty);
   ceil.rotation.x = Math.PI / 2; ceil.position.set(cx, cy, cz); g.add(ceil);
