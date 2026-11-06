@@ -40119,9 +40119,16 @@ void main() {
     let state = "menu";
     let started = false;
     const menuCam = { a: 0 };
-    camera.position.set(-3.4, 1.95, 11.6);
-    camera.lookAt(1.2, 2.5, 6.2);
+    const MENU_VIEW = { x: -3.4, z: 11.25, tx: 1.2, ty: 2.5, tz: 6.2 };
+    camera.position.set(MENU_VIEW.x, 1.62, MENU_VIEW.z);
+    camera.lookAt(MENU_VIEW.tx, MENU_VIEW.ty, MENU_VIEW.tz);
     function startGame() {
+      const dir = new Vector3();
+      camera.getWorldDirection(dir);
+      player.pos.set(camera.position.x, 0, camera.position.z);
+      player.yaw = Math.atan2(-dir.x, -dir.z);
+      player.pitch = Math.asin(Math.max(-1, Math.min(1, dir.y)));
+      if (player.vel) player.vel.set(0, 0, 0);
       ui.menuShow(false);
       ui.hudOn(true);
       ui.fadeInstant(1);
@@ -40283,8 +40290,8 @@ void main() {
       t += dt;
       if (state === "menu") {
         menuCam.a += dt * 0.045;
-        camera.position.set(-3.4 + Math.sin(menuCam.a) * 0.45, 1.95 + Math.sin(menuCam.a * 0.7) * 0.05, 11.6 - Math.cos(menuCam.a) * 0.35);
-        camera.lookAt(1.2 + Math.sin(menuCam.a * 0.5) * 0.3, 2.5, 6.2);
+        camera.position.set(MENU_VIEW.x + Math.sin(menuCam.a) * 0.45, 1.62, MENU_VIEW.z - Math.cos(menuCam.a) * 0.35);
+        camera.lookAt(MENU_VIEW.tx + Math.sin(menuCam.a * 0.5) * 0.3, MENU_VIEW.ty, MENU_VIEW.tz);
       } else if (state === "pv") {
         pv.update(dt);
       } else if (state === "play" || state === "paused" || state === "end") {
