@@ -37888,6 +37888,7 @@ void main() {
     W.colliders.push({ minX: 1.55, maxX: x1, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 2.3, maxY: h, enabled: true });
     const win = makeWindow(W, { x: 0, y: 3.1, z: z0 + 0.02, w: 1.2, h: 1.8, bars: 2, ry: 0, frameMat: M.metalDark, glassMat: M.glass });
     g.add(win.group);
+    const stepNoseMat = new MeshStandardMaterial({ color: 7039844, metalness: 0.45, roughness: 0.72, envMapIntensity: 0.35 });
     const stepMatTop = M.floorTerrazzo;
     const stepMatSide = M.concrete;
     function buildFlight(startZ, endZ, startY, dir, xa, xb, thin = false) {
@@ -37907,7 +37908,7 @@ void main() {
         }
         const tread = box(w + 0.02, 0.03, STEPS.run + 0.02, stepMatTop, cxA, topY - 0.011, zc);
         g.add(tread);
-        const nose = box(w + 0.03, 0.012, 0.035, M.metalRust, cxA, topY + 0, zc + dir * (STEPS.run / 2 - 0.01));
+        const nose = box(w + 0.03, 0.012, 0.035, stepNoseMat, cxA, topY + 0, zc + dir * (STEPS.run / 2 - 0.01));
         g.add(nose);
       }
       if (!thin) {
