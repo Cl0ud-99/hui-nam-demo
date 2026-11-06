@@ -1,13 +1,8 @@
 (() => {
   var __defProp = Object.defineProperty;
   var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __esm = (fn, res, err) => function __init() {
-    if (err) throw err[0];
-    try {
-      return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
-    } catch (e) {
-      throw err = [e], e;
-    }
+  var __esm = (fn, res) => function __init() {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
   };
   var __export = (target, all) => {
     for (var name in all)
@@ -34622,7 +34617,7 @@ void main() {
       this.resizeCbs && this.resizeCbs.forEach((f) => f(w, h));
     }
     onResize(fn) {
-      (this.resizeCbs || (this.resizeCbs = [])).push(fn);
+      (this.resizeCbs ||= []).push(fn);
     }
     render(dt) {
       this.grade.uniforms.uTime.value += dt;
@@ -34840,6 +34835,7 @@ void main() {
     M.floorConcrete = std("concrete_floor_damaged_01", { color: 9144188, roughness: 0.8, normalScale: 1.1, env: 0.3, tileMul: 1.6 });
     M.floorTerrazzo = std("terrazzo_tiles", { color: 10129540, roughness: 0.55, normalScale: 1, env: 0.45, tileMul: 2 });
     M.floorBath = std("dirty_tiles", { color: 10133646, roughness: 0.35, normalScale: 1, env: 0.7, tileMul: 3 });
+    M.floorBathT = std("floor_tiles_06", { color: 11971740, roughness: 0.44, normalScale: 0.9, env: 0.55, tileMul: 2.4 });
     M.floorAsphalt = std("asphalt_05", { color: 9342858, roughness: 0.4, normalScale: 1.2, env: 0.5, tileMul: 1.8 });
     M.tileWallBlue = std("blue_floor_tiles_01", { color: 10464924, roughness: 0.4, normalScale: 1, env: 0.6, tileMul: 3 });
     M.tileWallDirty = std("dirty_tiles", { color: 12764336, roughness: 0.38, normalScale: 1, env: 0.7, tileMul: 2.2 });
@@ -35328,12 +35324,11 @@ void main() {
       this.rooms[id] = box2;
     }
     onEnter(id, fn) {
-      var _a;
-      ((_a = this.enterHooks)[id] || (_a[id] = [])).push(fn);
+      (this.enterHooks[id] ||= []).push(fn);
     }
     addLight(roomId, light, opts = {}) {
       light.intensity *= 0.55;
-      if (opts.global) (this.globalLights || (this.globalLights = [])).push(light);
+      if (opts.global) (this.globalLights ||= []).push(light);
       if (opts.keep) light.userData.keep = true;
       if (light.userData.keepShadow) light.userData.keepShadow = true;
       light.userData.base = light.intensity;
@@ -38664,13 +38659,13 @@ void main() {
     const g = new Group();
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-    const floorMat = M.floorBath.clone();
-    floorMat.roughness = 0.26;
-    floorMat.metalness = 0.18;
-    floorMat.color = new Color(10463394);
+    const floorMat = M.floorBathT.clone();
+    floorMat.roughness = 0.44;
+    floorMat.metalness = 0;
+    floorMat.color = new Color(11971740);
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.set(cx, y0 + 8e-3, cz);
+    floor.position.set(cx, y0 + 0.016, cz);
     floor.receiveShadow = true;
     g.add(floor);
     W.upperHide.push(floor);
@@ -38826,16 +38821,36 @@ void main() {
     toilet.position.set(3.55, y0, 4.85);
     toilet.rotation.y = -Math.PI / 2;
     g.add(toilet);
-    toilet.add(box(0.36, 0.42, 0.5, M.porcelain, 0, 0.21, 0.05));
-    const bowl = new Mesh(new CylinderGeometry(0.19, 0.14, 0.16, 18), M.porcelain);
-    bowl.position.set(0, 0.42, 0.16);
+    const ped = new Mesh(new CylinderGeometry(0.152, 0.112, 0.4, 24), M.porcelain);
+    ped.position.set(0, 0.205, 0.03);
+    ped.scale.z = 1.18;
+    ped.castShadow = true;
+    toilet.add(ped);
+    const foot = new Mesh(new CylinderGeometry(0.118, 0.155, 0.055, 24), M.porcelain);
+    foot.position.set(0, 0.028, 0.03);
+    foot.scale.z = 1.18;
+    toilet.add(foot);
+    const bowl = new Mesh(new CylinderGeometry(0.19, 0.135, 0.17, 28), M.porcelain);
+    bowl.position.set(0, 0.43, 0.16);
     bowl.scale.z = 1.25;
+    bowl.castShadow = true;
     toilet.add(bowl);
-    const seat = new Mesh(new TorusGeometry(0.17, 0.028, 6, 18), M.porcelain);
+    const rim = new Mesh(new TorusGeometry(0.188, 0.018, 8, 30), M.porcelain);
+    rim.rotation.x = Math.PI / 2;
+    rim.scale.z = 1.25;
+    rim.position.set(0, 0.515, 0.16);
+    toilet.add(rim);
+    const seat = new Mesh(new TorusGeometry(0.176, 0.022, 8, 30), M.porcelain);
     seat.rotation.x = Math.PI / 2;
     seat.scale.z = 1.25;
-    seat.position.set(0, 0.51, 0.16);
+    seat.position.set(0, 0.532, 0.16);
     toilet.add(seat);
+    const lid = new Mesh(new CylinderGeometry(0.178, 0.178, 0.022, 30), M.porcelain);
+    lid.scale.z = 1.22;
+    lid.position.set(0, 0.615, -0.045);
+    lid.rotation.x = -1.12;
+    toilet.add(lid);
+    toilet.add(box(0.1, 0.03, 0.05, M.porcelain, 0, 0.525, -0.055));
     toilet.add(box(0.44, 0.52, 0.16, M.porcelain, 0, 0.68, -0.24));
     toilet.add(box(0.4, 0.04, 0.14, M.porcelain, 0, 0.94, -0.24));
     toilet.add(cyl(0.02, 0.02, 0.02, M.metalGalv, 8).translateY(0.93).translateZ(-0.18));

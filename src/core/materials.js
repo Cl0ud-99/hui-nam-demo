@@ -64,6 +64,9 @@ export function buildMaterials() {
   M.floorConcrete = std('concrete_floor_damaged_01', { color: 0x8b877c, roughness: 0.8, normalScale: 1.1, env: 0.3, tileMul: 1.6 });
   M.floorTerrazzo = std('terrazzo_tiles', { color: 0x9a9084, roughness: 0.55, normalScale: 1.0, env: 0.45, tileMul: 2 });
   M.floorBath = std('dirty_tiles', { color: 0x9aa08e, roughness: 0.35, normalScale: 1.0, env: 0.7, tileMul: 3 });
+  // square ceramic tiles for the wet room. dirty_tiles stretched into strips and read as
+  // floorboards; terrazzo at this scale had no readable joints at all.
+  M.floorBathT = std('floor_tiles_06', { color: 0xb6ac9c, roughness: 0.44, normalScale: 0.9, env: 0.55, tileMul: 2.4 });
   M.floorAsphalt = std('asphalt_05', { color: 0x8e8f8a, roughness: 0.4, normalScale: 1.2, env: 0.5, tileMul: 1.8 });
   M.tileWallBlue = std('blue_floor_tiles_01', { color: 0x9fae9c, roughness: 0.4, normalScale: 1.0, env: 0.6, tileMul: 3 });
   M.tileWallDirty = std('dirty_tiles', { color: 0xc2c4b0, roughness: 0.38, normalScale: 1.0, env: 0.7, tileMul: 2.2 });

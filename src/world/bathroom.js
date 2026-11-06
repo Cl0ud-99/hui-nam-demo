@@ -17,11 +17,13 @@ export function buildBathroom(W) {
   // shell
   // the bathroom floor is small and mostly in shadow: skip the planar reflector here, it costs
   // a whole extra scene pass in the tightest room in the game. Env-map + low roughness reads wet.
-  const floorMat = M.floorBath.clone();
-  floorMat.roughness = 0.26; floorMat.metalness = 0.18;
-  floorMat.color = new THREE.Color(0x9fa8a2);
+  const floorMat = M.floorBathT.clone();
+  floorMat.roughness = 0.44; floorMat.metalness = 0.0;
+  floorMat.color = new THREE.Color(0xb6ac9c);
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
-  floor.rotation.x = -Math.PI / 2; floor.position.set(cx, y0 + 0.008, cz); floor.receiveShadow = true; g.add(floor);
+  // the flat's own floor plane covers this footprint at y0+0.010 — sit 6 mm above it or the
+  // bathroom floor is simply hidden underneath (which is why it read as bedroom floorboards)
+  floor.rotation.x = -Math.PI / 2; floor.position.set(cx, y0 + 0.016, cz); floor.receiveShadow = true; g.add(floor);
   W.upperHide.push(floor);
 
   const ceil = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), M.ceilingDirty);
@@ -175,11 +177,21 @@ export function buildBathroom(W) {
 
   // toilet
   const toilet = new THREE.Group(); toilet.position.set(3.55, y0, 4.85); toilet.rotation.y = -Math.PI / 2; g.add(toilet);
-  toilet.add(box(0.36, 0.42, 0.5, M.porcelain, 0, 0.21, 0.05));
-  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.14, 0.16, 18), M.porcelain);
-  bowl.position.set(0, 0.42, 0.16); bowl.scale.z = 1.25; toilet.add(bowl);
-  const seat = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.028, 6, 18), M.porcelain);
-  seat.rotation.x = Math.PI / 2; seat.scale.z = 1.25; seat.position.set(0, 0.51, 0.16); toilet.add(seat);
+  // tapered porcelain column + flared foot: the old rectangular plinth read as a cardboard box
+  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.152, 0.112, 0.40, 24), M.porcelain);
+  ped.position.set(0, 0.205, 0.03); ped.scale.z = 1.18; ped.castShadow = true; toilet.add(ped);
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.118, 0.155, 0.055, 24), M.porcelain);
+  foot.position.set(0, 0.028, 0.03); foot.scale.z = 1.18; toilet.add(foot);
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.135, 0.17, 28), M.porcelain);
+  bowl.position.set(0, 0.43, 0.16); bowl.scale.z = 1.25; bowl.castShadow = true; toilet.add(bowl);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.188, 0.018, 8, 30), M.porcelain);
+  rim.rotation.x = Math.PI / 2; rim.scale.z = 1.25; rim.position.set(0, 0.515, 0.16); toilet.add(rim);
+  const seat = new THREE.Mesh(new THREE.TorusGeometry(0.176, 0.022, 8, 30), M.porcelain);
+  seat.rotation.x = Math.PI / 2; seat.scale.z = 1.25; seat.position.set(0, 0.532, 0.16); toilet.add(seat);
+  // lid standing open against the cistern
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.178, 0.178, 0.022, 30), M.porcelain);
+  lid.scale.z = 1.22; lid.position.set(0, 0.615, -0.045); lid.rotation.x = -1.12; toilet.add(lid);
+  toilet.add(box(0.1, 0.03, 0.05, M.porcelain, 0, 0.525, -0.055));
   toilet.add(box(0.44, 0.52, 0.16, M.porcelain, 0, 0.68, -0.24));
   toilet.add(box(0.4, 0.04, 0.14, M.porcelain, 0, 0.94, -0.24));
   toilet.add(cyl(0.02, 0.02, 0.02, M.metalGalv, 8).translateY(0.93).translateZ(-0.18));
