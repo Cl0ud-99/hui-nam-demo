@@ -60,21 +60,21 @@ export function buildBathroom(W) {
   const bw = x1 - x0, bd = z1 - z0;
   const cyc = y0 + h / 2;
   // north (sink) wall: interior face looks toward +z
-  wallBox(bw + WALL_T * 2, hWall, WALL_T, cx, cyw, z0 - WALL_T / 2, 4, bw, hWall);
-  W.colliders.push({ minX: x0 - 0.05, maxX: x1 + 0.05, minZ: z0 - WALL_T, maxZ: z0, minY: y0, maxY: cy, enabled: true });
+  wallBox(bw + WALL_T * 2, hWall, WALL_T, cx, cyw, z0 - WALL_T / 2 + 0.004, 4, bw, hWall);
+  W.colliders.push({ minX: x0 - 0.05, maxX: x1 + 0.05, minZ: z0 - WALL_T, maxZ: z0 + 0.004, minY: y0, maxY: cy, enabled: true });
   // south wall: interior face looks toward -z
-  wallBox(bw + WALL_T * 2, hWall, WALL_T, cx, cyw, z1 + WALL_T / 2, 5, bw, hWall);
-  W.colliders.push({ minX: x0 - 0.05, maxX: x1 + 0.05, minZ: z1, maxZ: z1 + WALL_T, minY: y0, maxY: cy, enabled: true });
+  wallBox(bw + WALL_T * 2, hWall, WALL_T, cx, cyw, z1 + WALL_T / 2 - 0.004, 5, bw, hWall);
+  W.colliders.push({ minX: x0 - 0.05, maxX: x1 + 0.05, minZ: z1 - 0.004, maxZ: z1 + WALL_T, minY: y0, maxY: cy, enabled: true });
   // east wall: interior face looks toward -x
-  wallBox(WALL_T, hWall, bd, x1 + WALL_T / 2, cyw, cz, 1, bd, hWall);
-  W.colliders.push({ minX: x1, maxX: x1 + WALL_T, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
+  wallBox(WALL_T, hWall, bd, x1 + WALL_T / 2 - 0.006, cyw, cz, 1, bd, hWall);
+  W.colliders.push({ minX: x1 - 0.006, maxX: x1 + WALL_T, minZ: z0, maxZ: z1, minY: y0, maxY: cy, enabled: true });
   // west wall: interior face looks toward +x, split around the doorway (z 3.8 .. 4.75)
   const WD0 = 3.8, WD1 = 4.75, WD_H = 2.1;
-  wallBox(WALL_T, hWall, WD0 - z0, x0 - WALL_T / 2, cyw, (z0 + WD0) / 2, 0, WD0 - z0, hWall);
-  wallBox(WALL_T, hWall, z1 - WD1, x0 - WALL_T / 2, cyw, (WD1 + z1) / 2, 0, z1 - WD1, hWall);
-  wallBox(WALL_T, hWall - WD_H, WD1 - WD0, x0 - WALL_T / 2, y0 + WD_H + (hWall - WD_H) / 2, (WD0 + WD1) / 2, 0, WD1 - WD0, hWall - WD_H);
-  W.colliders.push({ minX: x0 - WALL_T, maxX: x0, minZ: z0, maxZ: WD0, minY: y0, maxY: cy, enabled: true });
-  W.colliders.push({ minX: x0 - WALL_T, maxX: x0, minZ: WD1, maxZ: z1, minY: y0, maxY: cy, enabled: true });
+  wallBox(WALL_T, hWall, WD0 - z0, x0 - WALL_T / 2 + 0.006, cyw, (z0 + WD0) / 2, 0, WD0 - z0, hWall);
+  wallBox(WALL_T, hWall, z1 - WD1, x0 - WALL_T / 2 + 0.006, cyw, (WD1 + z1) / 2, 0, z1 - WD1, hWall);
+  wallBox(WALL_T, hWall - WD_H, WD1 - WD0, x0 - WALL_T / 2 + 0.006, y0 + WD_H + (hWall - WD_H) / 2, (WD0 + WD1) / 2, 0, WD1 - WD0, hWall - WD_H);
+  W.colliders.push({ minX: x0 - WALL_T, maxX: x0 + 0.006, minZ: z0, maxZ: WD0, minY: y0, maxY: cy, enabled: true });
+  W.colliders.push({ minX: x0 - WALL_T, maxX: x0 + 0.006, minZ: WD1, maxZ: z1, minY: y0, maxY: cy, enabled: true });
 
 
   // tile wainscot strip (darker green band)
