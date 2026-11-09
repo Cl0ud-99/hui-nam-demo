@@ -208,7 +208,7 @@ export class World {
       distortion: opts.distortion ?? 0.03,
       puddleMap: opts.puddle ? T.art.puddle_mask : null,
       puddleScale: opts.puddleScale ?? 0.1,
-      puddleDarken: 0.45,
+      puddleDarken: this._puddleDarken ?? 0.45,
       blur: opts.blur ?? 0.0,
       tint: opts.tint || 0xffffff,
     });

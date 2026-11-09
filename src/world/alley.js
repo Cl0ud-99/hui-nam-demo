@@ -40,28 +40,51 @@ export function buildAlley(W) {
     g.add(gutter);
   }
 
-  // soft radial alpha so puddles fade into the asphalt instead of reading as black tiles
-  const softAlpha = (() => {
-    const c = document.createElement('canvas'); c.width = c.height = 128;
+  // Irregular puddle mask: a radial gradient gave every puddle the same perfect ellipse.
+  // Overlapping lobes + a soft outer falloff give a torn, water-like outline; each puddle
+  // gets its own variant and an in-plane rotation.
+  const makePuddleAlpha = (seed) => {
+    const S = 256;
+    const c = document.createElement('canvas'); c.width = c.height = S;
     const ctx = c.getContext('2d');
-    const grd = ctx.createRadialGradient(64, 64, 6, 64, 64, 62);
-    grd.addColorStop(0, 'rgba(255,255,255,1)');
-    grd.addColorStop(0.62, 'rgba(255,255,255,0.92)');
-    grd.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(64, 64, 63, 0, Math.PI * 2); ctx.fill();
+    let st = (seed * 9781 + 12345) | 0;
+    const rnd = () => { st = (st * 16807) % 2147483647; return (st & 0x7fffffff) / 2147483647; };
+    const lobes = 8;
+    for (let i = 0; i < lobes; i++) {
+      const a = (i / lobes) * Math.PI * 2 + rnd() * 0.7;
+      const d = S * (0.05 + rnd() * 0.2);
+      const x = S / 2 + Math.cos(a) * d, y = S / 2 + Math.sin(a) * d;
+      const r = S * (0.14 + rnd() * 0.16);
+      const g = ctx.createRadialGradient(x, y, r * 0.12, x, y, r);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(0.5, 'rgba(255,255,255,0.95)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    }
+    // keep the quad border empty so the plane edge can never show
+    const fade = ctx.createRadialGradient(S / 2, S / 2, S * 0.26, S / 2, S / 2, S * 0.5);
+    fade.addColorStop(0, 'rgba(0,0,0,0)');
+    fade.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = fade; ctx.fillRect(0, 0, S, S);
+    ctx.globalCompositeOperation = 'source-over';
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.NoColorSpace; return t;
-  })();
+  };
   for (const [px, pz, sx, sz] of [[-4.5, 9.6, 2.4, 1.5], [1.2, 11.2, 3.0, 1.8], [6.8, 8.4, 2.0, 1.2], [-7.4, 12.4, 1.8, 1.1], [6.6, 12.6, 1.5, 1.0], [-2.2, 8.1, 1.6, 1.0], [3.4, 10.6, 1.8, 1.1], [-6.2, 7.6, 1.2, 0.8]]) {
     const pm = M.water.clone();
     pm.normalMap = T.art.water_normal;
-    pm.normalScale.set(0.35, 0.35);
+    pm.normalScale.set(0.22, 0.22);
     pm.color = new THREE.Color(0x1a2226);
-    pm.alphaMap = softAlpha;
+    pm.alphaMap = makePuddleAlpha(W.puddles.length + 3);
     pm.transparent = true;
     pm.opacity = 0.92;
     pm.depthWrite = false;
+    W._puddleDarken = 0.3;
     W.wetFloor(pm, { room: 'alley', amount: 0.0, distortion: 0.06, tint: 0xffeedd });
-    const p = new THREE.Mesh(new THREE.PlaneGeometry(sx, sz, 1, 1), pm);
+    W._puddleDarken = undefined;
+    const geo = new THREE.PlaneGeometry(sx, sz, 1, 1);
+    geo.rotateZ(Math.random() * Math.PI * 2);
+    const p = new THREE.Mesh(geo, pm);
     p.rotation.x = -Math.PI / 2; p.position.set(px, 0.006, pz);
     g.add(p); W.puddles.push({ mesh: p, mat: pm, phase: Math.random() * 10 });
   }

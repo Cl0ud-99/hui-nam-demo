@@ -34495,7 +34495,10 @@ void main() {
         ${puddleMap ? "diffuseColor.rgb *= mix(1.0, 1.0 - uPuddleDarken, wetMask);" : ""}`).replace("#include <opaque_fragment>", `{
           float puddle = WetPuddle(vWPos.xz);
           vec3 vn = normalize(vNormal);
-          vec2 ruv = gl_FragCoord.xy / uResolution;
+          // projected planar reflection (same matrix the mirrors use). The old screen-space
+          // lookup smeared every highlight along the view ray, which read as brushed streaks.
+          vec4 rp = uReflMatrix * vec4(vWPos, 1.0);
+          vec2 ruv = rp.xy / max(rp.w, 0.0001);
           ruv += vn.xy * uReflDistort * (0.35 + puddle * 0.9);
           // multi-tap blur: a matte, damp floor should smear the reflection, not mirror it.
           // gated on uReflAmount so the reflector's own pass (which zeroes it) never samples
@@ -34920,7 +34923,7 @@ void main() {
       depthWrite: false
     });
     M.mirror = new MeshStandardMaterial({ color: 9343632, roughness: 0.05, metalness: 1, envMapIntensity: 1.4 });
-    M.water = new MeshStandardMaterial({ color: 1712932, roughness: 0.05, metalness: 0.25, envMapIntensity: 1.2 });
+    M.water = new MeshStandardMaterial({ color: 2107691, roughness: 0.18, metalness: 0.12, envMapIntensity: 0.85 });
     M.bulb = new MeshStandardMaterial({ color: 16770749, emissive: 16767392, emissiveIntensity: 1.45, roughness: 0.35 });
     M.bulbRed = new MeshStandardMaterial({ color: 16738890, emissive: 16726556, emissiveIntensity: 7, roughness: 0.4 });
     M.blob = new MeshBasicMaterial({
@@ -35462,7 +35465,7 @@ void main() {
         distortion: opts.distortion ?? 0.03,
         puddleMap: opts.puddle ? T.art.puddle_mask : null,
         puddleScale: opts.puddleScale ?? 0.1,
-        puddleDarken: 0.45,
+        puddleDarken: this._puddleDarken ?? 0.45,
         blur: opts.blur ?? 0,
         tint: opts.tint || 16777215
       });
@@ -36828,33 +36831,57 @@ void main() {
       const gutter = box(x1 - x0, 0.02, 0.3, M.concreteDark, 0, 0.01, zz);
       g.add(gutter);
     }
-    const softAlpha = (() => {
+    const makePuddleAlpha = (seed) => {
+      const S = 256;
       const c = document.createElement("canvas");
-      c.width = c.height = 128;
+      c.width = c.height = S;
       const ctx = c.getContext("2d");
-      const grd = ctx.createRadialGradient(64, 64, 6, 64, 64, 62);
-      grd.addColorStop(0, "rgba(255,255,255,1)");
-      grd.addColorStop(0.62, "rgba(255,255,255,0.92)");
-      grd.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = grd;
-      ctx.beginPath();
-      ctx.arc(64, 64, 63, 0, Math.PI * 2);
-      ctx.fill();
+      let st = seed * 9781 + 12345 | 0;
+      const rnd = () => {
+        st = st * 16807 % 2147483647;
+        return (st & 2147483647) / 2147483647;
+      };
+      const lobes = 8;
+      for (let i = 0; i < lobes; i++) {
+        const a = i / lobes * Math.PI * 2 + rnd() * 0.7;
+        const d = S * (0.05 + rnd() * 0.2);
+        const x = S / 2 + Math.cos(a) * d, y = S / 2 + Math.sin(a) * d;
+        const r = S * (0.14 + rnd() * 0.16);
+        const g2 = ctx.createRadialGradient(x, y, r * 0.12, x, y, r);
+        g2.addColorStop(0, "rgba(255,255,255,1)");
+        g2.addColorStop(0.5, "rgba(255,255,255,0.95)");
+        g2.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = g2;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const fade = ctx.createRadialGradient(S / 2, S / 2, S * 0.26, S / 2, S / 2, S * 0.5);
+      fade.addColorStop(0, "rgba(0,0,0,0)");
+      fade.addColorStop(1, "rgba(0,0,0,1)");
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = fade;
+      ctx.fillRect(0, 0, S, S);
+      ctx.globalCompositeOperation = "source-over";
       const t = new CanvasTexture(c);
       t.colorSpace = NoColorSpace;
       return t;
-    })();
+    };
     for (const [px2, pz2, sx, sz] of [[-4.5, 9.6, 2.4, 1.5], [1.2, 11.2, 3, 1.8], [6.8, 8.4, 2, 1.2], [-7.4, 12.4, 1.8, 1.1], [6.6, 12.6, 1.5, 1], [-2.2, 8.1, 1.6, 1], [3.4, 10.6, 1.8, 1.1], [-6.2, 7.6, 1.2, 0.8]]) {
       const pm = M.water.clone();
       pm.normalMap = T.art.water_normal;
-      pm.normalScale.set(0.35, 0.35);
+      pm.normalScale.set(0.22, 0.22);
       pm.color = new Color(1712678);
-      pm.alphaMap = softAlpha;
+      pm.alphaMap = makePuddleAlpha(W.puddles.length + 3);
       pm.transparent = true;
       pm.opacity = 0.92;
       pm.depthWrite = false;
+      W._puddleDarken = 0.3;
       W.wetFloor(pm, { room: "alley", amount: 0, distortion: 0.06, tint: 16772829 });
-      const p = new Mesh(new PlaneGeometry(sx, sz, 1, 1), pm);
+      W._puddleDarken = void 0;
+      const geo = new PlaneGeometry(sx, sz, 1, 1);
+      geo.rotateZ(Math.random() * Math.PI * 2);
+      const p = new Mesh(geo, pm);
       p.rotation.x = -Math.PI / 2;
       p.position.set(px2, 6e-3, pz2);
       g.add(p);

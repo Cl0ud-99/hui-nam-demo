@@ -158,7 +158,9 @@ export function buildMaterials() {
     envMapIntensity: 1.0, side: THREE.DoubleSide, depthWrite: false,
   });
   M.mirror = new THREE.MeshStandardMaterial({ color: 0x8e9290, roughness: 0.05, metalness: 1.0, envMapIntensity: 1.4 });
-  M.water = new THREE.MeshStandardMaterial({ color: 0x1a2324, roughness: 0.05, metalness: 0.25, envMapIntensity: 1.2 });
+  // roughness 0.05 + a ripple normal map turned every lamp into a long brushed streak;
+  // 0.18 keeps the water glossy but gives round highlights instead of smears
+  M.water = new THREE.MeshStandardMaterial({ color: 0x20292b, roughness: 0.18, metalness: 0.12, envMapIntensity: 0.85 });
 
   // ---------------- light emitting
   M.bulb = new THREE.MeshStandardMaterial({ color: 0xffe6bd, emissive: 0xffd9a0, emissiveIntensity: 1.45, roughness: 0.35 });

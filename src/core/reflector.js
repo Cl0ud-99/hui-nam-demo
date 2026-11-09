@@ -190,7 +190,10 @@ export function wetify(material, {
       .replace('#include <opaque_fragment>', `{
           float puddle = WetPuddle(vWPos.xz);
           vec3 vn = normalize(vNormal);
-          vec2 ruv = gl_FragCoord.xy / uResolution;
+          // projected planar reflection (same matrix the mirrors use). The old screen-space
+          // lookup smeared every highlight along the view ray, which read as brushed streaks.
+          vec4 rp = uReflMatrix * vec4(vWPos, 1.0);
+          vec2 ruv = rp.xy / max(rp.w, 0.0001);
           ruv += vn.xy * uReflDistort * (0.35 + puddle * 0.9);
           // multi-tap blur: a matte, damp floor should smear the reflection, not mirror it.
           // gated on uReflAmount so the reflector's own pass (which zeroes it) never samples
