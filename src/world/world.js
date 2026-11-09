@@ -277,7 +277,7 @@ export class World {
     // static environment reflection: a dark, soft sheen with no person and no extra pass.
     // (a real planar pass here dropped the GL context on this driver)
     mesh.material = new THREE.MeshStandardMaterial({
-      color: 0x6f7571, roughness: 0.14, metalness: 0.9, envMap: T.env, envMapIntensity: 0.35,
+      color: 0x6f7571, roughness: 0.28, metalness: 0.85, envMap: T.env, envMapIntensity: 0.3,
     });
   }
 

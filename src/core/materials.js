@@ -97,7 +97,7 @@ export function buildMaterials() {
   // ---------------- B: shop joinery (herb cabinets / counter / structure)
   M.cabRosewood = std('dark_wooden_planks', { color: 0x5a2418, roughness: 0.55, normalScale: 0.45, env: 0.45, tileMul: 1.5 });
   M.cabDrawer = std('dark_wooden_planks', { color: 0xa46944, roughness: 0.48, normalScale: 0.35, env: 0.5, tileMul: 2.3 });
-  M.counterTop = std('dark_wooden_planks', { color: 0x6b4f36, roughness: 0.46, normalScale: 0.35, env: 0.3, tileMul: 3.2 });
+  M.counterTop = std('dark_wooden_planks', { color: 0x6b4f36, roughness: 0.68, normalScale: 0.35, env: 0.22, tileMul: 3.2 });
   M.counterBody = std('dark_paneled_wood', { color: 0x59684f, roughness: 0.55, normalScale: 0.45, env: 0.4, tileMul: 1.2 });
   M.beamRough = std('dark_wooden_planks', { color: 0x7d5a38, roughness: 0.93, normalScale: 1.25, env: 0.12, tileMul: 1.15 });
   M.signBack = std('painted_metal_shutter', { color: 0x3f4a44, roughness: 0.62, metalness: 0.3, env: 0.35, normalScale: 0.6 });
@@ -125,7 +125,10 @@ export function buildMaterials() {
   M.metalDark = std('rusty_metal_02', { color: 0x3a3a38, roughness: 0.55, metalness: 0.7, normalScale: 1.0, env: 0.7 });
   M.pipeRed = solid(0x6d2f26, 0.62, 0.35);
   M.pipeGreen = solid(0x3e4a40, 0.6, 0.4);
-  M.brass = solid(0xb08a4a, 0.35, 0.95);
+  M.brass = solid(0x9c7a42, 0.52, 0.9);   // tarnished brass, not a mirror
+  // long brass runs (counter nosing, kick plates) catch a lamp as one hard white line and read
+  // like an LED strip; use this dead-flat bronze for anything that long.
+  M.brassDull = new THREE.MeshStandardMaterial({ color: 0x6a5632, metalness: 0.5, roughness: 0.76, envMapIntensity: 0.2 });
   M.copper = solid(0x8a5a3a, 0.45, 0.9);
   M.steel = solid(0x9a9a96, 0.35, 1.0);
   M.blackMetal = solid(0x1c1b19, 0.5, 0.6);
@@ -178,7 +181,7 @@ export function buildMaterials() {
   M.tubeDiffuser = new THREE.MeshStandardMaterial({
     color: 0xf4f1e6, roughness: 0.9, transparent: true, opacity: 0.55, depthWrite: false,
   });
-  M.chrome = new THREE.MeshStandardMaterial({ color: 0xd7d9d4, metalness: 0.92, roughness: 0.22, envMapIntensity: 1.1 });
+  M.chrome = new THREE.MeshStandardMaterial({ color: 0xcfd2cc, metalness: 0.9, roughness: 0.42, envMapIntensity: 0.7 });
   M.tube = new THREE.MeshStandardMaterial({ color: 0xe6ece0, emissive: 0xe8ead6, emissiveIntensity: 1.25, roughness: 0.4 });
   M.tubeGreen = new THREE.MeshStandardMaterial({ color: 0xd6e4cf, emissive: 0xb8d8b0, emissiveIntensity: 2.2, roughness: 0.35 });
   M.tvGlow = new THREE.MeshStandardMaterial({ color: 0x7c8f8a, emissive: 0x6f8f88, emissiveIntensity: 3, roughness: 0.25 });
@@ -203,6 +206,30 @@ export function buildMaterials() {
   M.rustStreak = new THREE.MeshBasicMaterial({
     map: T.art.rust_streak, transparent: true, opacity: 0.6, depthWrite: false, toneMapped: false,
   });
+
+  // ---- 1987, 深水埗: forty years of cooking grease and street dust, nothing is polished.
+  // One sweep over every surface material — duller and far less environment reflection —
+  // while physically transparent / emissive things stay as they are.
+  {
+    const KEEP = new Set([
+      'glass', 'glassJar', 'water', 'bulb', 'bulbRed', 'tube', 'tubeGreen', 'tvGlow',
+      'labelSheet', 'blob', 'tubeDiffuser',
+    ]);
+    const METAL = new Set(['brass', 'metalRust', 'metalGalv', 'metalDark', 'chrome']);
+    for (const [k, m] of Object.entries(M)) {
+      if (!m || !m.isMeshStandardMaterial) continue;
+      if (KEEP.has(k)) continue;
+      if (METAL.has(k)) {
+        // tarnished metal keeps its metalness but loses the mirror finish
+        m.roughness = Math.min(0.92, (m.roughness ?? 0.5) + 0.12);
+        m.envMapIntensity = (m.envMapIntensity ?? 1) * 0.72;
+        continue;
+      }
+      m.roughness = Math.min(0.95, (m.roughness ?? 0.7) + 0.16);
+      m.envMapIntensity = (m.envMapIntensity ?? 1) * 0.62;
+      if (m.metalness) m.metalness *= 0.8;
+    }
+  }
   return M;
 }
 

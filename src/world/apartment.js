@@ -22,7 +22,7 @@ export function buildApartment(W) {
   const floorMat = M.floorApt.clone();
   // same here: the floor is damp, not polished — no mirrored ghost of the room
   W.wetFloor(floorMat, { room: 'apt', amount: 0.0, distortion: 0.045, blur: 0.004, tint: 0xffe8d0 });
-  floorMat.roughness = 0.52; floorMat.metalness = 0.0;
+  floorMat.roughness = 0.72; floorMat.metalness = 0.0;   // dusty boards, not a lacquered floor
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(cx, y0 + 0.01, cz);
   floor.receiveShadow = true; g.add(floor); W.upperHide.push(floor);

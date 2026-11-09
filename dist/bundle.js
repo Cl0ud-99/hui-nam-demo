@@ -34878,7 +34878,7 @@ void main() {
     M.framePaintGreen = std("dark_paneled_wood", { color: 9214090, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
     M.cabRosewood = std("dark_wooden_planks", { color: 5907480, roughness: 0.55, normalScale: 0.45, env: 0.45, tileMul: 1.5 });
     M.cabDrawer = std("dark_wooden_planks", { color: 10774852, roughness: 0.48, normalScale: 0.35, env: 0.5, tileMul: 2.3 });
-    M.counterTop = std("dark_wooden_planks", { color: 7032630, roughness: 0.46, normalScale: 0.35, env: 0.3, tileMul: 3.2 });
+    M.counterTop = std("dark_wooden_planks", { color: 7032630, roughness: 0.68, normalScale: 0.35, env: 0.22, tileMul: 3.2 });
     M.counterBody = std("dark_paneled_wood", { color: 5859407, roughness: 0.55, normalScale: 0.45, env: 0.4, tileMul: 1.2 });
     M.beamRough = std("dark_wooden_planks", { color: 8215096, roughness: 0.93, normalScale: 1.25, env: 0.12, tileMul: 1.15 });
     M.signBack = std("painted_metal_shutter", { color: 4147780, roughness: 0.62, metalness: 0.3, env: 0.35, normalScale: 0.6 });
@@ -34898,7 +34898,8 @@ void main() {
     M.metalDark = std("rusty_metal_02", { color: 3815992, roughness: 0.55, metalness: 0.7, normalScale: 1, env: 0.7 });
     M.pipeRed = solid(7155494, 0.62, 0.35);
     M.pipeGreen = solid(4082240, 0.6, 0.4);
-    M.brass = solid(11569738, 0.35, 0.95);
+    M.brass = solid(10254914, 0.52, 0.9);
+    M.brassDull = new MeshStandardMaterial({ color: 6968882, metalness: 0.5, roughness: 0.76, envMapIntensity: 0.2 });
     M.copper = solid(9067066, 0.45, 0.9);
     M.steel = solid(10132118, 0.35, 1);
     M.blackMetal = solid(1841945, 0.5, 0.6);
@@ -34962,7 +34963,7 @@ void main() {
       opacity: 0.55,
       depthWrite: false
     });
-    M.chrome = new MeshStandardMaterial({ color: 14146004, metalness: 0.92, roughness: 0.22, envMapIntensity: 1.1 });
+    M.chrome = new MeshStandardMaterial({ color: 13619916, metalness: 0.9, roughness: 0.42, envMapIntensity: 0.7 });
     M.tube = new MeshStandardMaterial({ color: 15133920, emissive: 15264470, emissiveIntensity: 1.25, roughness: 0.4 });
     M.tubeGreen = new MeshStandardMaterial({ color: 14083279, emissive: 12114096, emissiveIntensity: 2.2, roughness: 0.35 });
     M.tvGlow = new MeshStandardMaterial({ color: 8163210, emissive: 7311240, emissiveIntensity: 3, roughness: 0.25 });
@@ -35001,6 +35002,34 @@ void main() {
       depthWrite: false,
       toneMapped: false
     });
+    {
+      const KEEP = /* @__PURE__ */ new Set([
+        "glass",
+        "glassJar",
+        "water",
+        "bulb",
+        "bulbRed",
+        "tube",
+        "tubeGreen",
+        "tvGlow",
+        "labelSheet",
+        "blob",
+        "tubeDiffuser"
+      ]);
+      const METAL = /* @__PURE__ */ new Set(["brass", "metalRust", "metalGalv", "metalDark", "chrome"]);
+      for (const [k, m] of Object.entries(M)) {
+        if (!m || !m.isMeshStandardMaterial) continue;
+        if (KEEP.has(k)) continue;
+        if (METAL.has(k)) {
+          m.roughness = Math.min(0.92, (m.roughness ?? 0.5) + 0.12);
+          m.envMapIntensity = (m.envMapIntensity ?? 1) * 0.72;
+          continue;
+        }
+        m.roughness = Math.min(0.95, (m.roughness ?? 0.7) + 0.16);
+        m.envMapIntensity = (m.envMapIntensity ?? 1) * 0.62;
+        if (m.metalness) m.metalness *= 0.8;
+      }
+    }
     return M;
   }
   function posterMat(name, { tint = 16777215, emissive = 0.06, opacity = 1 } = {}) {
@@ -35554,10 +35583,10 @@ void main() {
     addMirror(mesh2, room) {
       mesh2.material = new MeshStandardMaterial({
         color: 7304561,
-        roughness: 0.14,
-        metalness: 0.9,
+        roughness: 0.28,
+        metalness: 0.85,
         envMap: T.env,
-        envMapIntensity: 0.35
+        envMapIntensity: 0.3
       });
     }
     volumetric(opts) {
@@ -36256,7 +36285,7 @@ void main() {
     g.add(box(w, h - 0.06, d, M.counterBody, 0, (h - 0.06) / 2, 0));
     const top = box(w + 0.1, 0.06, d + 0.08, M.counterTop, 0, h - 0.03, 0);
     g.add(top);
-    g.add(box(w + 0.1, 0.012, 0.022, M.brass, 0, h - 2e-3, d / 2 + 0.045));
+    g.add(box(w + 0.1, 0.012, 0.022, M.brassDull, 0, h - 2e-3, d / 2 + 0.045));
     for (let i = 0; i < 3; i++) {
       const pw = (w - 0.16) / 3;
       g.add(box(pw - 0.03, h - 0.22, 0.02, M.counterBody, -w / 2 + 0.08 + pw * (i + 0.5), (h - 0.06) / 2, d / 2 + 5e-3));
@@ -38388,7 +38417,7 @@ void main() {
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, cy = y0 + h;
     const floorMat = M.floorApt.clone();
     W.wetFloor(floorMat, { room: "apt", amount: 0, distortion: 0.045, blur: 4e-3, tint: 16771280 });
-    floorMat.roughness = 0.52;
+    floorMat.roughness = 0.72;
     floorMat.metalness = 0;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
@@ -38952,7 +38981,7 @@ void main() {
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     const floorMat = M.floorBathT.clone();
-    floorMat.roughness = 0.44;
+    floorMat.roughness = 0.62;
     floorMat.metalness = 0;
     floorMat.color = new Color(11971740);
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
@@ -38974,8 +39003,8 @@ void main() {
         m.map.repeat.set(Math.max(1, len / 1.35), Math.max(1, hh / 1.35));
         m.map.needsUpdate = true;
       }
-      m.roughness = 0.42;
-      m.metalness = 0.04;
+      m.roughness = 0.58;
+      m.metalness = 0.02;
       return m;
     };
     const wallBox = (w, hh, d, cx2, cy2, cz2, innerFace, len, hh2) => {
@@ -39190,7 +39219,7 @@ void main() {
     }
     g.add(cyl(0.06, 0.06, 6e-3, M.metalRust, 12).translateX(2.1).translateY(y0 + 0.012).translateZ(4.9));
     for (let i = 0; i < 5; i++) g.add(box(0.1, 4e-3, 6e-3, M.blackMetal, 2.1, y0 + 0.016, 4.86 + i * 0.018));
-    const whMat = new MeshStandardMaterial({ color: 14472646, roughness: 0.44, metalness: 0.06, envMapIntensity: 0.45 });
+    const whMat = new MeshStandardMaterial({ color: 14472646, roughness: 0.62, metalness: 0.02, envMapIntensity: 0.26 });
     const wh = new Group();
     wh.position.set(x1 - 0.076, y0 + 1.62, 3.4);
     wh.rotation.y = -Math.PI / 2;

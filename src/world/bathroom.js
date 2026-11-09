@@ -18,7 +18,7 @@ export function buildBathroom(W) {
   // the bathroom floor is small and mostly in shadow: skip the planar reflector here, it costs
   // a whole extra scene pass in the tightest room in the game. Env-map + low roughness reads wet.
   const floorMat = M.floorBathT.clone();
-  floorMat.roughness = 0.44; floorMat.metalness = 0.0;
+  floorMat.roughness = 0.62; floorMat.metalness = 0.0;   // old glazed tiles are dull, not wet-look
   floorMat.color = new THREE.Color(0xb6ac9c);
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   // the flat's own floor plane covers this footprint at y0+0.010 — sit 6 mm above it or the
@@ -43,7 +43,7 @@ export function buildBathroom(W) {
       m.map.repeat.set(Math.max(1, len / 1.35), Math.max(1, hh / 1.35));
       m.map.needsUpdate = true;
     }
-    m.roughness = 0.42; m.metalness = 0.04;
+    m.roughness = 0.58; m.metalness = 0.02;
     return m;
   };
   // face order in three.js BoxGeometry: +x, -x, +y, -y, +z, -z
@@ -236,7 +236,7 @@ export function buildBathroom(W) {
 
   // water heater: flat tank + a proud front cover. The old single box used the tiled
   // enamel material, whose UV scale made the front face read as an open cupboard door.
-  const whMat = new THREE.MeshStandardMaterial({ color: 0xdcd5c6, roughness: 0.44, metalness: 0.06, envMapIntensity: 0.45 });
+  const whMat = new THREE.MeshStandardMaterial({ color: 0xdcd5c6, roughness: 0.62, metalness: 0.02, envMapIntensity: 0.26 });
   const wh = new THREE.Group(); wh.position.set(x1 - 0.076, y0 + 1.62, 3.4); wh.rotation.y = -Math.PI / 2; g.add(wh);
   wh.add(box(0.42, 0.52, 0.15, whMat, 0, 0, 0));
   wh.add(box(0.385, 0.475, 0.02, whMat, 0, 0, 0.082));
