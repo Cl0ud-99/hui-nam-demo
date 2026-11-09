@@ -36259,6 +36259,9 @@ void main() {
     const base = new Mesh(new CylinderGeometry(r * 0.96, r * 0.96, 8e-3, 14), M.cabDrawer);
     base.position.y = 4e-3;
     g.add(base);
+    const lab = labelPlane(Math.min(0.105, r * 1.45), Math.min(0.048, h * 0.28), Math.floor(Math.random() * 72));
+    lab.position.set(0, h * 0.52, r * 1.005);
+    g.add(lab);
     return g;
   }
   function medicineBottle(color = 3810328) {
@@ -36302,16 +36305,31 @@ void main() {
   }
   function abacus() {
     const g = new Group();
-    g.add(box(0.34, 0.02, 0.15, M.cabDrawer, 0, 0.01, 0));
+    const beadMat = M.woodRed.clone();
+    beadMat.roughness = 0.4;
+    beadMat.color = new Color(9257520);
+    g.add(box(0.34, 0.022, 0.15, M.cabDrawer, 0, 0.011, 0));
+    for (const s2 of [-1, 1]) {
+      g.add(box(0.024, 0.034, 0.15, M.cabDrawer, s2 * 0.158, 0.03, 0));
+      g.add(box(0.34, 0.034, 0.024, M.cabDrawer, 0, 0.03, s2 * 0.063));
+    }
+    g.add(box(0.32, 0.014, 0.022, M.cabDrawer, 0, 0.042, 0));
     for (let i = 0; i < 8; i++) {
-      const rod = cyl(22e-4, 22e-4, 0.14, M.brass, 4);
+      const x = -0.14 + i * 0.04;
+      const rod = cyl(24e-4, 24e-4, 0.14, M.brass, 4);
       rod.rotation.x = Math.PI / 2;
-      rod.position.set(-0.14 + i * 0.04, 0.03, 0);
+      rod.position.set(x, 0.038, 0);
       g.add(rod);
       for (let k = 0; k < 4; k++) {
-        const bead = new Mesh(new SphereGeometry(0.011, 8, 6), M.shrineDark);
-        bead.scale.y = 0.55;
-        bead.position.set(-0.14 + i * 0.04, 0.033, -0.04 + k * 0.024 + i % 3 * 4e-3);
+        const bead = new Mesh(new SphereGeometry(0.0125, 10, 8), beadMat);
+        bead.scale.y = 0.5;
+        bead.position.set(x, 0.045, -0.045 + k * 0.026 + i % 3 * 5e-3);
+        g.add(bead);
+      }
+      for (let k = 0; k < 2; k++) {
+        const bead = new Mesh(new SphereGeometry(0.0125, 10, 8), beadMat);
+        bead.scale.y = 0.5;
+        bead.position.set(x, 0.045, 0.04 + k * 0.024);
         g.add(bead);
       }
     }

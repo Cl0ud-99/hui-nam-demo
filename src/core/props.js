@@ -179,6 +179,10 @@ export function herbJar(r = 0.075, h = 0.16, fill = 0x6a5a32) {
   lid.position.y = h + 0.005; g.add(lid);
   const base = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.96, r * 0.96, 0.008, 14), M.cabDrawer);
   base.position.y = 0.004; g.add(base);
+  // paper label on the front: the shelves were rows of blank glass cylinders
+  const lab = labelPlane(Math.min(0.105, r * 1.45), Math.min(0.048, h * 0.28), Math.floor(Math.random() * 72));
+  lab.position.set(0, h * 0.52, r * 1.005);
+  g.add(lab);
   return g;
 }
 
@@ -214,13 +218,27 @@ export function brassScale() {
 
 export function abacus() {
   const g = new THREE.Group();
-  g.add(box(0.34, 0.02, 0.15, M.cabDrawer, 0, 0.01, 0));
+  const beadMat = M.woodRed.clone(); beadMat.roughness = 0.4; beadMat.color = new THREE.Color(0x8d4230);
+  // frame + rails in dark timber, beads in red timber: the old all-dark version read as a slab
+  g.add(box(0.34, 0.022, 0.15, M.cabDrawer, 0, 0.011, 0));
+  for (const s2 of [-1, 1]) {
+    g.add(box(0.024, 0.034, 0.15, M.cabDrawer, s2 * 0.158, 0.03, 0));
+    g.add(box(0.34, 0.034, 0.024, M.cabDrawer, 0, 0.03, s2 * 0.063));
+  }
+  g.add(box(0.32, 0.014, 0.022, M.cabDrawer, 0, 0.042, 0));       // dividing bar
   for (let i = 0; i < 8; i++) {
-    const rod = cyl(0.0022, 0.0022, 0.14, M.brass, 4);
-    rod.rotation.x = Math.PI / 2; rod.position.set(-0.14 + i * 0.04, 0.03, 0); g.add(rod);
+    const x = -0.14 + i * 0.04;
+    const rod = cyl(0.0024, 0.0024, 0.14, M.brass, 4);
+    rod.rotation.x = Math.PI / 2; rod.position.set(x, 0.038, 0); g.add(rod);
     for (let k = 0; k < 4; k++) {
-      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.011, 8, 6), M.shrineDark);
-      bead.scale.y = 0.55; bead.position.set(-0.14 + i * 0.04, 0.033, -0.04 + k * 0.024 + (i % 3) * 0.004);
+      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.0125, 10, 8), beadMat);
+      bead.scale.y = 0.5; bead.position.set(x, 0.045, -0.045 + k * 0.026 + (i % 3) * 0.005);
+      g.add(bead);
+    }
+    // upper deck: two beads
+    for (let k = 0; k < 2; k++) {
+      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.0125, 10, 8), beadMat);
+      bead.scale.y = 0.5; bead.position.set(x, 0.045, 0.04 + k * 0.024);
       g.add(bead);
     }
   }
