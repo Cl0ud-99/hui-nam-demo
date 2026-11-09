@@ -461,7 +461,7 @@ export function buildApartment(W) {
   W.flicker(tvLight, { min: 0.45, max: 1.2, speed: 14, pattern: 'tv' });
 
   const lampLight = W.addLight('apt', (() => {
-    const l = new THREE.PointLight(0xffb070, 9.5, 4.6, 2);
+    const l = new THREE.PointLight(0xffb070, 11.5, 5.2, 2);
     l.position.set(-2.25, y0 + 0.85, 4.3); return l;
   })());
   W.flicker(lampLight, { min: 0.85, max: 1, speed: 5, pattern: 'soft' });

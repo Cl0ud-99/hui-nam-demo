@@ -315,24 +315,37 @@ export function sofa(w = 2.0) {
 
 export function bed(w = 1.15, l = 1.95) {
   const g = new THREE.Group();
-  g.add(box(w, 0.22, l, M.bedTimber, 0, 0.22, 0));
-  g.add(box(w - 0.06, 0.18, l - 0.08, M.fabricCream, 0, 0.42, 0));
-  // blanket
-  const blanket = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.08, l * 0.72, 18, 22), M.fabricRed);
+  // legs + rails: the old version was one solid slab sitting on the floor, which read as a cot
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    g.add(box(0.075, 0.34, 0.075, M.bedTimber, sx * (w / 2 - 0.07), 0.17, sz * (l / 2 - 0.09)));
+  }
+  g.add(box(w, 0.12, l, M.bedTimber, 0, 0.4, 0));                 // frame
+  g.add(box(w - 0.04, 0.2, l - 0.04, M.fabricCream, 0, 0.56, 0)); // mattress
+  // duvet with a rolled top edge and a draped side
+  const quiltMat = M.fabricRed.clone();
+  quiltMat.color = new THREE.Color(0xbb7d63);          // dark red read as black in the bedroom light
+  const blanket = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.06, l * 0.6, 20, 24), quiltMat);
   const p = blanket.geometry.attributes.position;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), y = p.getY(i);
-    p.setZ(i, Math.sin(x * 5) * 0.018 + Math.sin(y * 7 + 1) * 0.015 + Math.max(0, Math.abs(x) - w * 0.45) * 0.18);
+    const edge = Math.max(0, Math.abs(x) - w * 0.45);
+    p.setZ(i, 0.02 + Math.sin(x * 5) * 0.016 + Math.sin(y * 7 + 1) * 0.014 - Math.min(0.16, edge * 0.75));
   }
   blanket.geometry.computeVertexNormals();
   blanket.rotation.x = -Math.PI / 2;
-  blanket.position.set(0, 0.53, l * 0.1); g.add(blanket);
-  for (const s of [-1, 1]) {
-    const pillow = box(w * 0.42, 0.13, 0.32, M.fabricCream, s * w * 0.23, 0.58, -l / 2 + 0.24);
-    pillow.rotation.x = -0.12; pillow.rotation.z = s * 0.05; g.add(pillow);
+  blanket.position.set(0, 0.67, l * 0.16); g.add(blanket);
+  // fold-back roll at the head end
+  const sheet = box(w - 0.02, 0.05, l * 0.3, M.fabricCream, 0, 0.665, -l * 0.16);
+  g.add(sheet);
+  const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, w + 0.06, 12), M.fabricCream);
+  roll.rotation.z = Math.PI / 2; roll.position.set(0, 0.68, -l * 0.22); g.add(roll);
+  for (const s2 of [-1, 1]) {
+    const pillow = box(w * 0.42, 0.14, 0.32, M.fabricCream, s2 * w * 0.23, 0.72, -l / 2 + 0.26);
+    pillow.rotation.x = -0.12; pillow.rotation.z = s2 * 0.05; g.add(pillow);
   }
-  // headboard
-  g.add(box(w + 0.06, 0.5, 0.05, M.bedTimber, 0, 0.66, -l / 2 - 0.02));
+  // headboard + posts
+  g.add(box(w + 0.06, 0.62, 0.055, M.bedTimber, 0, 0.64, -l / 2 - 0.03));
+  for (const s2 of [-1, 1]) g.add(box(0.06, 0.95, 0.06, M.bedTimber, s2 * (w / 2 + 0.01), 0.475, -l / 2 - 0.03));
   return g;
 }
 

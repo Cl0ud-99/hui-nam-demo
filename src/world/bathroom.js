@@ -189,28 +189,34 @@ export function buildBathroom(W) {
   })());
   g.add(mirror.group);
 
-  // toilet
+  // toilet: pan (tapered base + bowl + solid rim) + close-coupled cistern against the wall.
+  // The old cistern was a box floating 20 cm off the wall with nothing connecting it to the pan.
   const toilet = new THREE.Group(); toilet.position.set(3.55, y0, 4.85); toilet.rotation.y = -Math.PI / 2; g.add(toilet);
-  const toiletShadow = blobShadow(1.0, 1.05, 0.5);
+  const toiletShadow = blobShadow(1.05, 1.0, 0.5);
   toiletShadow.position.set(3.55, y0 + 0.024, 4.85); g.add(toiletShadow);
-  // tapered porcelain column + flared foot: the old rectangular plinth read as a cardboard box
-  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.152, 0.112, 0.40, 24), M.porcelain);
-  ped.position.set(0, 0.205, 0.03); ped.scale.z = 1.18; ped.castShadow = true; toilet.add(ped);
-  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.118, 0.155, 0.055, 24), M.porcelain);
-  foot.position.set(0, 0.028, 0.03); foot.scale.z = 1.18; toilet.add(foot);
-  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.135, 0.17, 28), M.porcelain);
-  bowl.position.set(0, 0.43, 0.16); bowl.scale.z = 1.25; bowl.castShadow = true; toilet.add(bowl);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.188, 0.018, 8, 30), M.porcelain);
-  rim.rotation.x = Math.PI / 2; rim.scale.z = 1.25; rim.position.set(0, 0.515, 0.16); toilet.add(rim);
-  const seat = new THREE.Mesh(new THREE.TorusGeometry(0.176, 0.022, 8, 30), M.porcelain);
-  seat.rotation.x = Math.PI / 2; seat.scale.z = 1.25; seat.position.set(0, 0.532, 0.16); toilet.add(seat);
-  // lid standing open against the cistern
-  const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.178, 0.178, 0.022, 30), M.porcelain);
-  lid.scale.z = 1.22; lid.position.set(0, 0.615, -0.045); lid.rotation.x = -1.12; toilet.add(lid);
-  toilet.add(box(0.1, 0.03, 0.05, M.porcelain, 0, 0.525, -0.055));
-  toilet.add(box(0.44, 0.52, 0.16, M.porcelain, 0, 0.68, -0.24));
-  toilet.add(box(0.4, 0.04, 0.14, M.porcelain, 0, 0.94, -0.24));
-  toilet.add(cyl(0.02, 0.02, 0.02, M.metalGalv, 8).translateY(0.93).translateZ(-0.18));
+  // seat height 0.42 (was 0.585 — 15 cm too tall, it read like a bar stool)
+  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.115, 0.26, 24), M.porcelain);
+  ped.position.set(0, 0.13, 0.05); ped.scale.z = 1.2; ped.castShadow = true; toilet.add(ped);
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.165, 0.05, 24), M.porcelain);
+  foot.position.set(0, 0.025, 0.05); foot.scale.z = 1.2; toilet.add(foot);
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.14, 0.17, 28), M.porcelain);
+  bowl.position.set(0, 0.32, 0.17); bowl.scale.z = 1.25; bowl.castShadow = true; toilet.add(bowl);
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.205, 0.205, 0.036, 30), M.porcelain);
+  rim.scale.z = 1.25; rim.position.set(0, 0.408, 0.17); toilet.add(rim);
+  const seat = new THREE.Mesh(new THREE.TorusGeometry(0.174, 0.029, 10, 30), M.porcelain);
+  seat.rotation.x = Math.PI / 2; seat.scale.z = 1.22; seat.position.set(0, 0.443, 0.17); toilet.add(seat);
+  // lid standing open: hinged at the back, resting back against the cistern
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.186, 0.186, 0.026, 30), M.porcelain);
+  lid.scale.z = 1.2; lid.position.set(0, 0.575, -0.02); lid.rotation.x = -1.28; toilet.add(lid);
+  const hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.26, 10), M.porcelain);
+  hinge.rotation.z = Math.PI / 2; hinge.position.set(0, 0.452, -0.02); toilet.add(hinge);
+  // shoulder from the pan up to the cistern
+  toilet.add(box(0.32, 0.26, 0.26, M.porcelain, 0, 0.52, -0.06));
+  // cistern: back face 4 cm off the wall, bottom clear of the seat
+  toilet.add(box(0.46, 0.35, 0.2, M.porcelain, 0, 0.725, -0.31));
+  toilet.add(box(0.5, 0.032, 0.24, M.porcelain, 0, 0.916, -0.31));
+  toilet.add(cyl(0.036, 0.036, 0.2, M.porcelain, 12).translateY(0.5).translateZ(-0.28));
+  toilet.add(cyl(0.03, 0.03, 0.02, M.metalGalv, 12).translateY(0.936).translateZ(-0.31));
   W.colliders.push({ minX: 3.1, maxX: 3.95, minZ: 4.35, maxZ: 5.25, minY: y0, maxY: y0 + 0.9, enabled: true });
 
   // shower: head, pipe, curtain rail

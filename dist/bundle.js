@@ -36405,25 +36405,38 @@ void main() {
   }
   function bed(w = 1.15, l = 1.95) {
     const g = new Group();
-    g.add(box(w, 0.22, l, M.bedTimber, 0, 0.22, 0));
-    g.add(box(w - 0.06, 0.18, l - 0.08, M.fabricCream, 0, 0.42, 0));
-    const blanket = new Mesh(new PlaneGeometry(w + 0.08, l * 0.72, 18, 22), M.fabricRed);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      g.add(box(0.075, 0.34, 0.075, M.bedTimber, sx * (w / 2 - 0.07), 0.17, sz * (l / 2 - 0.09)));
+    }
+    g.add(box(w, 0.12, l, M.bedTimber, 0, 0.4, 0));
+    g.add(box(w - 0.04, 0.2, l - 0.04, M.fabricCream, 0, 0.56, 0));
+    const quiltMat = M.fabricRed.clone();
+    quiltMat.color = new Color(12287331);
+    const blanket = new Mesh(new PlaneGeometry(w + 0.06, l * 0.6, 20, 24), quiltMat);
     const p = blanket.geometry.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), y = p.getY(i);
-      p.setZ(i, Math.sin(x * 5) * 0.018 + Math.sin(y * 7 + 1) * 0.015 + Math.max(0, Math.abs(x) - w * 0.45) * 0.18);
+      const edge = Math.max(0, Math.abs(x) - w * 0.45);
+      p.setZ(i, 0.02 + Math.sin(x * 5) * 0.016 + Math.sin(y * 7 + 1) * 0.014 - Math.min(0.16, edge * 0.75));
     }
     blanket.geometry.computeVertexNormals();
     blanket.rotation.x = -Math.PI / 2;
-    blanket.position.set(0, 0.53, l * 0.1);
+    blanket.position.set(0, 0.67, l * 0.16);
     g.add(blanket);
-    for (const s of [-1, 1]) {
-      const pillow = box(w * 0.42, 0.13, 0.32, M.fabricCream, s * w * 0.23, 0.58, -l / 2 + 0.24);
+    const sheet = box(w - 0.02, 0.05, l * 0.3, M.fabricCream, 0, 0.665, -l * 0.16);
+    g.add(sheet);
+    const roll = new Mesh(new CylinderGeometry(0.055, 0.055, w + 0.06, 12), M.fabricCream);
+    roll.rotation.z = Math.PI / 2;
+    roll.position.set(0, 0.68, -l * 0.22);
+    g.add(roll);
+    for (const s2 of [-1, 1]) {
+      const pillow = box(w * 0.42, 0.14, 0.32, M.fabricCream, s2 * w * 0.23, 0.72, -l / 2 + 0.26);
       pillow.rotation.x = -0.12;
-      pillow.rotation.z = s * 0.05;
+      pillow.rotation.z = s2 * 0.05;
       g.add(pillow);
     }
-    g.add(box(w + 0.06, 0.5, 0.05, M.bedTimber, 0, 0.66, -l / 2 - 0.02));
+    g.add(box(w + 0.06, 0.62, 0.055, M.bedTimber, 0, 0.64, -l / 2 - 0.03));
+    for (const s2 of [-1, 1]) g.add(box(0.06, 0.95, 0.06, M.bedTimber, s2 * (w / 2 + 0.01), 0.475, -l / 2 - 0.03));
     return g;
   }
   function wardrobe(w = 1.2, h = 2, d = 0.55) {
@@ -38788,7 +38801,7 @@ void main() {
     })());
     W.flicker(tvLight, { min: 0.45, max: 1.2, speed: 14, pattern: "tv" });
     const lampLight = W.addLight("apt", (() => {
-      const l = new PointLight(16756848, 9.5, 4.6, 2);
+      const l = new PointLight(16756848, 11.5, 5.2, 2);
       l.position.set(-2.25, y0 + 0.85, 4.3);
       return l;
     })());
@@ -39008,42 +39021,46 @@ void main() {
     toilet.position.set(3.55, y0, 4.85);
     toilet.rotation.y = -Math.PI / 2;
     g.add(toilet);
-    const toiletShadow = blobShadow(1, 1.05, 0.5);
+    const toiletShadow = blobShadow(1.05, 1, 0.5);
     toiletShadow.position.set(3.55, y0 + 0.024, 4.85);
     g.add(toiletShadow);
-    const ped = new Mesh(new CylinderGeometry(0.152, 0.112, 0.4, 24), M.porcelain);
-    ped.position.set(0, 0.205, 0.03);
-    ped.scale.z = 1.18;
+    const ped = new Mesh(new CylinderGeometry(0.155, 0.115, 0.26, 24), M.porcelain);
+    ped.position.set(0, 0.13, 0.05);
+    ped.scale.z = 1.2;
     ped.castShadow = true;
     toilet.add(ped);
-    const foot = new Mesh(new CylinderGeometry(0.118, 0.155, 0.055, 24), M.porcelain);
-    foot.position.set(0, 0.028, 0.03);
-    foot.scale.z = 1.18;
+    const foot = new Mesh(new CylinderGeometry(0.12, 0.165, 0.05, 24), M.porcelain);
+    foot.position.set(0, 0.025, 0.05);
+    foot.scale.z = 1.2;
     toilet.add(foot);
-    const bowl = new Mesh(new CylinderGeometry(0.19, 0.135, 0.17, 28), M.porcelain);
-    bowl.position.set(0, 0.43, 0.16);
+    const bowl = new Mesh(new CylinderGeometry(0.2, 0.14, 0.17, 28), M.porcelain);
+    bowl.position.set(0, 0.32, 0.17);
     bowl.scale.z = 1.25;
     bowl.castShadow = true;
     toilet.add(bowl);
-    const rim = new Mesh(new TorusGeometry(0.188, 0.018, 8, 30), M.porcelain);
-    rim.rotation.x = Math.PI / 2;
+    const rim = new Mesh(new CylinderGeometry(0.205, 0.205, 0.036, 30), M.porcelain);
     rim.scale.z = 1.25;
-    rim.position.set(0, 0.515, 0.16);
+    rim.position.set(0, 0.408, 0.17);
     toilet.add(rim);
-    const seat = new Mesh(new TorusGeometry(0.176, 0.022, 8, 30), M.porcelain);
+    const seat = new Mesh(new TorusGeometry(0.174, 0.029, 10, 30), M.porcelain);
     seat.rotation.x = Math.PI / 2;
-    seat.scale.z = 1.25;
-    seat.position.set(0, 0.532, 0.16);
+    seat.scale.z = 1.22;
+    seat.position.set(0, 0.443, 0.17);
     toilet.add(seat);
-    const lid = new Mesh(new CylinderGeometry(0.178, 0.178, 0.022, 30), M.porcelain);
-    lid.scale.z = 1.22;
-    lid.position.set(0, 0.615, -0.045);
-    lid.rotation.x = -1.12;
+    const lid = new Mesh(new CylinderGeometry(0.186, 0.186, 0.026, 30), M.porcelain);
+    lid.scale.z = 1.2;
+    lid.position.set(0, 0.575, -0.02);
+    lid.rotation.x = -1.28;
     toilet.add(lid);
-    toilet.add(box(0.1, 0.03, 0.05, M.porcelain, 0, 0.525, -0.055));
-    toilet.add(box(0.44, 0.52, 0.16, M.porcelain, 0, 0.68, -0.24));
-    toilet.add(box(0.4, 0.04, 0.14, M.porcelain, 0, 0.94, -0.24));
-    toilet.add(cyl(0.02, 0.02, 0.02, M.metalGalv, 8).translateY(0.93).translateZ(-0.18));
+    const hinge = new Mesh(new CylinderGeometry(0.022, 0.022, 0.26, 10), M.porcelain);
+    hinge.rotation.z = Math.PI / 2;
+    hinge.position.set(0, 0.452, -0.02);
+    toilet.add(hinge);
+    toilet.add(box(0.32, 0.26, 0.26, M.porcelain, 0, 0.52, -0.06));
+    toilet.add(box(0.46, 0.35, 0.2, M.porcelain, 0, 0.725, -0.31));
+    toilet.add(box(0.5, 0.032, 0.24, M.porcelain, 0, 0.916, -0.31));
+    toilet.add(cyl(0.036, 0.036, 0.2, M.porcelain, 12).translateY(0.5).translateZ(-0.28));
+    toilet.add(cyl(0.03, 0.03, 0.02, M.metalGalv, 12).translateY(0.936).translateZ(-0.31));
     W.colliders.push({ minX: 3.1, maxX: 3.95, minZ: 4.35, maxZ: 5.25, minY: y0, maxY: y0 + 0.9, enabled: true });
     const sh = new Group();
     sh.position.set(2.15, y0, z1 - 0.06);
