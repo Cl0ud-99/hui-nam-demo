@@ -211,6 +211,9 @@ export class World {
       puddleDarken: this._puddleDarken ?? 0.45,
       blur: opts.blur ?? 0.0,
       tint: opts.tint || 0xffffff,
+      grout: opts.grout || 0,
+      groutWidth: opts.groutWidth || 0.022,
+      groutDark: opts.groutDark ?? 0.55,
     });
     material.needsUpdate = true;
     return material;

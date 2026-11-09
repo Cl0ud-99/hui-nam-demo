@@ -34454,11 +34454,19 @@ void main() {
     puddleDarken = 0.5,
     tint = 16777215,
     falloff = 3,
-    blur = 0
+    blur = 0,
+    grout = 0,
+    groutWidth = 0.022,
+    groutDark = 0.55
   } = {}) {
     const uniforms = {
       tReflect: { value: reflector.rt.texture },
       uReflMatrix: { value: reflector.textureMatrix },
+      // procedural panel joints: 0 = off. World-space so the seam never depends on texture
+      // resolution and stays crisp at grazing angles (the old baked grout vanished in mipmaps).
+      uGroutGrid: { value: grout },
+      uGroutWidth: { value: groutWidth },
+      uGroutDark: { value: groutDark },
       uReflAmount: { value: amount },
       uReflDistort: { value: distortion },
       uPuddleMap: { value: puddleMap },
@@ -34480,6 +34488,7 @@ void main() {
         varying vec3 vWPos;
         uniform sampler2D tReflect;
         uniform mat4 uReflMatrix;
+        uniform float uGroutGrid, uGroutWidth, uGroutDark;
         uniform float uReflAmount;
         uniform float uReflDistort;
         uniform sampler2D uPuddleMap;
@@ -34492,7 +34501,15 @@ void main() {
         uniform vec2 uResolution;
         float WetPuddle(vec2 p){ ${puddleMap ? "return texture2D(uPuddleMap, p * uPuddleScale).r;" : "return 1.0;"} }`).replace("#include <map_fragment>", `#include <map_fragment>
         float wetMask = WetPuddle(vWPos.xz) * uReflAmount;
-        ${puddleMap ? "diffuseColor.rgb *= mix(1.0, 1.0 - uPuddleDarken, wetMask);" : ""}`).replace("#include <opaque_fragment>", `{
+        ${puddleMap ? "diffuseColor.rgb *= mix(1.0, 1.0 - uPuddleDarken, wetMask);" : ""}
+        if (uGroutGrid > 0.0001) {
+          vec2 gd = abs(fract(vWPos.xz / uGroutGrid + 0.5) - 0.5) * uGroutGrid;
+          float gdist = min(gd.x, gd.y);
+          float seam = 1.0 - smoothstep(uGroutWidth * 0.5, uGroutWidth * 0.5 + 0.009, gdist);
+          float bevel = 1.0 - smoothstep(uGroutWidth * 0.5 + 0.009, uGroutWidth * 1.1 + 0.02, gdist);
+          diffuseColor.rgb *= mix(1.0, 1.0 - uGroutDark, seam);
+          diffuseColor.rgb *= mix(1.0, 0.86, bevel * 0.5);
+        }`).replace("#include <opaque_fragment>", `{
           float puddle = WetPuddle(vWPos.xz);
           vec3 vn = normalize(vNormal);
           // projected planar reflection (same matrix the mirrors use). The old screen-space
@@ -34842,6 +34859,7 @@ void main() {
     M.floorWoodDark = std("dark_wooden_planks", { color: 6244919, roughness: 0.75, normalScale: 1, env: 0.35 });
     M.floorConcrete = std("concrete_floor_damaged_01", { color: 9144188, roughness: 0.8, normalScale: 1.1, env: 0.3, tileMul: 1.6 });
     M.floorTerrazzo = std("terrazzo_tiles", { color: 10129540, roughness: 0.55, normalScale: 1, env: 0.45, tileMul: 2 });
+    M.floorShop = std("terrazzo_tiles", { color: 9407358, roughness: 0.62, normalScale: 1.05, env: 0.3, tileMul: 1.25 });
     M.floorBath = std("dirty_tiles", { color: 10133646, roughness: 0.35, normalScale: 1, env: 0.7, tileMul: 3 });
     M.floorBathT = std("floor_tiles_06", { color: 11971740, roughness: 0.44, normalScale: 0.9, env: 0.55, tileMul: 2.4 });
     M.floorAsphalt = std("asphalt_05", { color: 9342858, roughness: 0.4, normalScale: 1.2, env: 0.5, tileMul: 1.8 });
@@ -35467,7 +35485,10 @@ void main() {
         puddleScale: opts.puddleScale ?? 0.1,
         puddleDarken: this._puddleDarken ?? 0.45,
         blur: opts.blur ?? 0,
-        tint: opts.tint || 16777215
+        tint: opts.tint || 16777215,
+        grout: opts.grout || 0,
+        groutWidth: opts.groutWidth || 0.022,
+        groutDark: opts.groutDark ?? 0.55
       });
       material.needsUpdate = true;
       return material;
@@ -37231,8 +37252,16 @@ void main() {
       const sw = rand(0.4, 0.9), sh = rand(0.5, 1.2);
       const st = sticker("stain", sw, sh, rand(0.2, 0.4));
       let sx = rand(x0 + 0.4, x1 - 0.4);
-      if (sx + sw / 2 > 0.62 && sx - sw / 2 < 1.62) sx = sx < 1.12 ? rand(x0 + 0.4, 0.55 - sw / 2) : rand(1.68 + sw / 2, x1 - 0.4);
-      st.position.set(sx, rand(0.3, 2.4), z0 + 0.07);
+      let sy = rand(0.3, 2.4);
+      const hitWin = sx + sw / 2 > -3.55 && sx - sw / 2 < 0.62 && sy + sh / 2 > 0.9 && sy - sh / 2 < 2.95;
+      const hitDoor = sx + sw / 2 > 0.62 && sx - sw / 2 < 1.62;
+      if (hitWin || hitDoor) {
+        sy = rand(0.26, 0.84);
+        if (sx + sw / 2 > 0.62 && sx - sw / 2 < 1.62) {
+          sx = sx < 1.12 ? rand(x0 + 0.4, 0.55 - sw / 2) : rand(1.68 + sw / 2, x1 - 0.4);
+        }
+      }
+      st.position.set(sx, sy, z0 + 0.07);
       st.rotation.z = rand(0, 6);
       g.add(st);
     }
@@ -37614,8 +37643,8 @@ void main() {
     const g = new Group();
     W.root.add(g);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-    const floorMat = M.floorChecker.clone();
-    W.wetFloor(floorMat, { room: "shop", amount: 0, distortion: 0.05, blur: 35e-4, tint: 16773858 });
+    const floorMat = M.floorShop.clone();
+    W.wetFloor(floorMat, { room: "shop", amount: 0, distortion: 0.05, blur: 35e-4, tint: 16773858, grout: 0.9, groutWidth: 0.013, groutDark: 0.45 });
     floorMat.roughness = 0.34;
     floorMat.metalness = 0.08;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
@@ -37624,6 +37653,12 @@ void main() {
     floor.receiveShadow = true;
     g.add(floor);
     W.groundHide.push(floor);
+    for (const [wx, wz, ww, wd, op] of [[0.9, 5.15, 1.7, 1.1, 0.34], [-0.55, 3.45, 2.6, 0.95, 0.26], [0, 0.25, 6.2, 0.7, 0.22]]) {
+      const w = sticker("stain", ww, wd, op);
+      w.rotation.x = -Math.PI / 2;
+      w.position.set(wx, 0.024, wz);
+      g.add(w);
+    }
     const ceil = new Mesh(planeGeo(x1 - x0, z1 - z0), M.ceilingDirty);
     ceil.rotation.x = Math.PI / 2;
     ceil.position.set(cx, h, cz);

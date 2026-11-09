@@ -63,6 +63,8 @@ export function buildMaterials() {
   M.floorWoodDark = std('dark_wooden_planks', { color: 0x5f4a37, roughness: 0.75, normalScale: 1.0, env: 0.35 });
   M.floorConcrete = std('concrete_floor_damaged_01', { color: 0x8b877c, roughness: 0.8, normalScale: 1.1, env: 0.3, tileMul: 1.6 });
   M.floorTerrazzo = std('terrazzo_tiles', { color: 0x9a9084, roughness: 0.55, normalScale: 1.0, env: 0.45, tileMul: 2 });
+  // shop floor: worn terrazzo panels instead of the fine checkerboard, which read as new vinyl
+  M.floorShop = std('terrazzo_tiles', { color: 0x8f8b7e, roughness: 0.62, normalScale: 1.05, env: 0.3, tileMul: 1.25 });
   M.floorBath = std('dirty_tiles', { color: 0x9aa08e, roughness: 0.35, normalScale: 1.0, env: 0.7, tileMul: 3 });
   // square ceramic tiles for the wet room. dirty_tiles stretched into strips and read as
   // floorboards; terrazzo at this scale had no readable joints at all.

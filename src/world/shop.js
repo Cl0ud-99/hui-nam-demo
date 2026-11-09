@@ -18,13 +18,20 @@ export function buildShop(W) {
   const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
 
   // ---------------------------------------------------------------- shell
-  const floorMat = M.floorChecker.clone();
+  const floorMat = M.floorShop.clone();
   // no planar reflection indoors: looking down used to smear lamp ghosts across the tiles
-  W.wetFloor(floorMat, { room: 'shop', amount: 0.0, distortion: 0.05, blur: 0.0035, tint: 0xfff2e2 });
+  W.wetFloor(floorMat, { room: 'shop', amount: 0.0, distortion: 0.05, blur: 0.0035, tint: 0xfff2e2, grout: 0.9, groutWidth: 0.013, groutDark: 0.45 });
   floorMat.roughness = 0.34; floorMat.metalness = 0.08;
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(cx, 0.02, cz);
   floor.receiveShadow = true; g.add(floor); W.groundHide.push(floor);
+  // wear: three broad, faint patches where a 40-year-old shop actually gets dirty
+  for (const [wx, wz, ww, wd, op] of [[0.9, 5.15, 1.7, 1.1, 0.34], [-0.55, 3.45, 2.6, 0.95, 0.26], [0.0, 0.25, 6.2, 0.7, 0.22]]) {
+    const w = sticker('stain', ww, wd, op);
+    w.rotation.x = -Math.PI / 2;
+    w.position.set(wx, 0.024, wz);
+    g.add(w);
+  }
 
   const ceil = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), M.ceilingDirty);
   ceil.rotation.x = Math.PI / 2; ceil.position.set(cx, h, cz); g.add(ceil);

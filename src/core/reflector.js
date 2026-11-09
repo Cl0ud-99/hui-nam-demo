@@ -145,10 +145,16 @@ export class PlanarReflector {
 export function wetify(material, {
   reflector, amount = 1.0, distortion = 0.045, puddleMap = null, puddleScale = 0.12,
   puddleDarken = 0.5, tint = 0xffffff, falloff = 3.0, blur = 0.0,
+  grout = 0, groutWidth = 0.022, groutDark = 0.55,
 } = {}) {
   const uniforms = {
     tReflect: { value: reflector.rt.texture },
     uReflMatrix: { value: reflector.textureMatrix },
+    // procedural panel joints: 0 = off. World-space so the seam never depends on texture
+    // resolution and stays crisp at grazing angles (the old baked grout vanished in mipmaps).
+    uGroutGrid: { value: grout },
+    uGroutWidth: { value: groutWidth },
+    uGroutDark: { value: groutDark },
     uReflAmount: { value: amount },
     uReflDistort: { value: distortion },
     uPuddleMap: { value: puddleMap },
@@ -173,6 +179,7 @@ export function wetify(material, {
         varying vec3 vWPos;
         uniform sampler2D tReflect;
         uniform mat4 uReflMatrix;
+        uniform float uGroutGrid, uGroutWidth, uGroutDark;
         uniform float uReflAmount;
         uniform float uReflDistort;
         uniform sampler2D uPuddleMap;
@@ -186,7 +193,15 @@ export function wetify(material, {
         float WetPuddle(vec2 p){ ${puddleMap ? 'return texture2D(uPuddleMap, p * uPuddleScale).r;' : 'return 1.0;'} }`)
       .replace('#include <map_fragment>', `#include <map_fragment>
         float wetMask = WetPuddle(vWPos.xz) * uReflAmount;
-        ${puddleMap ? 'diffuseColor.rgb *= mix(1.0, 1.0 - uPuddleDarken, wetMask);' : ''}`)
+        ${puddleMap ? 'diffuseColor.rgb *= mix(1.0, 1.0 - uPuddleDarken, wetMask);' : ''}
+        if (uGroutGrid > 0.0001) {
+          vec2 gd = abs(fract(vWPos.xz / uGroutGrid + 0.5) - 0.5) * uGroutGrid;
+          float gdist = min(gd.x, gd.y);
+          float seam = 1.0 - smoothstep(uGroutWidth * 0.5, uGroutWidth * 0.5 + 0.009, gdist);
+          float bevel = 1.0 - smoothstep(uGroutWidth * 0.5 + 0.009, uGroutWidth * 1.1 + 0.02, gdist);
+          diffuseColor.rgb *= mix(1.0, 1.0 - uGroutDark, seam);
+          diffuseColor.rgb *= mix(1.0, 0.86, bevel * 0.5);
+        }`)
       .replace('#include <opaque_fragment>', `{
           float puddle = WetPuddle(vWPos.xz);
           vec3 vn = normalize(vNormal);

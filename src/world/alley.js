@@ -419,10 +419,20 @@ export function buildAlley(W) {
   for (let i = 0; i < 6; i++) {
     const sw = rand(0.4, 0.9), sh = rand(0.5, 1.2);
     const st = sticker('stain', sw, sh, rand(0.2, 0.4));
-    // keep them off the shop doorway (world x 0.75..1.50): a decal here floats in the opening
     let sx = rand(x0 + 0.4, x1 - 0.4);
-    if (sx + sw / 2 > 0.62 && sx - sw / 2 < 1.62) sx = sx < 1.12 ? rand(x0 + 0.4, 0.55 - sw / 2) : rand(1.68 + sw / 2, x1 - 0.4);
-    st.position.set(sx, rand(0.3, 2.4), z0 + 0.07);
+    let sy = rand(0.3, 2.4);
+    // two openings on this wall: the shop display window (x -3.55..0.62, y 0.90..2.95) and the
+    // doorway (x 0.62..1.62). A decal over either one hangs in mid air ~7 cm in front of the
+    // glass, which is what read as a floating smudge across the shopfront.
+    const hitWin = (sx + sw / 2 > -3.55 && sx - sw / 2 < 0.62 && sy + sh / 2 > 0.9 && sy - sh / 2 < 2.95);
+    const hitDoor = (sx + sw / 2 > 0.62 && sx - sw / 2 < 1.62);
+    if (hitWin || hitDoor) {
+      sy = rand(0.26, 0.84);                       // drop onto the solid stall riser under the window
+      if (sx + sw / 2 > 0.62 && sx - sw / 2 < 1.62) {
+        sx = sx < 1.12 ? rand(x0 + 0.4, 0.55 - sw / 2) : rand(1.68 + sw / 2, x1 - 0.4);
+      }
+    }
+    st.position.set(sx, sy, z0 + 0.07);
     st.rotation.z = rand(0, 6); g.add(st);
   }
 
