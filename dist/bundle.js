@@ -36529,37 +36529,185 @@ void main() {
   function tvSet() {
     const g = new Group();
     g.userData.dynamic = true;
-    g.add(box(0.62, 0.48, 0.44, M.plasticGreen, 0, 0.27, 0));
-    const screenMat = new MeshBasicMaterial({ color: 9611422 });
-    const screen = new Mesh(new PlaneGeometry(0.44, 0.33), screenMat);
-    screen.position.set(0, 0.31, 0.226);
-    g.add(screen);
+    const W = 0.46, H = 0.355, D = 0.355;
+    const rrect = (w, h, r) => {
+      const s2 = new Shape();
+      const x = -w / 2, y = -h / 2;
+      s2.moveTo(x + r, y);
+      s2.lineTo(x + w - r, y);
+      s2.quadraticCurveTo(x + w, y, x + w, y + r);
+      s2.lineTo(x + w, y + h - r);
+      s2.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      s2.lineTo(x + r, y + h);
+      s2.quadraticCurveTo(x, y + h, x, y + h - r);
+      s2.lineTo(x, y + r);
+      s2.quadraticCurveTo(x, y, x + r, y);
+      return s2;
+    };
+    const shellMat = new MeshStandardMaterial({ color: 9865840, roughness: 0.84, metalness: 0, envMapIntensity: 0.11 });
+    const panelMat = new MeshStandardMaterial({ color: 9142120, roughness: 0.86, metalness: 0, envMapIntensity: 0.1 });
+    const darkMat = new MeshStandardMaterial({ color: 2434079, roughness: 0.66, metalness: 0.05, envMapIntensity: 0.2 });
+    const knobMat = new MeshStandardMaterial({ color: 2828323, roughness: 0.52, metalness: 0.08, envMapIntensity: 0.3 });
+    const shellGeo = new ExtrudeGeometry(rrect(W, H, 0.03), {
+      depth: D * 0.52,
+      bevelEnabled: true,
+      bevelSize: 0.01,
+      bevelThickness: 0.01,
+      bevelSegments: 2,
+      curveSegments: 5
+    });
+    shellGeo.translate(0, 0, -D * 0.26);
+    const shell = new Mesh(shellGeo, shellMat);
+    shell.position.y = H / 2;
+    g.add(shell);
+    const humpGeo = new BoxGeometry(W * 0.92, H * 0.9, D * 0.46, 1, 1, 1);
+    {
+      const pos = humpGeo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        if (pos.getZ(i) < 0) {
+          pos.setX(i, pos.getX(i) * 0.76);
+          pos.setY(i, pos.getY(i) * 0.78);
+        }
+      }
+      humpGeo.computeVertexNormals();
+    }
+    const hump = new Mesh(humpGeo, shellMat);
+    hump.position.set(0, H / 2, -D * 0.5);
+    g.add(hump);
+    const FACE = D * 0.26 + 0.011;
+    const outer = rrect(0.356, 0.272, 0.02);
+    outer.holes.push(rrect(0.302, 0.222, 0.014));
+    const frameGeo = new ExtrudeGeometry(outer, {
+      depth: 0.01,
+      bevelEnabled: true,
+      bevelSize: 4e-3,
+      bevelThickness: 3e-3,
+      bevelSegments: 2,
+      curveSegments: 7
+    });
+    const frame = new Mesh(frameGeo, darkMat);
+    frame.position.set(-0.048, H / 2, FACE - 2e-3);
+    g.add(frame);
+    const throat = new Mesh(new BoxGeometry(0.32, 0.24, 0.03), new MeshStandardMaterial({
+      color: 658185,
+      roughness: 0.9,
+      metalness: 0,
+      envMapIntensity: 0.05
+    }));
+    throat.position.set(-0.048, H / 2, FACE - 0.02);
+    g.add(throat);
+    const SCW = 0.318, SCH = 0.238;
+    const capGeo = new PlaneGeometry(SCW, SCH, 28, 22);
+    {
+      const pos = capGeo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const nx = pos.getX(i) / (SCW / 2), ny = pos.getY(i) / (SCH / 2);
+        pos.setZ(i, 0.013 * (1 - nx * nx) * (1 - ny * ny));
+      }
+      capGeo.computeVertexNormals();
+    }
     const cv = document.createElement("canvas");
-    cv.width = 96;
-    cv.height = 72;
+    cv.width = 128;
+    cv.height = 96;
     const ctx = cv.getContext("2d");
     const tex = new CanvasTexture(cv);
     tex.colorSpace = SRGBColorSpace;
-    screenMat.map = tex;
-    let acc = 0;
+    tex.wrapS = tex.wrapT = ClampToEdgeWrapping;
+    const screenMat = new MeshStandardMaterial({
+      color: 1185039,
+      roughness: 0.5,
+      metalness: 0,
+      envMapIntensity: 0.12,
+      emissive: 16777215,
+      emissiveMap: tex,
+      emissiveIntensity: 1.15
+    });
+    const screen = new Mesh(capGeo, screenMat);
+    screen.position.set(-0.048, H / 2, FACE - 1e-3);
+    g.add(screen);
+    const strip = new Mesh(new BoxGeometry(0.118, H * 0.86, 8e-3), panelMat);
+    strip.position.set(0.168, H / 2, FACE + 2e-3);
+    g.add(strip);
+    const dial = (y, r) => {
+      const base = cyl(r, r, 0.013, knobMat, 20).rotateX(Math.PI / 2);
+      base.position.set(0.166, y, FACE + 0.011);
+      g.add(base);
+      const skirt = cyl(r * 1.16, r * 1.16, 6e-3, darkMat, 20).rotateX(Math.PI / 2);
+      skirt.position.set(0.166, y, FACE + 6e-3);
+      g.add(skirt);
+      const notch = box(4e-3, r * 0.62, 4e-3, shellMat, 0.166, y + r * 0.42, FACE + 0.018);
+      g.add(notch);
+      for (let i = 0; i < 8; i++) {
+        const a = i / 8 * Math.PI * 2;
+        const t = box(3e-3, 8e-3, 2e-3, darkMat, 0.166 + Math.cos(a) * r * 1.55, y + Math.sin(a) * r * 1.55, FACE + 7e-3);
+        t.rotation.z = a;
+        g.add(t);
+      }
+    };
+    dial(H / 2 + 0.082, 0.028);
+    dial(H / 2 + 0.018, 0.022);
+    g.add(box(0.014, 0.05, 4e-3, darkMat, 0.166, H / 2 - 0.03, FACE + 7e-3));
+    for (let i = 0; i < 7; i++) {
+      g.add(box(0.092, 5e-3, 6e-3, darkMat, 0.166, H / 2 - 0.074 - i * 0.0125, FACE + 6e-3));
+    }
+    g.add(box(0.052, 0.013, 3e-3, darkMat, -0.152, H / 2 - 0.145, FACE + 3e-3));
+    const aerial = new Group();
+    aerial.position.set(0.168, H - 4e-3, -0.034);
+    const ball = new Mesh(new SphereGeometry(0.013, 10, 8), darkMat);
+    aerial.add(ball);
+    const rod = (len, r0, r1, tiltZ, tiltX) => {
+      const a = new Group();
+      const seg1 = cyl(r0, r1, len * 0.55, M.chrome, 8);
+      seg1.position.y = len * 0.275;
+      a.add(seg1);
+      const seg2 = cyl(r0 * 0.62, r0 * 0.42, len * 0.5, M.chrome, 8);
+      seg2.position.y = len * 0.78;
+      a.add(seg2);
+      a.rotation.set(tiltX, 0, tiltZ);
+      return a;
+    };
+    aerial.add(rod(0.38, 42e-4, 32e-4, -0.26, 0.05));
+    aerial.add(rod(0.31, 38e-4, 3e-3, -0.58, -0.12));
+    g.add(aerial);
+    for (const sgn of [-1, 1]) g.add(box(0.05, 0.012, 0.03, darkMat, sgn * 0.155, 6e-3, 0.115));
+    for (const sgn of [-1, 1]) g.add(box(0.04, 0.01, 0.026, darkMat, sgn * 0.14, 5e-3, -0.13));
+    const cord1 = cyl(5e-3, 5e-3, 0.16, darkMat, 6);
+    cord1.position.set(-0.16, 0.06, -0.2);
+    cord1.rotation.set(0.9, 0.3, 0.4);
+    g.add(cord1);
+    let acc = 0, seed = 3;
+    const rnd = () => {
+      seed = seed * 16807 % 2147483647;
+      return (seed & 2147483647) / 2147483647;
+    };
     g.userData.animate = (t, dt) => {
       acc += dt;
-      if (acc < 0.06) return;
+      if (acc < 0.055) return;
       acc = 0;
-      const img = ctx.createImageData(96, 72);
-      for (let i = 0; i < img.data.length; i += 4) {
-        const v = Math.random() * 255 | 0;
-        img.data[i] = v * 0.8;
-        img.data[i + 1] = v;
-        img.data[i + 2] = v * 0.9;
-        img.data[i + 3] = 255;
+      const w = 128, h = 96;
+      const img = ctx.createImageData(w, h);
+      const band = t * 26 % h;
+      for (let y = 0; y < h; y++) {
+        const rowGain = 0.55 + 0.45 * Math.sin(y / h * Math.PI);
+        const nearBand = Math.max(0, 1 - Math.abs(y - band) / 9);
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          const v = rnd() * 190 * rowGain + nearBand * 34;
+          const g2 = Math.min(255, v * 1.02), b2 = Math.min(255, v * 0.96);
+          img.data[i] = v;
+          img.data[i + 1] = g2;
+          img.data[i + 2] = b2;
+          img.data[i + 3] = 255;
+        }
       }
       ctx.putImageData(img, 0, 0);
-      ctx.fillStyle = "rgba(220,240,230,0.25)";
-      ctx.fillRect(0, t * 60 % 72, 96, 5);
+      ctx.fillStyle = "rgba(0,0,0,0.34)";
+      for (let y = 0; y < h; y += 2) ctx.fillRect(0, y, w, 1);
+      ctx.fillStyle = "rgba(0,0,0,0.16)";
+      for (let y = 1; y < h; y += 2) ctx.fillRect(0, y, w, 1);
       tex.needsUpdate = true;
+      screenMat.emissiveIntensity = 1.08 + Math.sin(t * 37) * 0.04;
     };
-    for (const s of [-1, 1]) g.add(cyl(0.01, 0.01, 0.06, M.blackMetal, 5).translateX(s * 0.2).translateY(0.03));
     return g;
   }
   function altarTable(w = 1.5, d = 0.5, h = 0.82) {

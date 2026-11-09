@@ -1,6 +1,6 @@
 # HUI NAM 源碼清單（sha256）— 由 tools/manifest.mjs 生成
 # 校驗：sha256sum -c SRC-MANIFEST.txt
-e20a750f4c834043e2d91a9c8e71a68e6eda08f28caa488e9bfa036aebcf6ab4  dist/bundle.js
+52ef5eb23bacd0587edaaf7cc4e1707229f7bd473da93255dc07ea6fe0f2f01a  dist/bundle.js
 eace14d67a9536674d54c0870ac5049ad2ffb5c3789f901ef11883d65880249b  index.html
 7c8f48d5fbfa75fafe502a09392947ccd2b7d6c7dffacdfac82819e187df3025  package.json
 c9c24d12a3b087da6b59e6dba328ad29bd7a585aa3fb326cf6a263155e529a17  server.js
@@ -9,7 +9,7 @@ c9c24d12a3b087da6b59e6dba328ad29bd7a585aa3fb326cf6a263155e529a17  server.js
 61f6d012ba08ce1bbe1c4f54097bdbf2c47e5e3c3f24aa45761e63ab0c9a5e9b  src/core/gradeShader.js
 d83d64924cbb0c3689a9ca7c4410508ae7d72c541fdc5db615240fefe93f9f71  src/core/materials.js
 00d12726a3e697d62a5ee605a96fb3ae0b269b5605551e1755aa0623ea363aa5  src/core/player.js
-8702ba4b10e540292c6be83f744fcc966b6b1d35936decee88218ee290bc178b  src/core/props.js
+01cf8ca3a5e5b8b8e3b58a8abb252074a4908cd92c1165f2bb916056e623a011  src/core/props.js
 7e975c01714f7af0a9f0db77aba9120a6eeec64f6fd7853132ddca6f7238d836  src/core/reflector.js
 4834d1a922eb3e8774e8d0fed019beed1342c1dcaa9833aa301f45b77ad86f87  src/core/textures.js
 edcd8c1a8a11e28202550e7ea417dc17a5e29c3ffc1be4985486ccb40261edf2  src/core/util.js
