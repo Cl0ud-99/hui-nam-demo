@@ -1,6 +1,6 @@
 # HUI NAM 源碼清單（sha256）— 由 tools/manifest.mjs 生成
 # 校驗：sha256sum -c SRC-MANIFEST.txt
-8a6ecbf8402d78b9170700a6b69c84552c8dc1bf01af2e496c0f2390d5b56ce0  dist/bundle.js
+f74b6c041ca28d4c75a839ed81e85ea6fa8366d755c13d2ad4f4fc9d62b1d17d  dist/bundle.js
 eace14d67a9536674d54c0870ac5049ad2ffb5c3789f901ef11883d65880249b  index.html
 7c8f48d5fbfa75fafe502a09392947ccd2b7d6c7dffacdfac82819e187df3025  package.json
 c9c24d12a3b087da6b59e6dba328ad29bd7a585aa3fb326cf6a263155e529a17  server.js
@@ -21,7 +21,7 @@ a1b5c685b4835eb65e23a0ce99251633a6a5558705fc8173c6ac6a614340894f  src/main.js
 633a31fe3c7620412267c5acffe982a73b0f68b9970300bcc5ebc19eaded496b  src/world/bathroom.js
 ed708a2c0c52b0802e9ecc72ca159d4f934bee0b7ad9a823fbe08648a41d63ac  src/world/buildutil.js
 ebcbb626999512bf9cb9d95e8585fe5fb915d070e1b5521c9a88a2fe57baa4ca  src/world/fixtures.js
-12691d3a6fd5feb93e25abe6db2a4186b410fe063b082bec1a8870d3f00f30a8  src/world/shop.js
+8f15ef52526a90932b63559e4b73da35d48a94976636f3f3c8acac31b870bdea  src/world/shop.js
 9326c566d211a428ceed22fcd18ba839017321064f42107da3d8d874ad82abd7  src/world/stairs.js
 a15dbf7141efe4cefb1b589c936bf21382db0f6bdcae1e7018afbddebd39ac64  src/world/story.js
 efda846f2c76f6f6597c15c270cd785c1dfe06194ae9898c00390861eceac73f  src/world/world.js

@@ -37645,8 +37645,39 @@ void main() {
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     const floorMat = M.floorShop.clone();
     W.wetFloor(floorMat, { room: "shop", amount: 0, distortion: 0.05, blur: 35e-4, tint: 16773858, grout: 0.9, groutWidth: 0.013, groutDark: 0.45 });
-    floorMat.roughness = 0.34;
-    floorMat.metalness = 0.08;
+    const floorRough = (() => {
+      const S = 512;
+      const c = document.createElement("canvas");
+      c.width = c.height = S;
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "rgb(216,216,216)";
+      ctx.fillRect(0, 0, S, S);
+      let sd = 7;
+      const rnd = () => {
+        sd = sd * 16807 % 2147483647;
+        return (sd & 2147483647) / 2147483647;
+      };
+      for (let i = 0; i < 140; i++) {
+        const x = rnd() * S, y = rnd() * S, r = 18 + rnd() * 95;
+        const v = Math.round(105 + rnd() * 95);
+        const g2 = ctx.createRadialGradient(x, y, 0, x, y, r);
+        g2.addColorStop(0, `rgba(${v},${v},${v},0.5)`);
+        g2.addColorStop(1, `rgba(${v},${v},${v},0)`);
+        ctx.fillStyle = g2;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const t = new CanvasTexture(c);
+      t.wrapS = t.wrapT = RepeatWrapping;
+      t.repeat.set(2.6, 2.6);
+      t.colorSpace = NoColorSpace;
+      return t;
+    })();
+    floorMat.roughnessMap = floorRough;
+    floorMat.roughness = 1;
+    floorMat.metalness = 0;
+    floorMat.envMapIntensity = 0.16;
     const floor = new Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, 0.02, cz);

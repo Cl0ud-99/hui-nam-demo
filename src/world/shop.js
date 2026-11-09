@@ -21,7 +21,33 @@ export function buildShop(W) {
   const floorMat = M.floorShop.clone();
   // no planar reflection indoors: looking down used to smear lamp ghosts across the tiles
   W.wetFloor(floorMat, { room: 'shop', amount: 0.0, distortion: 0.05, blur: 0.0035, tint: 0xfff2e2, grout: 0.9, groutWidth: 0.013, groutDark: 0.45 });
-  floorMat.roughness = 0.34; floorMat.metalness = 0.08;
+  // patchy polish. A single low roughness value made the whole floor mirror the lamps and
+  // read as freshly waxed; a blotchy roughness map keeps only the traffic lanes semi-glossy.
+  const floorRough = (() => {
+    const S = 512;
+    const c = document.createElement('canvas'); c.width = c.height = S;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = 'rgb(216,216,216)'; ctx.fillRect(0, 0, S, S);   // base: matte terrazzo
+    let sd = 7;
+    const rnd = () => { sd = (sd * 16807) % 2147483647; return (sd & 0x7fffffff) / 2147483647; };
+    for (let i = 0; i < 140; i++) {
+      const x = rnd() * S, y = rnd() * S, r = 18 + rnd() * 95;
+      const v = Math.round(105 + rnd() * 95);                       // darker patch = smoother
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, `rgba(${v},${v},${v},0.5)`);
+      g.addColorStop(1, `rgba(${v},${v},${v},0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(2.6, 2.6);
+    t.colorSpace = THREE.NoColorSpace;
+    return t;
+  })();
+  floorMat.roughnessMap = floorRough;
+  floorMat.roughness = 1.0;
+  floorMat.metalness = 0.0;
+  floorMat.envMapIntensity = 0.16;
   const floor = new THREE.Mesh(planeGeo(x1 - x0, z1 - z0), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set(cx, 0.02, cz);
   floor.receiveShadow = true; g.add(floor); W.groundHide.push(floor);
