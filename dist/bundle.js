@@ -34857,7 +34857,7 @@ void main() {
     M.framePaintGreen = std("dark_paneled_wood", { color: 9214090, roughness: 0.86, normalScale: 0.18, env: 0.14, tileMul: 2.7 });
     M.cabRosewood = std("dark_wooden_planks", { color: 5907480, roughness: 0.55, normalScale: 0.45, env: 0.45, tileMul: 1.5 });
     M.cabDrawer = std("dark_wooden_planks", { color: 10774852, roughness: 0.48, normalScale: 0.35, env: 0.5, tileMul: 2.3 });
-    M.counterTop = std("dark_paneled_wood", { color: 4871496, roughness: 0.3, normalScale: 0.2, env: 0.55, tileMul: 1.6 });
+    M.counterTop = std("dark_wooden_planks", { color: 7032630, roughness: 0.46, normalScale: 0.35, env: 0.3, tileMul: 3.2 });
     M.counterBody = std("dark_paneled_wood", { color: 5859407, roughness: 0.55, normalScale: 0.45, env: 0.4, tileMul: 1.2 });
     M.beamRough = std("dark_wooden_planks", { color: 8215096, roughness: 0.93, normalScale: 1.25, env: 0.12, tileMul: 1.15 });
     M.signBack = std("painted_metal_shutter", { color: 4147780, roughness: 0.62, metalness: 0.3, env: 0.35, normalScale: 0.6 });
@@ -38065,8 +38065,10 @@ void main() {
     W.colliders.push({ minX: 1.55, maxX: x1, minZ: z1 - 0.05, maxZ: z1 + 0.2, minY: 2.3, maxY: h, enabled: true });
     const win = makeWindow(W, { x: 0, y: 3.1, z: z0 + 0.02, w: 1.2, h: 1.8, bars: 2, ry: 0, frameMat: M.metalDark, glassMat: M.glass });
     g.add(win.group);
-    const stepNoseMat = new MeshStandardMaterial({ color: 7039844, metalness: 0.45, roughness: 0.72, envMapIntensity: 0.35 });
-    const stepMatTop = M.floorTerrazzo;
+    const stepNoseMat = new MeshStandardMaterial({ color: 7170656, metalness: 0.06, roughness: 0.88, envMapIntensity: 0.15 });
+    const stepMatTop = M.floorTerrazzo.clone();
+    stepMatTop.roughness = 0.7;
+    stepMatTop.envMapIntensity = 0.26;
     const stepMatSide = M.concrete;
     function buildFlight(startZ, endZ, startY, dir, xa, xb, thin = false) {
       const w = xb - xa, cxA = (xa + xb) / 2;
@@ -38263,7 +38265,7 @@ void main() {
     W.root.add(winLight.target);
     W.volumetric({ x: 0.1, y: 4, z: -6.35, w: 1.1, h: 2.2, len: 3.4, color: 10467020, intensity: 0.5, dir: new Vector3(0.25, -1, 0.45).normalize() });
     W.addLight("stairs", (() => {
-      const l = new PointLight(9075302, 5, 7, 2);
+      const l = new PointLight(9075302, 4.2, 7, 2);
       l.position.set(0, 2, -3);
       return l;
     })());
@@ -38272,7 +38274,7 @@ void main() {
     g.add(stepLight);
     g.add(box(0.14, 0.06, 0.14, M.metalDark, -1.2, 6.58, -3.4));
     W.addLight("stairs", (() => {
-      const l = new PointLight(16760968, 10, 5, 2);
+      const l = new PointLight(16760968, 7.2, 5.6, 2);
       l.position.set(-1.2, 3.1, -3.4);
       return l;
     })());

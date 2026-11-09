@@ -95,7 +95,7 @@ export function buildMaterials() {
   // ---------------- B: shop joinery (herb cabinets / counter / structure)
   M.cabRosewood = std('dark_wooden_planks', { color: 0x5a2418, roughness: 0.55, normalScale: 0.45, env: 0.45, tileMul: 1.5 });
   M.cabDrawer = std('dark_wooden_planks', { color: 0xa46944, roughness: 0.48, normalScale: 0.35, env: 0.5, tileMul: 2.3 });
-  M.counterTop = std('dark_paneled_wood', { color: 0x4a5548, roughness: 0.30, normalScale: 0.2, env: 0.55, tileMul: 1.6 });
+  M.counterTop = std('dark_wooden_planks', { color: 0x6b4f36, roughness: 0.46, normalScale: 0.35, env: 0.3, tileMul: 3.2 });
   M.counterBody = std('dark_paneled_wood', { color: 0x59684f, roughness: 0.55, normalScale: 0.45, env: 0.4, tileMul: 1.2 });
   M.beamRough = std('dark_wooden_planks', { color: 0x7d5a38, roughness: 0.93, normalScale: 1.25, env: 0.12, tileMul: 1.15 });
   M.signBack = std('painted_metal_shutter', { color: 0x3f4a44, roughness: 0.62, metalness: 0.3, env: 0.35, normalScale: 0.6 });

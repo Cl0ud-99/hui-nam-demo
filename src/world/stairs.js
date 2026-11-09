@@ -54,8 +54,10 @@ export function buildStairs(W) {
 
   // ---------------------------------------------------------------- stairs
   // matte metal nosing: the polished M.metalRust strip was catching the bulb as a blown white line
-  const stepNoseMat = new THREE.MeshStandardMaterial({ color: 0x6b6b64, metalness: 0.45, roughness: 0.72, envMapIntensity: 0.35 });
-  const stepMatTop = M.floorTerrazzo;
+  const stepNoseMat = new THREE.MeshStandardMaterial({ color: 0x6d6a60, metalness: 0.06, roughness: 0.88, envMapIntensity: 0.15 });
+  // treads caught the bulb as a hot specular streak: rougher + less env keeps them matte
+  const stepMatTop = M.floorTerrazzo.clone();
+  stepMatTop.roughness = 0.7; stepMatTop.envMapIntensity = 0.26;
   const stepMatSide = M.concrete;
   function buildFlight(startZ, endZ, startY, dir, xa, xb, thin = false) {
     const w = xb - xa, cxA = (xa + xb) / 2;
@@ -247,14 +249,14 @@ export function buildStairs(W) {
   W.volumetric({ x: 0.1, y: 4.0, z: -6.35, w: 1.1, h: 2.2, len: 3.4, color: 0x9fb6cc, intensity: 0.5, dir: new THREE.Vector3(0.25, -1, 0.45).normalize() });
 
   W.addLight('stairs', (() => {
-    const l = new THREE.PointLight(0x8a7a66, 5, 7, 2);
+    const l = new THREE.PointLight(0x8a7a66, 4.2, 7, 2);
     l.position.set(0, 2.0, -3.0); return l;
   })());
   const stepLight = bulbLamp({ cord: 2.85, shade: false });
   stepLight.position.set(-1.2, 6.6, -3.4); g.add(stepLight);
   g.add(box(0.14, 0.06, 0.14, M.metalDark, -1.2, 6.58, -3.4));
   W.addLight('stairs', (() => {
-    const l = new THREE.PointLight(0xffc088, 10, 5, 2);
+    const l = new THREE.PointLight(0xffc088, 7.2, 5.6, 2);
     l.position.set(-1.2, 3.1, -3.4); return l;
   })());
 
