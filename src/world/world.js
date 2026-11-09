@@ -216,6 +216,38 @@ export class World {
     return material;
   }
 
+  // Reflection-only body: the player has no visible mesh, so mirrors used to show an empty
+  // room. Layer 2 is enabled on the reflector cameras only (same trick as the bath ghost),
+  // so this silhouette appears in mirrors and never in the first-person view.
+  makePlayerProxy() {
+    const g = new THREE.Group();
+    // lit, not flat black: the bathroom tube puts a rim on the head and shoulders, which is
+    // what makes the shape read as a person instead of a smudge
+    const coat = new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: 0.86, metalness: 0.0 });
+    const skin = new THREE.MeshStandardMaterial({ color: 0x4a3f36, roughness: 0.78, metalness: 0.0 });
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.88, 6, 12), coat);
+    body.position.y = 0.98; g.add(body);
+    const shoulders = new THREE.Mesh(new THREE.CapsuleGeometry(0.19, 0.28, 6, 10), coat);
+    shoulders.rotation.z = Math.PI / 2; shoulders.position.y = 1.35; g.add(shoulders);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.058, 0.16, 10), skin);
+    neck.position.y = 1.56; g.add(neck);
+    const hair = new THREE.MeshStandardMaterial({ color: 0x3a3a3c, roughness: 0.38, metalness: 0.0 });
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 12), hair);
+    head.position.y = 1.7; g.add(head);
+    g.traverse(o => o.layers.set(2));
+    g.visible = true;
+    g.userData.dynamic = true;
+    this.root.add(g);
+    this.playerProxy = g;
+    return g;
+  }
+
+  updatePlayerProxy(p) {
+    if (!this.playerProxy || !p) return;
+    this.playerProxy.position.set(p.pos.x, p.pos.y, p.pos.z);
+    this.playerProxy.rotation.y = p.yaw;
+  }
+
   makeMirror({ width, height, x, y, z, ry = 0, room = 'bath' }) {
     const group = new THREE.Group();
     group.userData.dynamic = true;

@@ -117,6 +117,7 @@ async function boot() {
     engine.renderer.shadowMap.needsUpdate = true;
   }
   const player = new Player(camera, world, audio);
+  world.makePlayerProxy();
   const story = new Story({ world, ui, audio, player, camera });
   world.story = story;
   story.onEnd = () => {
@@ -297,6 +298,7 @@ async function boot() {
       pv.update(dt);
     } else if (state === 'play' || state === 'paused' || state === 'end') {
       player.update(dt);
+      world.updatePlayerProxy(player);
       story.update(dt);
       const hov = player.hover;
       ui.prompt(hov ? (typeof hov.prompt === 'function' ? hov.prompt() : hov.prompt) : null);

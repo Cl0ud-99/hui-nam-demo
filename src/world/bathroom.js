@@ -151,7 +151,19 @@ export function buildBathroom(W) {
   leverCap.position.set(0.071, 0.106, -0.008); leverCap.rotation.z = Math.PI / 2; tap.add(leverCap);
   tap.add(cyl(0.0175, 0.0175, 0.020, M.chrome, 14).translateY(0.084).translateZ(-0.004));   // lever boss
   const water = new THREE.Mesh(new THREE.CylinderGeometry(0.0026, 0.0040, 0.275, 8, 1, true), M.glass);
-  water.position.set(0, -0.065, 0.158); tap.add(water);                             // stream
+  water.position.set(0, -0.065, 0.158); water.visible = false; tap.add(water);       // stream (off until used)
+  let waterOn = false;
+  W.hotspot({
+    x: 2.47, y: y0 + 0.93, z: z0 + 0.3, w: 0.4, h: 0.4, d: 0.4,
+    prompt: () => (waterOn ? '關水喉' : '開水喉'),
+    range: 1.9,
+    use: () => {
+      waterOn = !waterOn;
+      water.visible = waterOn;
+      W.audio?.water(waterOn);
+      W.hud?.subtitle?.(waterOn ? '水喉開咗。' : '水喉關咗。', 2200);
+    },
+  });
   // plumbing below
   sink.add(cyl(0.026, 0.026, 0.22, M.metalRust, 8).translateY(0.16).translateZ(-0.1));
   sink.add(cyl(0.026, 0.026, 0.2, M.metalRust, 8).rotateX(Math.PI / 2).translateY(0.1).translateZ(-0.02));

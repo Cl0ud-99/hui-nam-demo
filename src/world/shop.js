@@ -156,6 +156,24 @@ export function buildShop(W) {
   const scale = brassScale(); scale.position.set(-0.2, 1.04, 2.7); g.add(scale);
   const ab = abacus(); ab.position.set(0.3, 1.04, 2.95); ab.rotation.y = -0.15; g.add(ab);
   const rd = radio(); rd.position.set(-1.35, 1.04, 2.6); rd.rotation.y = 0.5; g.add(rd);
+  // tuner lamp: lit while the set is on, so the state reads without audio
+  const radioLed = new THREE.Mesh(
+    new THREE.SphereGeometry(0.011, 8, 6),
+    new THREE.MeshBasicMaterial({ color: 0xff3a22, toneMapped: false })
+  );
+  radioLed.position.set(0.045, 0.112, 0.052); radioLed.visible = false; rd.add(radioLed);
+  let radioOn = false;
+  W.hotspot({
+    x: -1.35, y: 1.16, z: 2.6, w: 0.44, h: 0.32, d: 0.4,
+    prompt: () => (radioOn ? '關收音機' : '開收音機'),
+    range: 2.0,
+    use: () => {
+      radioOn = !radioOn;
+      radioLed.visible = radioOn;
+      W.audio?.radioStatic(radioOn);
+      W.hud?.subtitle?.(radioOn ? '沙沙……有人喺度講嘢。' : '收音機熄咗。', 2600);
+    },
+  });
   const led = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({
     map: T.art.newspaper, color: 0xd8ccb2, roughness: 1,
   }));

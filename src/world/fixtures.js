@@ -77,6 +77,23 @@ export function makeDoor(W, {
   }
   root.add(box(width + fThick * 2, fThick, 0.14, frameMat, 0, height + fThick / 2, 0));
 
+  // ---- door hardware: three hinges on the hinge jamb, a rubber bumper on the lock jamb,
+  //      and a brass kick plate on both faces (previously the leaf had no hinge at all, so an
+  //      open door looked like it was floating in the opening)
+  for (const hy of [0.3, 1.02, 1.74]) {
+    root.add(box(0.055, 0.105, 0.012, M.brass, dir * (width / 2 + 0.026), hy, 0.075));
+    root.add(box(0.055, 0.105, 0.012, M.brass, dir * (width / 2 + 0.026), hy, -0.075));
+    const knuckle = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.11, 10), M.brass);
+    knuckle.position.set(dir * (width / 2 - 0.004), hy, 0);
+    root.add(knuckle);
+  }
+  const bumper = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 8), new THREE.MeshStandardMaterial({ color: 0x1a1a1c, roughness: 0.75 }));
+  bumper.position.set(-dir * (width / 2 + 0.012), height * 0.46, 0.062);
+  root.add(bumper);
+  for (const s2 of [1, -1]) {
+    pivot.add(box(width * 0.82, 0.11, 0.005, M.brass, -dir * width / 2, 0.115, s2 * (thick / 2 + 0.003)));
+  }
+
   (W.doors || (W.doors = [])).push(null);   // filled below, keeps draw order stable
   const collider = { minX: 0, maxX: 0, minZ: 0, maxZ: 0, minY: y, maxY: y + height, enabled: true };
   const hw = (Math.abs(Math.cos(ry)) * width + Math.abs(Math.sin(ry)) * 0.2) / 2 + 0.05;

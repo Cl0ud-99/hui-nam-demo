@@ -341,6 +341,31 @@ export class AudioEngine {
     }
   }
 
+  /** Radio static: band-passed noise loop with a faint 50 Hz hum. */
+  radioStatic(on = true) {
+    if (!this.ready) return;
+    if (on && !this._radio) {
+      const c = this.ctx;
+      const src = this._loopNoise();
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1500; f.Q.value = 0.55;
+      const g = c.createGain(); g.gain.value = 0;
+      src.connect(f); f.connect(g); g.connect(this.master);
+      g.gain.linearRampToValueAtTime(0.075, c.currentTime + 0.5);
+      const hum = c.createOscillator(); hum.type = 'sine'; hum.frequency.value = 50;
+      const hg = c.createGain(); hg.gain.value = 0;
+      hum.connect(hg); hg.connect(this.master); hum.start();
+      hg.gain.linearRampToValueAtTime(0.02, c.currentTime + 0.5);
+      this._radio = { src, g, hum, hg };
+    } else if (!on && this._radio) {
+      const { src, g, hum, hg } = this._radio;
+      const t = this.ctx.currentTime;
+      g.gain.linearRampToValueAtTime(0.0, t + 0.35);
+      hg.gain.linearRampToValueAtTime(0.0, t + 0.35);
+      setTimeout(() => { try { src.stop(); hum.stop(); } catch (e) { } }, 600);
+      this._radio = null;
+    }
+  }
+
   buzzBurst(power = 1) {
     this._tone({ freq: 120, dur: 0.4, type: 'sawtooth', gain: 0.02 * power, send: 0.05 });
     this._burst({ freq: 2600, q: 5, dur: 0.35, gain: 0.02 * power });

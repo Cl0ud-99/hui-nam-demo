@@ -35469,6 +35469,39 @@ void main() {
       material.needsUpdate = true;
       return material;
     }
+    // Reflection-only body: the player has no visible mesh, so mirrors used to show an empty
+    // room. Layer 2 is enabled on the reflector cameras only (same trick as the bath ghost),
+    // so this silhouette appears in mirrors and never in the first-person view.
+    makePlayerProxy() {
+      const g = new Group();
+      const coat = new MeshStandardMaterial({ color: 2764856, roughness: 0.86, metalness: 0 });
+      const skin = new MeshStandardMaterial({ color: 4865846, roughness: 0.78, metalness: 0 });
+      const body = new Mesh(new CapsuleGeometry(0.17, 0.88, 6, 12), coat);
+      body.position.y = 0.98;
+      g.add(body);
+      const shoulders = new Mesh(new CapsuleGeometry(0.19, 0.28, 6, 10), coat);
+      shoulders.rotation.z = Math.PI / 2;
+      shoulders.position.y = 1.35;
+      g.add(shoulders);
+      const neck = new Mesh(new CylinderGeometry(0.052, 0.058, 0.16, 10), skin);
+      neck.position.y = 1.56;
+      g.add(neck);
+      const hair = new MeshStandardMaterial({ color: 3815996, roughness: 0.38, metalness: 0 });
+      const head = new Mesh(new SphereGeometry(0.1, 16, 12), hair);
+      head.position.y = 1.7;
+      g.add(head);
+      g.traverse((o) => o.layers.set(2));
+      g.visible = true;
+      g.userData.dynamic = true;
+      this.root.add(g);
+      this.playerProxy = g;
+      return g;
+    }
+    updatePlayerProxy(p) {
+      if (!this.playerProxy || !p) return;
+      this.playerProxy.position.set(p.pos.x, p.pos.y, p.pos.z);
+      this.playerProxy.rotation.y = p.yaw;
+    }
     makeMirror({ width, height, x, y, z, ry = 0, room = "bath" }) {
       const group = new Group();
       group.userData.dynamic = true;
@@ -35955,6 +35988,19 @@ void main() {
       root.add(box(fThick, height + fThick, 0.14, frameMat, s * (width / 2 + fThick / 2 - 5e-3), (height + fThick) / 2, 0));
     }
     root.add(box(width + fThick * 2, fThick, 0.14, frameMat, 0, height + fThick / 2, 0));
+    for (const hy of [0.3, 1.02, 1.74]) {
+      root.add(box(0.055, 0.105, 0.012, M.brass, dir * (width / 2 + 0.026), hy, 0.075));
+      root.add(box(0.055, 0.105, 0.012, M.brass, dir * (width / 2 + 0.026), hy, -0.075));
+      const knuckle = new Mesh(new CylinderGeometry(0.013, 0.013, 0.11, 10), M.brass);
+      knuckle.position.set(dir * (width / 2 - 4e-3), hy, 0);
+      root.add(knuckle);
+    }
+    const bumper = new Mesh(new SphereGeometry(0.024, 10, 8), new MeshStandardMaterial({ color: 1710620, roughness: 0.75 }));
+    bumper.position.set(-dir * (width / 2 + 0.012), height * 0.46, 0.062);
+    root.add(bumper);
+    for (const s2 of [1, -1]) {
+      pivot.add(box(width * 0.82, 0.11, 5e-3, M.brass, -dir * width / 2, 0.115, s2 * (thick / 2 + 3e-3)));
+    }
     (W.doors || (W.doors = [])).push(null);
     const collider = { minX: 0, maxX: 0, minZ: 0, maxZ: 0, minY: y, maxY: y + height, enabled: true };
     const hw = (Math.abs(Math.cos(ry)) * width + Math.abs(Math.sin(ry)) * 0.2) / 2 + 0.05;
@@ -37656,6 +37702,30 @@ void main() {
     rd.position.set(-1.35, 1.04, 2.6);
     rd.rotation.y = 0.5;
     g.add(rd);
+    const radioLed = new Mesh(
+      new SphereGeometry(0.011, 8, 6),
+      new MeshBasicMaterial({ color: 16726562, toneMapped: false })
+    );
+    radioLed.position.set(0.045, 0.112, 0.052);
+    radioLed.visible = false;
+    rd.add(radioLed);
+    let radioOn = false;
+    W.hotspot({
+      x: -1.35,
+      y: 1.16,
+      z: 2.6,
+      w: 0.44,
+      h: 0.32,
+      d: 0.4,
+      prompt: () => radioOn ? "\u95DC\u6536\u97F3\u6A5F" : "\u958B\u6536\u97F3\u6A5F",
+      range: 2,
+      use: () => {
+        radioOn = !radioOn;
+        radioLed.visible = radioOn;
+        W.audio?.radioStatic(radioOn);
+        W.hud?.subtitle?.(radioOn ? "\u6C99\u6C99\u2026\u2026\u6709\u4EBA\u55BA\u5EA6\u8B1B\u5622\u3002" : "\u6536\u97F3\u6A5F\u7184\u5497\u3002", 2600);
+      }
+    });
     const led = new Mesh(new PlaneGeometry(0.28, 0.2), new MeshStandardMaterial({
       map: T.art.newspaper,
       color: 14208178,
@@ -38892,7 +38962,25 @@ void main() {
     tap.add(cyl(0.0175, 0.0175, 0.02, M.chrome, 14).translateY(0.084).translateZ(-4e-3));
     const water = new Mesh(new CylinderGeometry(26e-4, 4e-3, 0.275, 8, 1, true), M.glass);
     water.position.set(0, -0.065, 0.158);
+    water.visible = false;
     tap.add(water);
+    let waterOn = false;
+    W.hotspot({
+      x: 2.47,
+      y: y0 + 0.93,
+      z: z0 + 0.3,
+      w: 0.4,
+      h: 0.4,
+      d: 0.4,
+      prompt: () => waterOn ? "\u95DC\u6C34\u5589" : "\u958B\u6C34\u5589",
+      range: 1.9,
+      use: () => {
+        waterOn = !waterOn;
+        water.visible = waterOn;
+        W.audio?.water(waterOn);
+        W.hud?.subtitle?.(waterOn ? "\u6C34\u5589\u958B\u5497\u3002" : "\u6C34\u5589\u95DC\u5497\u3002", 2200);
+      }
+    });
     sink.add(cyl(0.026, 0.026, 0.22, M.metalRust, 8).translateY(0.16).translateZ(-0.1));
     sink.add(cyl(0.026, 0.026, 0.2, M.metalRust, 8).rotateX(Math.PI / 2).translateY(0.1).translateZ(-0.02));
     W.colliders.push({ minX: 2.1, maxX: 2.8, minZ: z0, maxZ: z0 + 0.5, minY: y0, maxY: y0 + 1, enabled: true });
@@ -39902,6 +39990,47 @@ void main() {
         this._water = null;
       }
     }
+    /** Radio static: band-passed noise loop with a faint 50 Hz hum. */
+    radioStatic(on = true) {
+      if (!this.ready) return;
+      if (on && !this._radio) {
+        const c = this.ctx;
+        const src = this._loopNoise();
+        const f = c.createBiquadFilter();
+        f.type = "bandpass";
+        f.frequency.value = 1500;
+        f.Q.value = 0.55;
+        const g = c.createGain();
+        g.gain.value = 0;
+        src.connect(f);
+        f.connect(g);
+        g.connect(this.master);
+        g.gain.linearRampToValueAtTime(0.075, c.currentTime + 0.5);
+        const hum = c.createOscillator();
+        hum.type = "sine";
+        hum.frequency.value = 50;
+        const hg = c.createGain();
+        hg.gain.value = 0;
+        hum.connect(hg);
+        hg.connect(this.master);
+        hum.start();
+        hg.gain.linearRampToValueAtTime(0.02, c.currentTime + 0.5);
+        this._radio = { src, g, hum, hg };
+      } else if (!on && this._radio) {
+        const { src, g, hum, hg } = this._radio;
+        const t = this.ctx.currentTime;
+        g.gain.linearRampToValueAtTime(0, t + 0.35);
+        hg.gain.linearRampToValueAtTime(0, t + 0.35);
+        setTimeout(() => {
+          try {
+            src.stop();
+            hum.stop();
+          } catch (e) {
+          }
+        }, 600);
+        this._radio = null;
+      }
+    }
     buzzBurst(power = 1) {
       this._tone({ freq: 120, dur: 0.4, type: "sawtooth", gain: 0.02 * power, send: 0.05 });
       this._burst({ freq: 2600, q: 5, dur: 0.35, gain: 0.02 * power });
@@ -40288,6 +40417,7 @@ void main() {
       engine.renderer.shadowMap.needsUpdate = true;
     }
     const player = new Player(camera, world, audio);
+    world.makePlayerProxy();
     const story = new Story({ world, ui, audio, player, camera });
     world.story = story;
     story.onEnd = () => {
@@ -40513,6 +40643,7 @@ void main() {
         pv.update(dt);
       } else if (state === "play" || state === "paused" || state === "end") {
         player.update(dt);
+        world.updatePlayerProxy(player);
         story.update(dt);
         const hov = player.hover;
         ui.prompt(hov ? typeof hov.prompt === "function" ? hov.prompt() : hov.prompt : null);
