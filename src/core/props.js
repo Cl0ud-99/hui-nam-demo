@@ -587,6 +587,15 @@ export function stuckPoster(name, w, h, opts) {
   return p;
 }
 
+/** Soft black contact blob for the floor under furniture (1 draw call). */
+export function blobShadow(w, d, opacity = 0.34) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), M.blob.clone());
+  m.material.opacity = opacity;
+  m.rotation.x = -Math.PI / 2;
+  m.renderOrder = 1;
+  return m;
+}
+
 export function sticker(name, w, h, opacity = 1) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), decalMat(name, opacity));
   m.renderOrder = 2;

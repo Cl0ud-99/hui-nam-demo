@@ -3,7 +3,7 @@ import { M, posterMat, decalMat } from '../core/materials.js';
 import { T } from '../core/textures.js';
 import { box, cyl, mesh, planeGeo, rand } from '../core/util.js';
 import { wallGroup } from './buildutil.js';
-import { sticker } from '../core/props.js';
+import { sticker, blobShadow } from '../core/props.js';
 import { APT, BATH } from './apartment.js';
 
 export function buildBathroom(W) {
@@ -97,6 +97,8 @@ export function buildBathroom(W) {
   // ---------------------------------------------------------------- fixtures
   // sink
   const sink = new THREE.Group(); sink.position.set(2.45, y0, z0 + 0.3); g.add(sink);
+  const pedestalShadow = blobShadow(0.72, 0.72, 0.55);
+  pedestalShadow.position.set(2.45, y0 + 0.024, z0 + 0.28); g.add(pedestalShadow);
   // pedestal (slim, tapered — was a fat pipe that read as a stick)
   // pedestal: open cone that tucks under the bowl (its closed top cap was the flat disc seen inside the basin)
   const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.142, 0.105, 0.655, 20, 1, true), M.porcelain);
@@ -177,6 +179,8 @@ export function buildBathroom(W) {
 
   // toilet
   const toilet = new THREE.Group(); toilet.position.set(3.55, y0, 4.85); toilet.rotation.y = -Math.PI / 2; g.add(toilet);
+  const toiletShadow = blobShadow(1.0, 1.05, 0.5);
+  toiletShadow.position.set(3.55, y0 + 0.024, 4.85); g.add(toiletShadow);
   // tapered porcelain column + flared foot: the old rectangular plinth read as a cardboard box
   const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.152, 0.112, 0.40, 24), M.porcelain);
   ped.position.set(0, 0.205, 0.03); ped.scale.z = 1.18; ped.castShadow = true; toilet.add(ped);

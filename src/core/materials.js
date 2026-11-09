@@ -163,6 +163,14 @@ export function buildMaterials() {
   // ---------------- light emitting
   M.bulb = new THREE.MeshStandardMaterial({ color: 0xffe6bd, emissive: 0xffd9a0, emissiveIntensity: 1.45, roughness: 0.35 });
   M.bulbRed = new THREE.MeshStandardMaterial({ color: 0xff6a4a, emissive: 0xff3a1c, emissiveIntensity: 7, roughness: 0.4 });
+  // contact shadow: a black radial blob painted on the floor under heavy furniture.
+  // GTAO alone only gives a soft ambience; this is what makes a counter or a bed look like
+  // it is pressing into the floor rather than resting on top of it.
+  M.blob = new THREE.MeshBasicMaterial({
+    map: T.art.soft_dot, color: 0x000000, transparent: true, opacity: 0.34,
+    depthWrite: false, toneMapped: false,
+    polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3,
+  });
   M.tubeDiffuser = new THREE.MeshStandardMaterial({
     color: 0xf4f1e6, roughness: 0.9, transparent: true, opacity: 0.55, depthWrite: false,
   });

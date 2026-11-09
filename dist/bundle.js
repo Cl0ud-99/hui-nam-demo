@@ -1,8 +1,13 @@
 (() => {
   var __defProp = Object.defineProperty;
   var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __esm = (fn, res) => function __init() {
-    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  var __esm = (fn, res, err) => function __init() {
+    if (err) throw err[0];
+    try {
+      return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+    } catch (e) {
+      throw err = [e], e;
+    }
   };
   var __export = (target, all) => {
     for (var name in all)
@@ -34617,7 +34622,7 @@ void main() {
       this.resizeCbs && this.resizeCbs.forEach((f) => f(w, h));
     }
     onResize(fn) {
-      (this.resizeCbs ||= []).push(fn);
+      (this.resizeCbs || (this.resizeCbs = [])).push(fn);
     }
     render(dt) {
       this.grade.uniforms.uTime.value += dt;
@@ -34918,6 +34923,17 @@ void main() {
     M.water = new MeshStandardMaterial({ color: 1712932, roughness: 0.05, metalness: 0.25, envMapIntensity: 1.2 });
     M.bulb = new MeshStandardMaterial({ color: 16770749, emissive: 16767392, emissiveIntensity: 1.45, roughness: 0.35 });
     M.bulbRed = new MeshStandardMaterial({ color: 16738890, emissive: 16726556, emissiveIntensity: 7, roughness: 0.4 });
+    M.blob = new MeshBasicMaterial({
+      map: T.art.soft_dot,
+      color: 0,
+      transparent: true,
+      opacity: 0.34,
+      depthWrite: false,
+      toneMapped: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -3,
+      polygonOffsetUnits: -3
+    });
     M.tubeDiffuser = new MeshStandardMaterial({
       color: 16052710,
       roughness: 0.9,
@@ -35324,11 +35340,12 @@ void main() {
       this.rooms[id] = box2;
     }
     onEnter(id, fn) {
-      (this.enterHooks[id] ||= []).push(fn);
+      var _a;
+      ((_a = this.enterHooks)[id] || (_a[id] = [])).push(fn);
     }
     addLight(roomId, light, opts = {}) {
       light.intensity *= 0.55;
-      if (opts.global) (this.globalLights ||= []).push(light);
+      if (opts.global) (this.globalLights || (this.globalLights = [])).push(light);
       if (opts.keep) light.userData.keep = true;
       if (light.userData.keepShadow) light.userData.keepShadow = true;
       light.userData.base = light.intensity;
@@ -36649,6 +36666,13 @@ void main() {
     p.geometry.computeVertexNormals();
     return p;
   }
+  function blobShadow(w, d, opacity = 0.34) {
+    const m = new Mesh(new PlaneGeometry(w, d), M.blob.clone());
+    m.material.opacity = opacity;
+    m.rotation.x = -Math.PI / 2;
+    m.renderOrder = 1;
+    return m;
+  }
   function sticker(name, w, h, opacity = 1) {
     const m = new Mesh(new PlaneGeometry(w, h), decalMat(name, opacity));
     m.renderOrder = 2;
@@ -37617,6 +37641,9 @@ void main() {
     const counter = shopCounter(2.35, 0.68, 1.04);
     counter.position.set(-0.55, 0, 2.75);
     g.add(counter);
+    const counterShadow = blobShadow(3.1, 1.35, 0.46);
+    counterShadow.position.set(-0.55, 0.028, 2.75);
+    g.add(counterShadow);
     W.colliders.push({ minX: -1.78, maxX: 0.68, minZ: 2.36, maxZ: 3.14, minY: 0, maxY: 1.1, enabled: true });
     const scale = brassScale();
     scale.position.set(-0.2, 1.04, 2.7);
@@ -38334,6 +38361,9 @@ void main() {
     altar.position.set(x0 + 0.42, y0, 0.12);
     altar.rotation.y = Math.PI / 2;
     g.add(altar);
+    const altarShadow = blobShadow(1.2, 2.5, 0.45);
+    altarShadow.position.set(x0 + 0.42, y0 + 0.018, 0.12);
+    g.add(altarShadow);
     const at = altarTable(1.95, 0.62, 0.8);
     altar.add(at);
     const cloth = new Mesh(new PlaneGeometry(1.9, 0.62, 12, 10), M.shrineRed);
@@ -38492,6 +38522,9 @@ void main() {
     sf.position.set(2.75, y0, 1.55);
     sf.rotation.y = -Math.PI / 2;
     g.add(sf);
+    const sfShadow = blobShadow(1.45, 2.7, 0.4);
+    sfShadow.position.set(2.75, y0 + 0.018, 1.55);
+    g.add(sfShadow);
     W.colliders.push({ minX: 2.3, maxX: 3.2, minZ: 0.5, maxZ: 2.6, minY: y0, maxY: y0 + 0.9, enabled: true });
     const coffee = box(0.95, 0.05, 0.5, M.woodTable, 1.25, y0 + 0.36, 1.55);
     g.add(coffee);
@@ -38504,6 +38537,9 @@ void main() {
     tv.position.set(x0 + 0.3, y0 + 0.55, 2.55);
     tv.rotation.y = Math.PI / 2;
     g.add(tv);
+    const tvShadow = blobShadow(1.05, 2.1, 0.42);
+    tvShadow.position.set(x0 + 0.3, y0 + 0.018, 2.55);
+    g.add(tvShadow);
     W.animators.push((t, dt) => tv.userData.animate?.(t, dt));
     W.colliders.push({ minX: x0, maxX: x0 + 0.55, minZ: 2, maxZ: 3.1, minY: y0, maxY: y0 + 1.1, enabled: true });
     const kt = new Group();
@@ -38538,6 +38574,9 @@ void main() {
     wr.position.set(x1 - 0.3, y0, 2.15);
     wr.rotation.y = -Math.PI / 2;
     g.add(wr);
+    const wrShadow = blobShadow(1.1, 1.75, 0.44);
+    wrShadow.position.set(x1 - 0.3, y0 + 0.018, 2.15);
+    g.add(wrShadow);
     W.colliders.push({ minX: x1 - 0.62, maxX: x1, minZ: 1.55, maxZ: 2.75, minY: y0, maxY: y0 + 2, enabled: true });
     W.addMirror(wr.userData.mirror, "wardrobe");
     const ch = woodenChair();
@@ -38547,6 +38586,9 @@ void main() {
     const bd = bed(1.15, 1.95);
     bd.position.set(-3.15, y0, 4.85);
     g.add(bd);
+    const bedShadow = blobShadow(1.7, 2.5, 0.42);
+    bedShadow.position.set(-3.15, y0 + 0.018, 4.85);
+    g.add(bedShadow);
     W.colliders.push({ minX: -3.75, maxX: -2.55, minZ: 3.85, maxZ: 5.85, minY: y0, maxY: y0 + 0.6, enabled: true });
     const night = box(0.42, 0.5, 0.4, M.plyLight, -2.25, y0 + 0.25, 4.3);
     g.add(night);
@@ -38786,6 +38828,9 @@ void main() {
     const sink = new Group();
     sink.position.set(2.45, y0, z0 + 0.3);
     g.add(sink);
+    const pedestalShadow = blobShadow(0.72, 0.72, 0.55);
+    pedestalShadow.position.set(2.45, y0 + 0.024, z0 + 0.28);
+    g.add(pedestalShadow);
     const pedestal = new Mesh(new CylinderGeometry(0.142, 0.105, 0.655, 20, 1, true), M.porcelain);
     pedestal.position.set(0, 0.3275, -0.02);
     sink.add(pedestal);
@@ -38875,6 +38920,9 @@ void main() {
     toilet.position.set(3.55, y0, 4.85);
     toilet.rotation.y = -Math.PI / 2;
     g.add(toilet);
+    const toiletShadow = blobShadow(1, 1.05, 0.5);
+    toiletShadow.position.set(3.55, y0 + 0.024, 4.85);
+    g.add(toiletShadow);
     const ped = new Mesh(new CylinderGeometry(0.152, 0.112, 0.4, 24), M.porcelain);
     ped.position.set(0, 0.205, 0.03);
     ped.scale.z = 1.18;

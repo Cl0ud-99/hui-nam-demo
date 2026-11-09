@@ -7,7 +7,7 @@ import { makeDoor } from './fixtures.js';
 import {
   bulbLamp, fluorescent, sofa, bed, wardrobe, tvSet, altarTable, incenseBurner, candle,
   pictureFrame, poster, stuckPoster, sticker, stackOfBooks, newspapers, woodenChair,
-  cardboardBox, bucket, curtain, hangingCloth, cable, tube, diningTable, herbJar, radio,
+  cardboardBox, bucket, curtain, hangingCloth, cable, tube, diningTable, herbJar, radio, blobShadow,
 } from '../core/props.js';
 
 export const APT = { x0: -4, x1: 4, z0: -1.0, z1: 6.0, y0: 3.6, h: 2.95 };
@@ -161,6 +161,8 @@ export function buildApartment(W) {
 
   // ---------------------------------------------------------------- altar corner (hero)
   const altar = new THREE.Group(); altar.position.set(x0 + 0.42, y0, 0.12); altar.rotation.y = Math.PI / 2; g.add(altar);
+  const altarShadow = blobShadow(1.2, 2.5, 0.45);
+  altarShadow.position.set(x0 + 0.42, y0 + 0.018, 0.12); g.add(altarShadow);
   const at = altarTable(1.95, 0.62, 0.8); altar.add(at);
   // red cloth over the table
   const cloth = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.62, 12, 10), M.shrineRed);
@@ -270,6 +272,8 @@ export function buildApartment(W) {
 
   // ---------------------------------------------------------------- living
   const sf = sofa(2.05); sf.position.set(2.75, y0, 1.55); sf.rotation.y = -Math.PI / 2; g.add(sf);
+  const sfShadow = blobShadow(1.45, 2.7, 0.4);
+  sfShadow.position.set(2.75, y0 + 0.018, 1.55); g.add(sfShadow);
   W.colliders.push({ minX: 2.3, maxX: 3.2, minZ: 0.5, maxZ: 2.6, minY: y0, maxY: y0 + 0.9, enabled: true });
 
   const coffee = box(0.95, 0.05, 0.5, M.woodTable, 1.25, y0 + 0.36, 1.55); g.add(coffee);
@@ -281,6 +285,8 @@ export function buildApartment(W) {
   // tv cabinet + tv against the west wall, facing the sofa
   const cab = box(1.1, 0.55, 0.42, M.plyLight, x0 + 0.28, y0 + 0.275, 2.55); g.add(cab);
   const tv = tvSet(); tv.position.set(x0 + 0.3, y0 + 0.55, 2.55); tv.rotation.y = Math.PI / 2; g.add(tv);
+  const tvShadow = blobShadow(1.05, 2.1, 0.42);
+  tvShadow.position.set(x0 + 0.3, y0 + 0.018, 2.55); g.add(tvShadow);
   W.animators.push((t, dt) => tv.userData.animate?.(t, dt));
   W.colliders.push({ minX: x0, maxX: x0 + 0.55, minZ: 2.0, maxZ: 3.1, minY: y0, maxY: y0 + 1.1, enabled: true });
 
@@ -308,6 +314,8 @@ export function buildApartment(W) {
 
   // wardrobe (east wall) with mirror
   const wr = wardrobe(1.15, 1.95, 0.55); wr.position.set(x1 - 0.3, y0, 2.15); wr.rotation.y = -Math.PI / 2; g.add(wr);
+  const wrShadow = blobShadow(1.1, 1.75, 0.44);
+  wrShadow.position.set(x1 - 0.3, y0 + 0.018, 2.15); g.add(wrShadow);
   W.colliders.push({ minX: x1 - 0.62, maxX: x1, minZ: 1.55, maxZ: 2.75, minY: y0, maxY: y0 + 2.0, enabled: true });
   // real planar mirror on the wardrobe door, built through the same path as the bathroom
   // mirror (the env-map stand-in showed a blurry photo of the alley instead of the room)
@@ -321,6 +329,8 @@ export function buildApartment(W) {
 
   // ---------------------------------------------------------------- bedroom
   const bd = bed(1.15, 1.95); bd.position.set(-3.15, y0, 4.85); g.add(bd);
+  const bedShadow = blobShadow(1.7, 2.5, 0.42);
+  bedShadow.position.set(-3.15, y0 + 0.018, 4.85); g.add(bedShadow);
   W.colliders.push({ minX: -3.75, maxX: -2.55, minZ: 3.85, maxZ: 5.85, minY: y0, maxY: y0 + 0.6, enabled: true });
   const night = box(0.42, 0.5, 0.4, M.plyLight, -2.25, y0 + 0.25, 4.3); g.add(night);
   const nlamp = new THREE.Group(); nlamp.position.set(-2.25, y0 + 0.5, 4.3); g.add(nlamp);

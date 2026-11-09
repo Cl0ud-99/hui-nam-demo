@@ -7,7 +7,7 @@ import { makeDoor, makeWindow } from './fixtures.js';
 import {
   apothecary, shopCounter, herbJar, medicineBottle, brassScale, abacus, radio,
   woodenStool, woodenChair, pictureFrame, poster, stuckPoster, sticker, stackOfBooks,
-  newspapers, bulbLamp, fluorescent, wallFan, cardboardBox, crate, bucket, hangingCloth,
+  newspapers, bulbLamp, fluorescent, wallFan, cardboardBox, crate, bucket, hangingCloth, blobShadow,
 } from '../core/props.js';
 
 export const SHOP = { x0: -4, x1: 4, z0: -1, z1: 6, h: 3.45 };
@@ -149,6 +149,8 @@ export function buildShop(W) {
   // counter
   const counter = shopCounter(2.35, 0.68, 1.04);
   counter.position.set(-0.55, 0, 2.75); g.add(counter);
+  const counterShadow = blobShadow(3.1, 1.35, 0.46);
+  counterShadow.position.set(-0.55, 0.028, 2.75); g.add(counterShadow);
   W.colliders.push({ minX: -1.78, maxX: 0.68, minZ: 2.36, maxZ: 3.14, minY: 0, maxY: 1.1, enabled: true });
 
   const scale = brassScale(); scale.position.set(-0.2, 1.04, 2.7); g.add(scale);
